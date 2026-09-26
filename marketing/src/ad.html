@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>KOVA · Anuncio</title>
+<link rel="stylesheet" href="fonts.css">
+<!--
+  Plantilla de los videos de anuncios de KOVA.
+  Parámetros: ?c=bot|web|auto  &d=wa|web  &f=story|feed  &t=segundos (vista previa estática)
+  render.js la graba cuadro por cuadro: todas las animaciones son CSS en pausa y se posicionan con seek(t).
+-->
+<style>
+:root{
+  --bg:#07060d; --text:#f4f2ff; --muted:#a09cb8; --line:rgba(255,255,255,.1);
+  --v:#7c5cff; --c:#00e0ff; --p:#ff4ecd; --g:#25d366;
+  --grad:linear-gradient(120deg,#7c5cff 0%,#00e0ff 55%,#ff4ecd 100%);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --W:1080px; --H:1920px; --top:250px; --bot:430px;
+}
+body.feed{--H:1350px; --top:70px; --bot:70px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:var(--W);height:var(--H);overflow:hidden;background:var(--bg)}
+body{font-family:Inter,"Noto Color Emoji",sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+h1,h2,h3,.sg{font-family:"Space Grotesk",Inter,"Noto Color Emoji",sans-serif;letter-spacing:-.025em;line-height:1.02;font-weight:700}
+.mono{font-family:"JetBrains Mono",monospace}
+.gt{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- Fondo ---------- */
+.bg{position:absolute;inset:0;overflow:hidden}
+.bg .grid{position:absolute;inset:-100px;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:90px 90px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);animation:gridmove 15s linear both}
+@keyframes gridmove{to{transform:translate(90px,180px)}}
+.orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.55}
+.o1{width:700px;height:700px;background:#7c5cff;left:-250px;top:8%;animation:drift1 15s ease-in-out both}
+.o2{width:620px;height:620px;background:#00b8d9;right:-260px;top:45%;animation:drift2 15s ease-in-out both}
+.o3{width:520px;height:520px;background:#ff4ecd;left:20%;bottom:-300px;opacity:.35;animation:drift1 15s ease-in-out reverse both}
+@keyframes drift1{50%{transform:translate(160px,120px) scale(1.15)}}
+@keyframes drift2{50%{transform:translate(-180px,-140px) scale(1.1)}}
+
+/* ---------- Escenas ---------- */
+.safe{position:absolute;left:0;right:0;top:var(--top);bottom:var(--bot);padding:0 72px}
+.sc{position:absolute;inset:0 72px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:44px;
+  animation:scIn .55s var(--ease) backwards, scOut .4s ease-in forwards;
+  animation-delay:calc(var(--s) * 1s), calc(var(--e) * 1s - .4s)}
+.sc.first{animation:scOut .4s ease-in forwards;animation-delay:calc(var(--e) * 1s - .4s)}
+.sc.last{animation:scIn .55s var(--ease) backwards;animation-delay:calc(var(--s) * 1s)}
+@keyframes scIn{from{opacity:0;transform:translateY(60px) scale(.97)}}
+@keyframes scOut{to{opacity:0;transform:translateY(-50px) scale(.98)}}
+
+/* Animaciones de elementos: --d = segundo absoluto en el video */
+.a{animation-duration:.6s;animation-timing-function:var(--ease);animation-fill-mode:both;animation-delay:calc(var(--d) * 1s)}
+.up{animation-name:up} @keyframes up{from{opacity:0;transform:translateY(50px)}}
+.pop{animation-name:pop;animation-timing-function:cubic-bezier(.3,1.6,.5,1)} @keyframes pop{from{opacity:0;transform:scale(.6)}}
+.left{animation-name:left} @keyframes left{from{opacity:0;transform:translateX(-80px)}}
+.right{animation-name:right} @keyframes right{from{opacity:0;transform:translateX(80px)}}
+.hookin{animation-name:hookin;animation-duration:1.2s} @keyframes hookin{from{transform:scale(1.06)}}
+.gone{animation-name:gone;animation-duration:.2s} @keyframes gone{to{opacity:0;height:0;padding:0;margin:0}}
+
+.hook{font-size:104px}
+.cap{font-size:62px}
+.sub{font-size:38px;color:var(--muted);font-weight:500;line-height:1.35}
+.pill{display:inline-flex;align-items:center;gap:14px;padding:16px 30px;border-radius:99px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);font-size:34px;font-weight:600}
+.dot{width:16px;height:16px;border-radius:50%;background:var(--g);box-shadow:0 0 0 6px rgba(37,211,102,.2)}
+
+/* Tarjetas de notificación */
+.notifs{display:flex;flex-direction:column;gap:22px;width:100%}
+.notif{display:flex;gap:24px;align-items:center;text-align:left;padding:26px 30px;border-radius:30px;background:rgba(22,20,36,.92);border:1.5px solid rgba(255,255,255,.1);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.notif .ic{flex:none;width:84px;height:84px;border-radius:22px;background:var(--g);display:grid;place-items:center}
+.notif .ic svg{width:52px;height:52px;fill:#fff}
+.notif b{display:block;font-size:32px}
+.notif span{font-size:32px;color:#d8d4ee}
+.notif small{margin-left:auto;align-self:flex-start;font-size:26px;color:var(--muted)}
+.badge{position:relative;display:inline-block}
+.badge i{position:absolute;top:-22px;right:-40px;font-style:normal;background:#ff3b5c;color:#fff;font:800 34px Inter;padding:6px 18px;border-radius:99px}
+
+/* Teléfono */
+.phone{position:relative;width:540px;height:880px;border-radius:64px;background:#0b0a14;border:10px solid #23213a;box-shadow:0 40px 120px rgba(124,92,255,.35),0 0 0 2px rgba(255,255,255,.08);overflow:hidden;flex:none}
+.phone .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:150px;height:36px;border-radius:99px;background:#000;z-index:3}
+.chat-h{display:flex;align-items:center;gap:18px;padding:66px 26px 20px;background:#1f2c34;text-align:left}
+.chat-h .av{width:66px;height:66px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font:800 30px Inter}
+.chat-h b{display:block;font-size:28px}
+.chat-h small{font-size:22px;color:#8fe3b0}
+.chat-b{position:absolute;left:0;right:0;top:152px;bottom:0;padding:24px 20px 34px;display:flex;flex-direction:column;justify-content:flex-end;gap:16px;background:#0b141a;background-image:radial-gradient(rgba(255,255,255,.035) 2px,transparent 2px);background-size:26px 26px}
+.msg{max-width:84%;padding:16px 20px 14px;border-radius:22px;font-size:26px;line-height:1.35;text-align:left;white-space:pre-line}
+.msg small{display:block;text-align:right;font-size:18px;opacity:.6;margin-top:4px}
+.msg.in{align-self:flex-start;background:#202c33;border-top-left-radius:6px}
+.msg.out{align-self:flex-end;background:#005c4b;border-top-right-radius:6px}
+.typing{align-self:flex-end;display:flex;gap:8px;padding:20px 24px;border-radius:22px;background:#005c4b;border-top-right-radius:6px}
+.typing i{width:12px;height:12px;border-radius:50%;background:#bfe;animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{50%{opacity:.25}}
+.msgin{animation:msgin .45s var(--ease) both;animation-delay:calc(var(--d) * 1s)}
+@keyframes msgin{from{display:none;opacity:0;transform:translateY(30px)}}
+.typing{animation:msgin .3s var(--ease) both, tout .01s linear forwards;animation-delay:calc(var(--d) * 1s), calc((var(--d) + var(--len)) * 1s)}
+@keyframes tout{to{display:none}}
+.chip{position:absolute;padding:14px 24px;border-radius:99px;background:rgba(15,14,26,.94);border:1.5px solid rgba(255,255,255,.16);font-size:28px;font-weight:600;white-space:nowrap;box-shadow:0 16px 40px rgba(0,0,0,.45);z-index:4}
+
+/* Scroll de la web real */
+.screen{position:absolute;inset:0;overflow:hidden;border-radius:52px}
+.screen img{width:100%;display:block;animation:scrollsite 6.3s cubic-bezier(.45,0,.2,1) both;animation-delay:3.2s}
+@keyframes scrollsite{0%,12%{transform:translateY(0)}38%,52%{transform:translateY(-990px)}86%,100%{transform:translateY(-2470px)}}
+
+/* Listas y tarjetas */
+.feats{display:flex;flex-direction:column;gap:20px;width:100%}
+.feat{display:flex;align-items:center;gap:22px;padding:24px 30px;border-radius:26px;background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.1);font-size:40px;font-weight:600;text-align:left}
+.feat em{font-style:normal;font-size:46px}
+.price{display:flex;align-items:baseline;justify-content:center;gap:18px;flex-wrap:wrap}
+.price .from{font-size:40px;color:var(--muted);font-weight:600}
+.price .n{font:700 150px "Space Grotesk";letter-spacing:-.04em}
+.card{width:100%;padding:44px 46px;border-radius:40px;background:linear-gradient(160deg,rgba(124,92,255,.22),rgba(0,224,255,.08));border:2px solid rgba(124,92,255,.5);box-shadow:0 30px 90px rgba(124,92,255,.25);text-align:left}
+.card h3{font-size:60px}
+.card .plan-p{display:flex;align-items:baseline;gap:14px;margin:12px 0 18px}
+.card .plan-p b{font:700 118px "Space Grotesk";letter-spacing:-.04em}
+.card .plan-p span{font-size:36px;color:var(--muted)}
+.card ul{list-style:none;display:grid;gap:14px}
+.card li{font-size:36px;font-weight:500;display:flex;gap:16px;align-items:center}
+.card li::before{content:"✓";flex:none;width:44px;height:44px;border-radius:50%;background:rgba(37,211,102,.18);color:var(--g);display:grid;place-items:center;font-weight:800;font-size:28px}
+
+.win{width:100%;border-radius:30px;background:#0d0c17;border:1.5px solid rgba(255,255,255,.12);box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden;text-align:left}
+.win .bar{display:flex;gap:12px;align-items:center;padding:20px 26px;border-bottom:1.5px solid rgba(255,255,255,.08);font-size:24px;color:var(--muted)}
+.win .bar i{width:18px;height:18px;border-radius:50%;background:#ff5f57}.win .bar i:nth-child(2){background:#febc2e}.win .bar i:nth-child(3){background:#28c840;margin-right:14px}
+.code{padding:26px 30px;font-size:27px;line-height:1.6;white-space:pre}
+.code .ln{display:block;overflow:hidden;white-space:nowrap;animation:typeln .45s steps(28) both;animation-delay:calc(var(--d) * 1s)}
+@keyframes typeln{from{width:0}to{width:100%}}
+.k{color:#c792ea}.s{color:#c3e88d}.f{color:#82aaff}.c{color:#6d6985}
+.tasks{display:grid;gap:18px;width:100%}
+.task{display:flex;align-items:center;gap:22px;padding:22px 28px;border-radius:24px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);font-size:36px;font-weight:600;text-align:left}
+.task .st{margin-left:auto;font-size:26px;font-weight:700;padding:8px 18px;border-radius:99px;position:relative;min-width:210px;text-align:center}
+.task .st .todo,.task .st .done{position:absolute;inset:0;display:grid;place-items:center;border-radius:99px}
+.task .st .todo{background:rgba(255,94,94,.15);color:#ff8a8a}
+.task .st .done{background:rgba(37,211,102,.18);color:var(--g)}
+.fadeout{animation-name:fo;animation-duration:.3s} @keyframes fo{to{opacity:0}}
+.grid6{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%}
+.svc{padding:30px 24px;border-radius:28px;background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.1);font-size:34px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:12px}
+.svc em{font-style:normal;font-size:64px}
+.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.trust span{font-size:30px;font-weight:600;padding:12px 24px;border-radius:99px;background:rgba(0,224,255,.1);border:1.5px solid rgba(0,224,255,.3);color:#bdf6ff}
+
+.browser .addr{flex:1;padding:10px 20px;border-radius:99px;background:rgba(255,255,255,.07);font-size:26px;color:#d8d4ee}
+.e404{padding:60px 30px 70px;text-align:center}
+.e404 b{display:block;font:700 170px "Space Grotesk";letter-spacing:-.05em;color:#3a3752}
+.e404 span{font-size:36px;color:var(--muted)}
+
+/* Cierre */
+.logo{width:230px;height:230px;filter:drop-shadow(0 0 50px rgba(79,92,240,.7))}
+.brand{font:700 110px "Space Grotesk";letter-spacing:.14em;margin-top:-10px}
+.cta{display:inline-flex;align-items:center;gap:22px;padding:34px 56px;border-radius:99px;font-size:50px;font-weight:800;color:#06140b;background:var(--g);box-shadow:0 0 0 0 rgba(37,211,102,.6),0 24px 60px rgba(37,211,102,.35);animation:pulse 1.2s ease-out infinite}
+.cta svg{width:62px;height:62px;fill:#06140b}
+.cta.web{color:#fff;background:linear-gradient(120deg,#7c5cff,#00b8e6);box-shadow:0 24px 60px rgba(124,92,255,.45);animation-name:pulse2}
+@keyframes pulse{70%{box-shadow:0 0 0 34px rgba(37,211,102,0),0 24px 60px rgba(37,211,102,.35)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0),0 24px 60px rgba(37,211,102,.35)}}
+@keyframes pulse2{50%{transform:scale(1.04)}}
+.hand{font-size:40px;font-weight:600;color:#d8d4ee}
+.hand em{font-style:normal;display:inline-block;animation:bob .8s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(14px)}}
+
+[data-c],[data-d]{display:none!important}
+body.c-bot [data-c=bot],body.c-web [data-c=web],body.c-auto [data-c=auto]{display:block!important}
+body.d-wa [data-d=wa],body.d-web [data-d=web]{display:flex!important}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="kl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3fe0"/><stop offset=".55" stop-color="#4f5cf0"/><stop offset="1" stop-color="#2f9bff"/></linearGradient>
+    <mask id="km" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><g fill="none" stroke="#000" stroke-width="2.2"><path d="M32.3 35.5V66.5L63 35.8"/><path d="M53 27.3 70.6 26 69.4 43.6"/><path d="M51.5 55.5 69 72.5"/></g></mask>
+  </defs>
+  <symbol id="wa" viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4c-1-1.6-1.5-3.4-1.5-5.2 0-5.4 4.4-9.8 9.8-9.8 2.6 0 5.1 1 6.9 2.9 1.8 1.8 2.9 4.3 2.9 6.9 0 5.4-4.4 9.8-9.8 9.8zm8.4-18.2C18.1 1.3 15.2.1 12 .1 5.5.1.1 5.4.1 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.2-3.5-8.3z"/></symbol>
+  <symbol id="logo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="none" stroke="url(#kl)" stroke-width="3"/><g fill="url(#kl)" mask="url(#km)"><rect x="26" y="31" width="12.6" height="46"/><path d="M26 69.5 60.5 35 68.5 43 38.6 72.9Z"/><path d="M46.5 24.6 75.5 22 73 51Z"/><path d="M42.5 60 50.6 51.8 76.5 77H60.5Z"/></g></symbol>
+</svg>
+
+<div class="bg"><div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div class="safe">
+
+<!-- ================= Concepto 1: BOT DE WHATSAPP ================= -->
+<div data-c="bot">
+  <div class="sc first" style="--e:3.3">
+    <h1 class="hook a hookin" style="--d:0">¿Clientes <span class="gt">esperando</span> respuesta en tu WhatsApp?</h1>
+    <div class="notifs">
+      <div class="notif a right" style="--d:.35"><div class="ic"><svg><use href="#wa"/></svg></div><div><b>Cliente nuevo</b><span>¿Tienen disponibilidad hoy?</span></div><small>23:41</small></div>
+      <div class="notif a right" style="--d:.8"><div class="ic"><svg><use href="#wa"/></svg></div><div><b>Cliente nuevo</b><span>¿Cuánto cuesta? 🙏</span></div><small>23:44</small></div>
+      <div class="notif a right" style="--d:1.25"><div class="ic"><svg><use href="#wa"/></svg></div><div><b>Cliente nuevo</b><span>Hola?? … mejor busco en otro lado</span></div><small>23:52</small></div>
+    </div>
+    <div class="pill a pop" style="--d:1.9">😴 Mientras duermes, se van a tu competencia</div>
+  </div>
+
+  <div class="sc" style="--s:3.3;--e:9.3;gap:36px">
+    <h2 class="cap a up" style="--d:3.4">Un <span class="gt">bot con IA</span> te responde 24/7</h2>
+    <div style="position:relative">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="chat-h"><div class="av">IA</div><div><b>Tu Negocio</b><small>● en línea · bot con IA</small></div></div>
+        <div class="chat-b">
+          <div class="msg in msgin" style="--d:3.8">Hola! ¿Tienen turno para hoy? <small>23:52</small></div>
+          <div class="typing" style="--d:4.3;--len:.6"><i></i><i></i><i></i></div>
+          <div class="msg out msgin" style="--d:4.9">¡Hola! 👋 Sí, hoy tengo libre:
+🕓 4:00 pm
+🕕 6:00 pm
+¿Cuál prefieres? <small>23:52 ✓✓</small></div>
+          <div class="msg in msgin" style="--d:6.2">A las 6 porfa 🙌 <small>23:53</small></div>
+          <div class="typing" style="--d:6.6;--len:.6"><i></i><i></i><i></i></div>
+          <div class="msg out msgin" style="--d:7.2">✅ ¡Listo! Te agendé hoy a las 6:00 pm. Te aviso 1 hora antes. <small>23:53 ✓✓</small></div>
+        </div>
+      </div>
+      <div class="a fadeout" style="--d:7.3;position:absolute;right:-150px;top:84px;z-index:4"><div class="chip a pop" style="--d:5.2;position:static;display:inline-block">⚡ Respondió en 2 segundos</div></div>
+      <div class="chip a pop" style="--d:7.6;right:-150px;top:84px">📅 Cita agendada sola</div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:9.3;--e:12.5;gap:34px">
+    <h2 class="cap a up" style="--d:9.4">Tu vendedor que <span class="gt">nunca duerme</span></h2>
+    <div class="feats">
+      <div class="feat a left" style="--d:9.7"><em>💬</em>Responde al instante</div>
+      <div class="feat a left" style="--d:9.95"><em>📅</em>Agenda citas y toma pedidos</div>
+      <div class="feat a left" style="--d:10.2"><em>💳</em>Cobra con links de pago</div>
+      <div class="feat a left" style="--d:10.45"><em>🧠</em>Entrenado con la info de tu negocio</div>
+    </div>
+    <div class="price a pop" style="--d:10.9"><span class="from">Bots desde</span><span class="n gt">$75</span><span class="from">· listo en 2–3 días</span></div>
+  </div>
+</div>
+
+<!-- ================= Concepto 2: PÁGINA WEB ================= -->
+<div data-c="web">
+  <div class="sc first" style="--e:3.2">
+    <h1 class="hook a hookin" style="--d:0">Si no tienes <span class="gt">página web</span>, tu competencia se queda con tus clientes</h1>
+    <div class="win browser a up" style="--d:.5">
+      <div class="bar"><i></i><i></i><i></i><div class="addr">🔒 tunegocio.com</div></div>
+      <div class="e404"><b>404</b><span>Esta página no existe… todavía 👀</span></div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:3.2;--e:9.6;gap:36px">
+    <h2 class="cap a up" style="--d:3.3">Así se ve una web <span class="gt">hecha por KOVA</span> 👇</h2>
+    <div style="position:relative">
+      <div class="phone"><div class="notch"></div><div class="screen"><img src="site-strip.jpg" alt=""></div></div>
+      <div class="chip a pop" style="--d:4.2;left:-80px;top:170px">⚡ Carga ultra rápida</div>
+      <div class="chip a pop" style="--d:5.4;right:-80px;top:420px">📱 Perfecta en el celular</div>
+      <div class="chip a pop" style="--d:6.6;left:-70px;bottom:130px">💬 Botón directo a WhatsApp</div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:9.6;--e:12.5;gap:34px">
+    <h2 class="cap a up" style="--d:9.7">Tu web lista en <span class="gt">2–3 días</span></h2>
+    <div class="card a pop" style="--d:9.95">
+      <h3>Landing Pro</h3>
+      <div class="plan-p"><span>desde</span><b class="gt">$89</b></div>
+      <ul>
+        <li class="a left" style="--d:10.3">Diseño premium con animaciones</li>
+        <li class="a left" style="--d:10.5">Botón y chat a WhatsApp</li>
+        <li class="a left" style="--d:10.7">SEO + Google Analytics</li>
+        <li class="a left" style="--d:10.9">100% adaptada al celular</li>
+      </ul>
+    </div>
+    <div class="sub a up" style="--d:11.2">¿Necesitas más? Webs completas y tiendas online a medida</div>
+  </div>
+</div>
+
+<!-- ================= Concepto 3: AUTOMATIZACIÓN / PROGRAMADOR ================= -->
+<div data-c="auto">
+  <div class="sc first" style="--e:3.3">
+    <h1 class="hook a hookin" style="--d:0">Deja de hacer <span class="gt">a mano</span> lo que un programa hace por ti</h1>
+    <div class="tasks">
+      <div class="task a right" style="--d:.4">🧾 Enviar facturas<span class="st"><span class="todo">⏳ 2 h/día</span></span></div>
+      <div class="task a right" style="--d:.7">📊 Actualizar el Excel<span class="st"><span class="todo">⏳ 1 h/día</span></span></div>
+      <div class="task a right" style="--d:1.0">💬 Responder mensajes<span class="st"><span class="todo">⏳ 3 h/día</span></span></div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:3.3;--e:9.3;gap:34px">
+    <h2 class="cap a up" style="--d:3.4">Lo <span class="gt">programamos</span> una vez. Funciona solo.</h2>
+    <div class="win a up" style="--d:3.6">
+      <div class="bar"><i></i><i></i><i></i>kova/automatiza.ts</div>
+<div class="code mono"><span class="ln" style="--d:4.0"><span class="k">cada</span>(<span class="s">"día 8:00"</span>, <span class="k">async</span> () =&gt; {</span><span class="ln" style="--d:4.45">  <span class="k">await</span> <span class="f">enviarFacturas</span>(clientes)</span><span class="ln" style="--d:4.9">  <span class="k">await</span> <span class="f">actualizarExcel</span>(ventas)</span><span class="ln" style="--d:5.35">  <span class="k">await</span> bot.<span class="f">responder</span>(<span class="s">"WhatsApp"</span>)</span><span class="ln" style="--d:5.8">}) <span class="c">// ✓ listo, sin tocar nada</span></span></div>
+    </div>
+    <div class="tasks">
+      <div class="task a left" style="--d:6.1">🧾 Enviar facturas<span class="st"><span class="todo a fadeout" style="--d:6.6">⏳ manual</span><span class="done a pop" style="--d:6.6">✓ automático</span></span></div>
+      <div class="task a left" style="--d:6.3">📊 Actualizar el Excel<span class="st"><span class="todo a fadeout" style="--d:7.1">⏳ manual</span><span class="done a pop" style="--d:7.1">✓ automático</span></span></div>
+      <div class="task a left" style="--d:6.5">💬 Responder mensajes<span class="st"><span class="todo a fadeout" style="--d:7.6">⏳ manual</span><span class="done a pop" style="--d:7.6">✓ automático</span></span></div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:9.3;--e:12.5;gap:34px">
+    <h2 class="cap a up" style="--d:9.4">Tu equipo de <span class="gt">programadores</span></h2>
+    <div class="grid6">
+      <div class="svc a pop" style="--d:9.6"><em>🌐</em>Páginas web</div>
+      <div class="svc a pop" style="--d:9.75"><em>🤖</em>Bots WhatsApp</div>
+      <div class="svc a pop" style="--d:9.9"><em>🛒</em>Tiendas online</div>
+      <div class="svc a pop" style="--d:10.05"><em>⚙️</em>Automatizaciones</div>
+      <div class="svc a pop" style="--d:10.2"><em>🧠</em>Inteligencia artificial</div>
+      <div class="svc a pop" style="--d:10.35"><em>💻</em>Software a medida</div>
+    </div>
+    <div class="trust a up" style="--d:10.8"><span>Precio fijo</span><span>50% al iniciar, 50% al entregar</span><span>El código es tuyo</span></div>
+  </div>
+</div>
+
+<!-- ================= Cierre (común) ================= -->
+<div class="sc last" style="--s:12.5;gap:40px">
+  <svg class="logo a pop" style="--d:12.6"><use href="#logo"/></svg>
+  <div class="brand a up" style="--d:12.75">KOVA</div>
+  <div class="sub a up" style="--d:12.9;margin-top:-20px">Software que trabaja por ti</div>
+  <div data-d="wa" style="flex-direction:column;align-items:center;gap:36px">
+    <div class="cta a pop" style="--d:13.1"><svg><use href="#wa"/></svg>Escríbenos por WhatsApp</div>
+    <div class="pill a up" style="--d:13.4"><span class="dot"></span>Asesoría gratis · Respondemos rápido</div>
+    <div class="hand a up" style="--d:13.7">Toca el botón <em>👇</em></div>
+  </div>
+  <div data-d="web" style="flex-direction:column;align-items:center;gap:36px">
+    <div class="cta web a pop" style="--d:13.1">kovaautomatiza.com</div>
+    <div class="pill a up" style="--d:13.4"><span class="dot"></span>Mira planes y precios · Asesoría gratis</div>
+    <div class="hand a up" style="--d:13.7">Toca «Más información» <em>👇</em></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  var q = new URLSearchParams(location.search);
+  document.body.className = "c-" + (q.get("c") || "bot") + " d-" + (q.get("d") || "wa") + " " + (q.get("f") || "story");
+  // Congela todas las animaciones y las coloca en el segundo t (lo usa render.js)
+  window.seek = function (t) {
+    document.getAnimations().forEach(function (a) { a.pause(); a.currentTime = t * 1000; });
+  };
+  window.ready = Promise.all([document.fonts.ready, new Promise(function (r) {
+    var img = document.querySelector("[data-c=web] img");
+    if (!img || img.complete) r(); else { img.onload = r; img.onerror = r; }
+  })]).then(function () { if (q.has("t")) seek(parseFloat(q.get("t"))); });
+</script>
+</body>
+</html>

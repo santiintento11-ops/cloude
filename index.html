@@ -1184,14 +1184,32 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
   var $ = function(s,c){return (c||document).querySelector(s)};
   var $$ = function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
 
-  function waLink(text){ return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text); }
-  function openWA(text){ window.open(waLink(text), "_blank", "noopener"); }
+  var META_PIXEL_ID = ""; // ID del Pixel de Meta (Administrador de eventos → Orígenes de datos). Vacío = desactivado.
+
+  // Quien llega desde un anuncio (?utm_source=...&utm_content=nombre-del-anuncio) lleva una etiqueta
+  // al final del mensaje de WhatsApp, para saber qué anuncio trajo cada chat.
+  var AD_REF = (function(){
+    var p = new URLSearchParams(location.search), ref = p.get("utm_content") || p.get("utm_source");
+    try { if (ref) sessionStorage.setItem("kova_ad", ref); else ref = sessionStorage.getItem("kova_ad"); } catch(e){}
+    return ref ? " [ref: " + ref + "]" : "";
+  })();
+
+  if (META_PIXEL_ID) {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init", META_PIXEL_ID);
+    fbq("track", "PageView");
+  }
+  function trackContact(){ if (window.fbq) fbq("track", "Contact"); }
+
+  function waLink(text){ return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text + AD_REF); }
+  function openWA(text){ trackContact(); window.open(waLink(text), "_blank", "noopener"); }
 
   // WhatsApp links
   $$("[data-wa]").forEach(function(a){
     a.setAttribute("href", waLink(a.getAttribute("data-wa")));
     a.setAttribute("target","_blank");
     a.setAttribute("rel","noopener");
+    a.addEventListener("click", trackContact);
   });
 
   $("#year").textContent = new Date().getFullYear();

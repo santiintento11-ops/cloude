@@ -45,3 +45,9 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 | Redes sociales | bloque `.socials` del footer (ahora apuntan a `#`) |
 
 > Los testimonios, los casos de éxito, las cifras (150+ proyectos, 12 países…) y las garantías son **textos de ejemplo**. Reemplázalos por datos reales antes de publicar: mostrar reseñas o garantías que no son ciertas puede ir contra las leyes de protección al consumidor.
+
+## Publicidad en Meta
+
+La campaña de Facebook/Instagram (estrategia, paso a paso, textos y 12 videos) está en [`marketing/CAMPANA-META.md`](marketing/CAMPANA-META.md). Los videos están en `marketing/videos/`.
+
+La web marca los chats que llegan desde un anuncio: si la URL trae `utm_content`, el mensaje de WhatsApp termina en `[ref: nombre-del-anuncio]`. Para activar el Pixel de Meta, pega su ID en `var META_PIXEL_ID = "";`.
