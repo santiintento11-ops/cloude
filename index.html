@@ -135,6 +135,9 @@ main,header,footer{position:relative;z-index:2}
 .hero p.lead{font-size:clamp(16.5px,1.5vw,19px);color:var(--muted);max-width:560px}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin:34px 0 36px}
 .trust-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.trust-row .trust-ref{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:14.5px}
+.trust-ref svg{width:16px;height:16px;color:var(--g);flex-shrink:0}
+.trust-ref a{color:#fff;text-decoration:underline;text-underline-offset:3px}
 .avatars{display:flex}
 .avatars span{width:38px;height:38px;border-radius:50%;border:2px solid var(--bg);margin-left:-10px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff}
 .avatars span:first-child{margin-left:0}
@@ -330,6 +333,9 @@ section{padding:110px 0;position:relative}
 .work .res div b{display:block;font-family:"Space Grotesk";font-size:20px}
 .work .res div small{color:var(--muted);font-size:12px}
 
+.refs{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:34px 38px}
+.refs h3{font-size:clamp(24px,2.6vw,32px);margin-bottom:6px}
+.refs p{color:var(--muted);max-width:560px}
 /* ---------- Testimonials ---------- */
 .t-wrap{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
 .t-track{display:flex;gap:22px;width:max-content;animation:scroll 60s linear infinite}
@@ -579,7 +585,7 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
 <section class="hero" id="inicio">
   <div class="container hero-grid">
     <div>
-      <span class="pill reveal"><span class="dot">Disponibles</span> Aceptando 4 proyectos nuevos este mes</span>
+      <span class="pill reveal"><span class="dot">Disponibles</span> Aceptando proyectos nuevos</span>
       <h1 class="reveal d1">Construimos software que <span class="typed-wrap"><span class="typed" id="typed">trabaja por ti</span><span class="caret"></span></span></h1>
       <p class="lead reveal d2">En <b style="color:#fff">KOVA</b> diseñamos y programamos páginas web, tiendas online, bots, automatizaciones, inteligencia artificial y software a medida que hacen crecer tu negocio en piloto automático. <b style="color:#fff">Con garantía total</b> y entrega a tiempo.</p>
       <div class="hero-ctas reveal d3">
@@ -587,13 +593,7 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
         <a href="#" class="btn btn-wa btn-lg" data-wa="Hola KOVA 👋 Quiero una asesoría gratuita para mi proyecto."><svg><use href="#i-wa"/></svg>Asesoría gratis</a>
       </div>
       <div class="trust-row reveal d4">
-        <div class="avatars">
-          <span style="background:#7c5cff">AM</span><span style="background:#00a6c7">JR</span><span style="background:#e0419f">LP</span><span style="background:#2bb673">DC</span><span style="background:#f59e0b">+</span>
-        </div>
-        <div>
-          <div class="stars">★★★★★</div>
-          <small><b>4.9/5</b> de más de <b>150 clientes</b> en 12 países</small>
-        </div>
+        <small class="trust-ref"><svg><use href="#i-check"/></svg>Precio fijo · El código es tuyo · <a href="#" data-wa="Hola KOVA 👋 ¿Me pueden pasar referencias y ejemplos de trabajos?">Referencias a pedido</a></small>
       </div>
     </div>
 
@@ -602,9 +602,9 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
         <div class="code-head"><i></i><i></i><i></i><span class="tab mono">kova/automation.ts</span></div>
         <div class="code-body" id="codeBody"></div>
       </div>
-      <div class="float-card fc1"><div class="ic" style="background:rgba(37,211,102,.15);color:#25d366"><svg><use href="#i-bolt"/></svg></div><div><b>+340% ventas</b><small>Bot de WhatsApp · Retail</small></div></div>
-      <div class="float-card fc2"><div class="ic" style="background:rgba(124,92,255,.18);color:#a68cff"><svg><use href="#i-clock"/></svg></div><div><b>120 h/mes ahorradas</b><small>Automatización n8n</small></div></div>
-      <div class="float-card fc3"><div class="ic" style="background:rgba(0,224,255,.15);color:#00e0ff"><svg><use href="#i-rocket"/></svg></div><div><b>Lighthouse 100</b><small>Web ultra rápida</small></div></div>
+      <div class="float-card fc1"><div class="ic" style="background:rgba(37,211,102,.15);color:#25d366"><svg><use href="#i-bolt"/></svg></div><div><b>Bots con IA 24/7</b><small>WhatsApp · Instagram · Web</small></div></div>
+      <div class="float-card fc2"><div class="ic" style="background:rgba(124,92,255,.18);color:#a68cff"><svg><use href="#i-clock"/></svg></div><div><b>Tareas en automático</b><small>n8n · Make · Python</small></div></div>
+      <div class="float-card fc3"><div class="ic" style="background:rgba(0,224,255,.15);color:#00e0ff"><svg><use href="#i-rocket"/></svg></div><div><b>Webs ultra rápidas</b><small>Optimizadas para Google</small></div></div>
     </div>
   </div>
 </section>
@@ -618,10 +618,10 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
 <!-- ============ STATS ============ -->
 <section class="stats">
   <div class="container stats-grid">
-    <div class="stat reveal"><div class="num"><span class="grad-text" data-count="150">0</span><span class="grad-text">+</span></div><p>Proyectos entregados con éxito</p></div>
-    <div class="stat reveal d1"><div class="num"><span class="grad-text" data-count="98">0</span><span class="grad-text">%</span></div><p>Clientes que vuelven o nos recomiendan</p></div>
-    <div class="stat reveal d2"><div class="num"><span class="grad-text" data-count="12">0</span></div><p>Países donde operan nuestros sistemas</p></div>
-    <div class="stat reveal d3"><div class="num"><span class="grad-text" data-count="24">0</span><span class="grad-text">/7</span></div><p>Monitoreo y soporte de tus sistemas</p></div>
+    <div class="stat reveal"><div class="num"><span class="grad-text">50/50</span></div><p>Pagas la mitad al iniciar y la otra mitad al entregar</p></div>
+    <div class="stat reveal d1"><div class="num"><span class="grad-text" data-count="100">0</span><span class="grad-text">%</span></div><p>El código y los accesos son tuyos</p></div>
+    <div class="stat reveal d2"><div class="num"><span class="grad-text" data-count="90">0</span><span class="grad-text"> días</span></div><p>De garantía y soporte en la mayoría de planes</p></div>
+    <div class="stat reveal d3"><div class="num"><span class="grad-text">&lt; 1 h</span></div><p>Tiempo de respuesta por WhatsApp</p></div>
   </div>
 </section>
 
@@ -1003,8 +1003,8 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
   <div class="container">
     <div class="sec-head reveal">
       <span class="eyebrow">Proyectos</span>
-      <h2>Resultados que<br><span class="grad-text">hablan por nosotros</span></h2>
-      <p>Algunos de los sistemas que hemos construido para empresas como la tuya.</p>
+      <h2>Lo que podemos<br><span class="grad-text">construir para ti</span></h2>
+      <p>Ejemplos de proyectos que programamos. ¿Quieres ver trabajos reales? Pídenos referencias por WhatsApp.</p>
     </div>
     <div class="filters reveal" id="filters">
       <button class="active" data-f="all">Todos</button>
@@ -1016,42 +1016,43 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
     <div class="work-grid" id="workGrid">
       <article class="card work reveal" data-cat="bot">
         <div class="thumb" style="background:linear-gradient(135deg,#0f5132,#25d366)"><div class="mock"><div class="bar"><i></i><i></i><i></i></div><div class="ln" style="width:55%"></div><div class="ln" style="width:75%;margin-left:auto;background:rgba(37,211,102,.5)"></div><div class="ln" style="width:60%"></div><div class="ln" style="width:40%;margin-left:auto;background:rgba(37,211,102,.5)"></div><div class="row"><div class="bx g"></div><div class="bx"></div></div></div></div>
-        <div class="info"><span class="tag">Bot IA · Retail</span><h3>Vendedor IA para tienda de moda</h3><p>Bot de WhatsApp que recomienda productos, toma pedidos y cobra con link de pago.</p><div class="res"><div><b>+340%</b><small>ventas por chat</small></div><div><b>24/7</b><small>atención</small></div></div></div>
+        <div class="info"><span class="tag">Bot IA · Retail</span><h3>Vendedor IA para tienda de moda</h3><p>Bot de WhatsApp que recomienda productos, toma pedidos y cobra con link de pago.</p></div>
       </article>
       <article class="card work reveal d1" data-cat="soft">
         <div class="thumb" style="background:linear-gradient(135deg,#3a1c9c,#7c5cff)"><div class="mock"><div class="bar"><i></i><i></i><i></i></div><div class="row" style="flex:0 0 40px"><div class="bx g"></div><div class="bx g"></div><div class="bx g"></div></div><div class="row"><div class="bx" style="flex:2"></div><div class="bx"></div></div></div></div>
-        <div class="info"><span class="tag">SaaS · Logística</span><h3>Plataforma de gestión de flotas</h3><p>Rastreo en tiempo real, rutas optimizadas y facturación para 200+ vehículos.</p><div class="res"><div><b>-28%</b><small>costos operativos</small></div><div><b>200+</b><small>vehículos</small></div></div></div>
+        <div class="info"><span class="tag">SaaS · Logística</span><h3>Plataforma de gestión de flotas</h3><p>Rastreo en tiempo real, rutas optimizadas y facturación de toda la flota.</p></div>
       </article>
       <article class="card work reveal d2" data-cat="web">
         <div class="thumb" style="background:linear-gradient(135deg,#00708a,#00e0ff)"><div class="mock"><div class="bar"><i></i><i></i><i></i></div><div class="ln" style="width:30%"></div><div class="bx g" style="flex:0 0 70px"></div><div class="row"><div class="bx"></div><div class="bx"></div><div class="bx"></div></div></div></div>
-        <div class="info"><span class="tag">Web · Inmobiliaria</span><h3>Portal inmobiliario premium</h3><p>Web con buscador avanzado, tours 360° y captación automática de leads.</p><div class="res"><div><b>x3</b><small>leads mensuales</small></div><div><b>0.9s</b><small>carga</small></div></div></div>
+        <div class="info"><span class="tag">Web · Inmobiliaria</span><h3>Portal inmobiliario premium</h3><p>Web con buscador avanzado, tours 360° y captación automática de leads.</p></div>
       </article>
       <article class="card work reveal" data-cat="auto">
         <div class="thumb" style="background:linear-gradient(135deg,#8a3b00,#ff9f1c)"><div class="mock"><div class="bar"><i></i><i></i><i></i></div><div class="row"><div class="bx g"></div><div class="bx"></div></div><div class="row"><div class="bx"></div><div class="bx g"></div></div><div class="row"><div class="bx g"></div><div class="bx"></div></div></div></div>
-        <div class="info"><span class="tag">Automatización · Contabilidad</span><h3>Facturación 100% automática</h3><p>Flujos n8n que leen pedidos, emiten facturas electrónicas y envían reportes diarios.</p><div class="res"><div><b>120h</b><small>ahorradas/mes</small></div><div><b>0</b><small>errores manuales</small></div></div></div>
+        <div class="info"><span class="tag">Automatización · Contabilidad</span><h3>Facturación 100% automática</h3><p>Flujos n8n que leen pedidos, emiten facturas electrónicas y envían reportes diarios.</p></div>
       </article>
       <article class="card work reveal d1" data-cat="web">
         <div class="thumb" style="background:linear-gradient(135deg,#7a0f5c,#ff4ecd)"><div class="mock"><div class="bar"><i></i><i></i><i></i></div><div class="row" style="flex:0 0 80px"><div class="bx g"></div></div><div class="row"><div class="bx"></div><div class="bx"></div><div class="bx"></div><div class="bx"></div></div></div></div>
-        <div class="info"><span class="tag">E-commerce · Belleza</span><h3>Tienda Shopify de cosmética</h3><p>Tema a medida, suscripciones, upsells y bot de WhatsApp para seguimiento de pedidos.</p><div class="res"><div><b>4.8%</b><small>conversión</small></div><div><b>+$60k</b><small>1er trimestre</small></div></div></div>
+        <div class="info"><span class="tag">E-commerce · Belleza</span><h3>Tienda Shopify de cosmética</h3><p>Tema a medida, suscripciones, upsells y bot de WhatsApp para seguimiento de pedidos.</p></div>
       </article>
       <article class="card work reveal d2" data-cat="soft">
         <div class="thumb" style="background:linear-gradient(135deg,#1a2a6c,#4a6cff)"><div class="mock"><div class="bar"><i></i><i></i><i></i></div><div class="ln" style="width:65%"></div><div class="ln" style="width:85%"></div><div class="ln" style="width:50%"></div><div class="row"><div class="bx g"></div></div></div></div>
-        <div class="info"><span class="tag">IA · Legal</span><h3>Asistente IA para estudio jurídico</h3><p>Agente que analiza contratos, resume expedientes y redacta borradores en segundos.</p><div class="res"><div><b>-70%</b><small>tiempo de revisión</small></div><div><b>10k+</b><small>documentos</small></div></div></div>
+        <div class="info"><span class="tag">IA · Legal</span><h3>Asistente IA para estudio jurídico</h3><p>Agente que analiza contratos, resume expedientes y redacta borradores en segundos.</p></div>
       </article>
     </div>
   </div>
 </section>
 
-<!-- ============ TESTIMONIALS ============ -->
-<section id="testimonios" style="padding-bottom:80px">
+<!-- ============ REFERENCIAS ============ -->
+<section id="referencias" style="padding:0 0 80px">
   <div class="container">
-    <div class="sec-head reveal">
-      <span class="eyebrow">Testimonios</span>
-      <h2>Lo que dicen<br><span class="grad-text">nuestros clientes</span></h2>
+    <div class="card refs reveal">
+      <div>
+        <h3>¿Quieres ver <span class="grad-text">trabajos reales</span>?</h3>
+        <p>Escríbenos y te pasamos ejemplos de proyectos y referencias de clientes, según lo que necesites.</p>
+      </div>
+      <a href="#" class="btn btn-wa btn-lg" data-wa="Hola KOVA 👋 ¿Me pueden pasar referencias y ejemplos de trabajos?"><svg><use href="#i-wa"/></svg>Pedir referencias</a>
     </div>
   </div>
-  <div class="t-wrap"><div class="t-track" id="tRow1"></div></div>
-  <div class="t-wrap t-row2"><div class="t-track" id="tRow2"></div></div>
 </section>
 
 <!-- ============ QUOTE BUILDER ============ -->
@@ -1124,7 +1125,7 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
       <div class="qa reveal"><button aria-expanded="false">¿El código y el proyecto son míos? <span class="pm"></span></button><div class="ans"><div><p>Sí, 100%. Al finalizar te entregamos el código fuente, accesos a servidores, dominios, bases de datos y la documentación. No dependes de nosotros.</p></div></div></div>
       <div class="qa reveal"><button aria-expanded="false">¿Puedo pedir cambios durante el desarrollo? <span class="pm"></span></button><div class="ans"><div><p>Claro. Cada semana te mostramos avances y puedes pedir ajustes. Los cambios dentro del alcance acordado no tienen costo; si surgen funcionalidades nuevas, te cotizamos antes de hacerlas.</p></div></div></div>
       <div class="qa reveal"><button aria-expanded="false">¿Ofrecen mantenimiento después de la entrega? <span class="pm"></span></button><div class="ans"><div><p>Sí. Tenemos planes de mantenimiento mensual desde $15/mes que incluyen actualizaciones, backups, monitoreo 24/7, mejoras y soporte prioritario por WhatsApp.</p></div></div></div>
-      <div class="qa reveal"><button aria-expanded="false">¿Trabajan con clientes fuera de Ecuador? <span class="pm"></span></button><div class="ans"><div><p>Sí, trabajamos 100% remoto con clientes de Latinoamérica, Estados Unidos y Europa. Nos adaptamos a tu zona horaria para reuniones.</p></div></div></div>
+      <div class="qa reveal"><button aria-expanded="false">¿Trabajan con clientes fuera de Ecuador? <span class="pm"></span></button><div class="ans"><div><p>Sí, trabajamos 100% remoto y atendemos clientes de cualquier país. Nos adaptamos a tu zona horaria para reuniones.</p></div></div></div>
     </div>
   </div>
 </section>
@@ -1161,7 +1162,7 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
         </div>
       </div>
       <div><h4>Servicios</h4><ul><li><a href="#servicios">Páginas web</a></li><li><a href="#servicios">Bots de WhatsApp</a></li><li><a href="#servicios">Automatizaciones</a></li><li><a href="#servicios">Software a medida</a></li><li><a href="#servicios">Inteligencia Artificial</a></li></ul></div>
-      <div><h4>Empresa</h4><ul><li><a href="#proceso">Proceso</a></li><li><a href="#proyectos">Proyectos</a></li><li><a href="#testimonios">Testimonios</a></li><li><a href="#garantia">Garantía</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div><h4>Empresa</h4><ul><li><a href="#proceso">Proceso</a></li><li><a href="#proyectos">Proyectos</a></li><li><a href="#referencias">Referencias</a></li><li><a href="#garantia">Garantía</a></li><li><a href="#faq">FAQ</a></li></ul></div>
       <div><h4>Contacto</h4><ul><li><a href="#" data-wa="Hola KOVA 👋">+593 96 905 3512</a></li><li><a href="https://sport-less-store.myshopify.com/" target="_blank" rel="noopener">Tienda oficial</a></li><li><a href="#cotizar">Cotizar proyecto</a></li><li><a href="#planes">Planes y precios</a></li></ul></div>
     </div>
     <div class="f-bottom">
@@ -1184,14 +1185,32 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
   var $ = function(s,c){return (c||document).querySelector(s)};
   var $$ = function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
 
-  function waLink(text){ return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text); }
-  function openWA(text){ window.open(waLink(text), "_blank", "noopener"); }
+  var META_PIXEL_ID = ""; // ID del Pixel de Meta (Administrador de eventos → Orígenes de datos). Vacío = desactivado.
+
+  // Quien llega desde un anuncio (?utm_source=...&utm_content=nombre-del-anuncio) lleva una etiqueta
+  // al final del mensaje de WhatsApp, para saber qué anuncio trajo cada chat.
+  var AD_REF = (function(){
+    var p = new URLSearchParams(location.search), ref = p.get("utm_content") || p.get("utm_source");
+    try { if (ref) sessionStorage.setItem("kova_ad", ref); else ref = sessionStorage.getItem("kova_ad"); } catch(e){}
+    return ref ? " [ref: " + ref + "]" : "";
+  })();
+
+  if (META_PIXEL_ID) {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init", META_PIXEL_ID);
+    fbq("track", "PageView");
+  }
+  function trackContact(){ if (window.fbq) fbq("track", "Contact"); }
+
+  function waLink(text){ return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text + AD_REF); }
+  function openWA(text){ trackContact(); window.open(waLink(text), "_blank", "noopener"); }
 
   // WhatsApp links
   $$("[data-wa]").forEach(function(a){
     a.setAttribute("href", waLink(a.getAttribute("data-wa")));
     a.setAttribute("target","_blank");
     a.setAttribute("rel","noopener");
+    a.addEventListener("click", trackContact);
   });
 
   $("#year").textContent = new Date().getFullYear();
@@ -1358,24 +1377,6 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
       $$("#workGrid .work").forEach(function(w){ w.classList.toggle("hide", f !== "all" && w.getAttribute("data-cat") !== f); });
     });
   });
-
-  // Testimonials
-  var T = [
-    ["Andrea M.","CEO · Boutique Aurora","El bot de WhatsApp que nos hizo KOVA vende mientras dormimos. En el primer mes recuperamos la inversión.","#7c5cff"],
-    ["Jorge R.","Gerente · LogiTrans","Automatizaron toda nuestra facturación. Lo que antes nos tomaba 3 días ahora pasa solo en minutos.","#00a6c7"],
-    ["Lucía P.","Fundadora · Glow Beauty","La tienda quedó espectacular, rápida y vendiendo desde el día uno. Súper profesionales.","#e0419f"],
-    ["Diego C.","Director · Inmobiliaria Horizonte","Cumplieron cada fecha de entrega. La comunicación por WhatsApp es inmediata, se nota la experiencia.","#2bb673"],
-    ["Valeria S.","Abogada · Estudio Salazar","El asistente de IA revisa contratos en segundos. Nos cambió la forma de trabajar.","#f59e0b"],
-    ["Martín G.","Fundador · FitApp","Pasamos de idea a MVP con usuarios pagando en 5 semanas. Código limpio y bien documentado.","#6366f1"],
-    ["Camila V.","Marketing · Café Andino","Nuestra nueva web triplicó las reservas. El diseño y las animaciones son otro nivel.","#ec4899"],
-    ["Ricardo T.","COO · MediPlus","Integraron nuestro sistema de citas con WhatsApp y Google Calendar. Cero citas perdidas.","#14b8a6"]
-  ];
-  function tCard(t){
-    var ini = t[0].split(" ").map(function(s){return s[0]}).join("");
-    return '<div class="card t-card"><div class="stars">★★★★★</div><p>“' + t[2] + '”</p><div class="who"><span style="background:' + t[3] + '">' + ini + '</span><div><b>' + t[0] + '</b><small>' + t[1] + '</small></div></div></div>';
-  }
-  var r1 = T.slice(0,4).map(tCard).join(""), r2 = T.slice(4).map(tCard).join("");
-  $("#tRow1").innerHTML = r1 + r1; $("#tRow2").innerHTML = r2 + r2;
 
   // FAQ
   $$("#faqList .qa").forEach(function(q){
