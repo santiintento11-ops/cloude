@@ -248,8 +248,8 @@ El anuncio te trae el chat, pero la venta la cierras tú.
 
 ## 8. ⚠️ Importante antes de gastar más
 
-- En `index.html` hay **textos de ejemplo** que no son reales: "4.9/5 de más de 150 clientes en 12 países", los testimonios, los casos de éxito y "+340 % ventas". Las personas que lleguen desde el anuncio los van a ver. **Reemplázalos por datos reales o quítalos.** Mostrar reseñas falsas va contra las políticas de publicidad de Meta (te pueden rechazar anuncios o bloquear la cuenta) y contra las leyes de protección al consumidor. Por eso los videos y textos de esta campaña **no usan esas cifras**.
-- Lo mismo con "70 % OFF" y "cupos limitados": úsalo solo si es verdad.
+- La web **ya no muestra datos inventados**: se quitaron la calificación "4.9/5 de 150 clientes", las cifras, los resultados de proyectos y los testimonios de ejemplo. En su lugar hay compromisos reales (pago 50/50, el código es tuyo, garantía, respuesta rápida) y un botón discreto de **"Pedir referencias"** por WhatsApp. Cuando tengas clientes reales que te autoricen, puedes volver a agregar testimonios **verdaderos**.
+- "70 % OFF" y "cupos limitados" siguen en la web: úsalos solo si son verdad (que los precios anteriores se hayan cobrado de verdad).
 - El marcador `[ref: ...]` y el Pixel están en la rama `claude/marketing-campaign-videos-b1zr0x`. Tu web se publica desde `claude/friendly-wright-hmh3xu`, así que **haz merge** de ese cambio para que funcione en kovaautomatiza.com.
 - $3/día son ~$90 al mes, más los impuestos que Meta cobre en tu país.
 

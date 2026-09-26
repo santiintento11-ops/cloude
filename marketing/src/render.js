@@ -1,5 +1,6 @@
 // Graba los anuncios de KOVA a partir de ad.html.
 //   node render.js                 -> 3 videos 9:16 + portadas + 3 imágenes 4:5 en ../videos y ../imagenes
+//   node render.js web             -> solo la idea "web" (vale bot, web, auto)
 //   node render.js preview bot story 1.5 5 8   -> capturas sueltas para revisar (usa "img" en vez de "story" para las imágenes)
 // Requiere playwright (Chromium) e imageio-ffmpeg (pip) o ffmpeg en el PATH.
 const { chromium } = require("playwright");
@@ -76,9 +77,10 @@ async function renderImage(browser, c) {
   } else {
     fs.mkdirSync(path.join(VIDEOS, "portadas"), { recursive: true });
     fs.mkdirSync(IMAGES, { recursive: true });
-    for (const c of CONCEPTS) await renderImage(browser, c);
+    const list = args.length ? args : CONCEPTS;
+    for (const c of list) await renderImage(browser, c);
     const ff = ffmpegBin();
-    for (const c of CONCEPTS) await renderVideo(browser, ff, c);
+    for (const c of list) await renderVideo(browser, ff, c);
   }
   await browser.close();
 })();

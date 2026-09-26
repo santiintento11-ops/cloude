@@ -40,11 +40,10 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 | Número de WhatsApp | `var WA_NUMBER = "593969053512";` en el `<script>` |
 | Logo | `<symbol id="i-logo">` (sprite SVG al inicio del `<body>`). Es una versión vectorial del logo original. También está suelto en `assets/logo.svg` y el original en `assets/logo-original.png` |
 | Precios y planes | sección `id="planes"` (cada botón lleva el mensaje de WhatsApp en `data-wa`) |
-| Testimonios | array `T` en el `<script>` |
-| Proyectos, estadísticas y garantías | secciones `id="proyectos"`, `.stats` e `id="garantia"` |
+| Proyectos, referencias, cifras y garantías | secciones `id="proyectos"`, `id="referencias"`, `.stats` e `id="garantia"` |
 | Redes sociales | bloque `.socials` del footer (ahora apuntan a `#`) |
 
-> Los testimonios, los casos de éxito, las cifras (150+ proyectos, 12 países…) y las garantías son **textos de ejemplo**. Reemplázalos por datos reales antes de publicar: mostrar reseñas o garantías que no son ciertas puede ir contra las leyes de protección al consumidor.
+> La web no muestra testimonios ni cifras inventadas: la sección "Proyectos" son **ejemplos de lo que se puede construir** (sin resultados) y hay un bloque "Pedir referencias" (`id="referencias"`). Si agregas testimonios o cifras, que sean reales y con permiso del cliente: las reseñas falsas van contra las políticas de Meta y las leyes de protección al consumidor.
 
 ## Publicidad en Meta
 
