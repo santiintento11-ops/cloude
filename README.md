@@ -23,6 +23,8 @@ Cada push a `claude/friendly-wright-hmh3xu` publica la web automáticamente con 
    - `CNAME` para `www` → `santiintento11-ops.github.io`
 3. En **Settings → Pages** escribe el dominio y activa **Enforce HTTPS**.
 
+**Configuración actual:** `kovaautomatiza.com` usa Cloudflare (plan Free) como DNS y proxy. Los nameservers están en Namecheap → Custom DNS. En Cloudflare, SSL/TLS está en modo **Full** y "Always Use HTTPS" está activado. El HTTPS lo da Cloudflare, así que en GitHub no hace falta marcar "Enforce HTTPS".
+
 ## Publicar en Shopify (sport-less-store.myshopify.com)
 
 1. En Shopify ve a **Tienda online → Temas → ⋯ → Editar código**.
