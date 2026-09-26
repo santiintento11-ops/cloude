@@ -1,7 +1,7 @@
 # Campaña KOVA en Meta (Facebook + Instagram) · $3 al día
 
 **Meta:** conseguir clientes que compren webs, bots, automatizaciones y software.
-**Qué vamos a probar:** qué funciona mejor, que te escriban directo al **WhatsApp** o que primero visiten **tu web**. Además, cuál de los **3 videos** atrae más clientes.
+**Qué vamos a probar:** qué funciona mejor, que te escriban directo al **WhatsApp** o que primero visiten **tu web**. Además, cuál de las **3 ideas** (BOT, WEB, AUTO) atrae más clientes y si funciona mejor el **video** o la **imagen**.
 
 ---
 
@@ -11,44 +11,37 @@
 Presupuesto total: $3/día (~$90/mes)
 │
 ├── Campaña A · WHATSAPP      $1,50/día  → la gente te escribe directo al WhatsApp
-│     └── 1 conjunto → 3 anuncios: video BOT · video WEB · video AUTO
+│     └── 1 conjunto → 3 anuncios: BOT · WEB · AUTO   (cada uno con su video + su imagen)
 │
 └── Campaña B · WEB           $1,50/día  → la gente entra a kovaautomatiza.com
-      └── 1 conjunto → 3 anuncios: video BOT · video WEB · video AUTO
+      └── 1 conjunto → 3 anuncios: BOT · WEB · AUTO   (cada uno con su video + su imagen)
 ```
 
-- Las dos campañas usan **el mismo público y los mismos 3 videos**. Así la comparación es justa: lo único que cambia es a dónde llega la persona.
+- Las dos campañas usan **el mismo público y los mismos anuncios**. Así la comparación es justa: lo único que cambia es a dónde llega la persona.
 - Cada campaña usa el objetivo que Meta optimiza mejor para ese destino. WhatsApp busca personas que suelen escribir a empresas. Web busca personas que abren la página y esperan a que cargue, no clics accidentales.
-- Dentro de cada conjunto, Meta le da más presupuesto al video que mejor funciona. En 7 días sabrás qué video gana y en 10–14 días qué destino gana.
+- Dentro de cada conjunto, Meta le da más presupuesto al anuncio que mejor funciona. En 7 días sabrás qué idea gana y en 10–14 días qué destino gana.
 
-### Los 3 videos (ángulos distintos para ver cuál conecta)
+### Las 3 ideas (ángulos distintos para ver cuál conecta)
 
-| Video | Gancho (primeros 3 s) | A quién le habla |
+| Idea | Gancho (primeros 3 s) | A quién le habla |
 |---|---|---|
 | **BOT** | "¿Clientes esperando respuesta en tu WhatsApp?" + demo de chat con IA agendando una cita | Negocios que atienden por WhatsApp (salones, clínicas, tiendas, restaurantes) |
 | **WEB** | "Si no tienes página web, tu competencia se queda con tus clientes" + tu web real en un celular | Negocios sin web o con una web vieja |
 | **AUTO** | "Deja de hacer a mano lo que un programa hace por ti" + código y tareas que se automatizan | Empresas con tareas repetitivas; muestra que eres programador |
 
-Cada video dura 15 s, tiene subtítulos grandes (el 80 % de la gente ve sin sonido) y termina con una tarjeta de cierre distinta según el destino:
-- Los videos `-wa-` terminan con **"Escríbenos por WhatsApp"**.
-- Los videos `-web-` terminan con **"kovaautomatiza.com"**.
+Cada idea tiene **1 video y 1 imagen**:
+- **Video** (15 s, vertical 9:16): subtítulos grandes, porque el 80 % de la gente ve sin sonido. Termina con "Escríbenos por WhatsApp · kovaautomatiza.com", así sirve para las dos campañas. El contenido está centrado, de modo que Meta lo puede recortar a 4:5 en el feed sin cortar nada.
+- **Imagen** (1080×1350, 4:5): gancho, beneficio, precio y botón en una sola pieza.
 
-### Archivos
+### Archivos (solo 6)
 
-`marketing/videos/`:
+| Idea | Video | Imagen |
+|---|---|---|
+| BOT | `videos/kova-bot.mp4` | `imagenes/kova-bot.jpg` |
+| WEB | `videos/kova-web.mp4` | `imagenes/kova-web.jpg` |
+| AUTO | `videos/kova-auto.mp4` | `imagenes/kova-auto.jpg` |
 
-| Archivo | Uso |
-|---|---|
-| `kova-bot-wa-feed.mp4` · `kova-bot-wa-story.mp4` | Anuncio BOT → campaña WhatsApp |
-| `kova-web-wa-feed.mp4` · `kova-web-wa-story.mp4` | Anuncio WEB → campaña WhatsApp |
-| `kova-auto-wa-feed.mp4` · `kova-auto-wa-story.mp4` | Anuncio AUTO → campaña WhatsApp |
-| `kova-bot-web-feed.mp4` · `kova-bot-web-story.mp4` | Anuncio BOT → campaña Web |
-| `kova-web-web-feed.mp4` · `kova-web-web-story.mp4` | Anuncio WEB → campaña Web |
-| `kova-auto-web-feed.mp4` · `kova-auto-web-story.mp4` | Anuncio AUTO → campaña Web |
-| `portadas/*.jpg` | Portada (miniatura) de cada video |
-
-- **feed** = 1080×1350 (4:5) para el feed de Facebook e Instagram.
-- **story** = 1080×1920 (9:16) para Stories y Reels. Deja libre la zona de abajo, donde Instagram pone sus botones.
+`videos/portadas/` tiene la portada (miniatura) de cada video.
 
 ---
 
@@ -59,7 +52,7 @@ Cada video dura 15 s, tiene subtítulos grandes (el 80 % de la gente ve sin soni
 - [ ] Deja **desactivadas** las 3 campañas viejas (WhatsApp LATAM, publicaciones promocionadas). No las borres, sirven de historial.
 - [ ] **WhatsApp conectado a tu página de Facebook:** Página → Configuración → WhatsApp → número **+593 96 905 3512**. Sin esto la campaña A no deja elegir WhatsApp.
 - [ ] **Método de pago** activo en Facturación y pagos.
-- [ ] Descarga a tu PC la carpeta `marketing/videos` (o el `.zip`).
+- [ ] Descarga a tu PC las carpetas `marketing/videos` y `marketing/imagenes` (o el `.zip`).
 
 ---
 
@@ -88,9 +81,9 @@ Cada video dura 15 s, tiene subtítulos grandes (el 80 % de la gente ve sin soni
 
 **Nivel anuncio.** Crea 3 anuncios. Haz el primero, luego ⋯ → **Duplicar** y cambia video y textos.
 - Identidad: tu página de Facebook + tu cuenta de Instagram.
-- Formato: **Imagen o video única**.
-- Contenido: **Agregar video** → sube el `...-feed.mp4`. Luego, en la sección de ubicaciones, edita **Stories y Reels** y cambia al `...-story.mp4` del mismo concepto.
-- **Portada:** sube el `.jpg` de `portadas/` con el mismo nombre del video.
+- Formato: **Imagen o video única** → activa **Formato flexible** (si aparece). Sube el **video y la imagen de la misma idea** (por ejemplo `kova-bot.mp4` + `kova-bot.jpg`). Meta muestra el video en Reels y Stories y la imagen donde funcione mejor.
+  - Si no aparece "Formato flexible", haz 2 anuncios por idea, uno con el video y otro con la imagen (por ejemplo `WA-BOT-VIDEO` y `WA-BOT-IMG`).
+- **Portada del video:** sube el `.jpg` de `videos/portadas/` con el mismo nombre.
 - Textos: copia los de la [sección 5](#5-textos-de-los-anuncios).
 - Llamada a la acción: **Enviar mensaje de WhatsApp**.
 - **Plantilla de mensaje** (lo que ve la persona al abrir el chat):
@@ -102,11 +95,11 @@ Cada video dura 15 s, tiene subtítulos grandes (el 80 % de la gente ve sin soni
     4. `¿Cuánto cuesta? 💰`
 - **Mejoras de Advantage+ creative:** desactiva las que cambian el video (plantillas, superposiciones de texto, retoques visuales). Deja activada solo **Música**, porque los videos no traen audio y en Reels el sonido ayuda.
 
-| Nombre del anuncio | Video (feed / story) |
-|---|---|
-| `WA-BOT` | `kova-bot-wa-feed.mp4` / `kova-bot-wa-story.mp4` |
-| `WA-WEB` | `kova-web-wa-feed.mp4` / `kova-web-wa-story.mp4` |
-| `WA-AUTO` | `kova-auto-wa-feed.mp4` / `kova-auto-wa-story.mp4` |
+| Nombre del anuncio | Video | Imagen |
+|---|---|---|
+| `WA-BOT` | `kova-bot.mp4` | `kova-bot.jpg` |
+| `WA-WEB` | `kova-web.mp4` | `kova-web.jpg` |
+| `WA-AUTO` | `kova-auto.mp4` | `kova-auto.jpg` |
 
 ---
 
@@ -125,7 +118,7 @@ Cada video dura 15 s, tiene subtítulos grandes (el 80 % de la gente ve sin soni
 - Presupuesto: **Diario $1,50**, sin fecha de fin.
 - Público y ubicaciones: **exactamente iguales** a los de la campaña A.
 
-**Nivel anuncio.** Crea 3 anuncios igual que en la campaña A, pero con los videos `-web-`:
+**Nivel anuncio.** Crea los mismos 3 anuncios (mismos videos e imágenes que en la campaña A), con estos cambios:
 - URL del sitio web: `https://kovaautomatiza.com/`
 - **Parámetros de URL** (en "Seguimiento" → "Parámetros de URL"), copia exactamente:
   ```
@@ -136,11 +129,11 @@ Cada video dura 15 s, tiene subtítulos grandes (el 80 % de la gente ve sin soni
 - Llamada a la acción: **Más información**.
 - Mejoras de Advantage+ creative: igual que en la campaña A (solo Música).
 
-| Nombre del anuncio | Video (feed / story) |
-|---|---|
-| `WEB-BOT` | `kova-bot-web-feed.mp4` / `kova-bot-web-story.mp4` |
-| `WEB-WEB` | `kova-web-web-feed.mp4` / `kova-web-web-story.mp4` |
-| `WEB-AUTO` | `kova-auto-web-feed.mp4` / `kova-auto-web-story.mp4` |
+| Nombre del anuncio | Video | Imagen |
+|---|---|---|
+| `WEB-BOT` | `kova-bot.mp4` | `kova-bot.jpg` |
+| `WEB-WEB` | `kova-web.mp4` | `kova-web.jpg` |
+| `WEB-AUTO` | `kova-auto.mp4` | `kova-auto.jpg` |
 
 > **Opcional pero recomendado: Pixel de Meta.** En *Administrador de eventos* → *Conectar orígenes de datos* → *Web* → crea un Pixel y copia su número. Luego, en `index.html`, pégalo en `var META_PIXEL_ID = "";` (queda así: `"1234567890"`). La web ya está preparada para registrar cada clic en WhatsApp como evento **Contacto**. Con unos 50 contactos puedes cambiar el conjunto a "Maximizar conversiones → Contacto", que suele traer clientes más baratos.
 
@@ -220,7 +213,8 @@ Agrega estas columnas en el Administrador (**Columnas → Personalizar**): *Impo
 
 **Día 7:**
 1. En cada campaña, **apaga el anuncio con el peor costo por resultado**, siempre que haya gastado al menos $1,50. Si Meta casi no le dio presupuesto, también es perdedor.
-2. Mira los videos que quedan: ¿el que gana es el mismo en las dos campañas? Ese es tu **ángulo ganador**.
+2. Mira los que quedan: ¿la idea que gana es la misma en las dos campañas? Esa es tu **idea ganadora**.
+3. **Video o imagen:** en el anuncio ganador, usa **Desglose → Por recurso/contenido**. Así ves qué rindió mejor, el video o la imagen.
 
 **Día 10–14: elige el destino ganador.** No te fijes en qué campaña trae más clics. Fíjate en **cuál trae más cotizaciones y ventas por dólar**:
 
@@ -233,7 +227,7 @@ Agrega estas columnas en el Administrador (**Columnas → Personalizar**): *Impo
 | **Costo por venta** | | |
 
 - La ganadora recibe los **$3/día completos**. La otra se apaga.
-- Luego pídeme **2 variaciones nuevas del video ganador** (otro gancho y otro servicio) y súbelas a la campaña ganadora. Así el anuncio no se desgasta.
+- Luego pídeme **2 variaciones nuevas de la idea ganadora** (otro gancho y otro servicio) y súbelas a la campaña ganadora. Así el anuncio no se desgasta.
 - Fase 2, cuando tengas un ganador claro: duplica el conjunto y prueba **Colombia + Perú + México**, o sube a $5/día.
 
 ---
@@ -263,12 +257,12 @@ El anuncio te trae el chat, pero la venta la cierras tú.
 
 ## Editar o regenerar los videos
 
-Los videos salen de `marketing/src/ad.html`, que es HTML animado con tu logo, tus colores y capturas reales de tu web. Para cambiar textos o precios, edita ese archivo y vuelve a grabar:
+Los videos y las imágenes salen de `marketing/src/ad.html`, que es HTML animado con tu logo, tus colores y capturas reales de tu web. Para cambiar textos o precios, edita ese archivo y vuelve a generarlos:
 
 ```bash
 pip install imageio-ffmpeg
 cd marketing/src
-node render.js            # graba los 12 videos y portadas en ../videos
-node render.js preview bot wa story 2 6 14   # capturas sueltas para revisar
+node render.js            # 3 videos + portadas en ../videos y 3 imágenes en ../imagenes
+node render.js preview bot story 2 6 14   # capturas sueltas para revisar ("img" en vez de "story" para las imágenes)
 ```
 (Necesita Node con `playwright` instalado.)

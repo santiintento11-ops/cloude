@@ -48,6 +48,6 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 
 ## Publicidad en Meta
 
-La campaña de Facebook/Instagram (estrategia, paso a paso, textos y 12 videos) está en [`marketing/CAMPANA-META.md`](marketing/CAMPANA-META.md). Los videos están en `marketing/videos/`.
+La campaña de Facebook/Instagram (estrategia, paso a paso y textos) está en [`marketing/CAMPANA-META.md`](marketing/CAMPANA-META.md). Los 3 videos están en `marketing/videos/` y las 3 imágenes en `marketing/imagenes/`.
 
 La web marca los chats que llegan desde un anuncio: si la URL trae `utm_content`, el mensaje de WhatsApp termina en `[ref: nombre-del-anuncio]`. Para activar el Pixel de Meta, pega su ID en `var META_PIXEL_ID = "";`.
