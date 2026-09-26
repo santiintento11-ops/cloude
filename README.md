@@ -8,6 +8,21 @@ Es un único archivo, `index.html`, con el CSS, el JS y los íconos incluidos. N
 
 Abre `index.html` en el navegador.
 
+## Hosting gratis: GitHub Pages
+
+Cada push a `claude/friendly-wright-hmh3xu` publica la web automáticamente con `.github/workflows/pages.yml`.
+
+- URL: https://santiintento11-ops.github.io/cloude/
+- Si el primer despliegue falla con un error de permisos, ve a **Settings → Pages → Build and deployment → Source** y elige **GitHub Actions**. Después vuelve a lanzar el workflow desde la pestaña **Actions**.
+
+### Conectar tu dominio
+
+1. Crea en la raíz del repo un archivo `CNAME` que contenga solo tu dominio (por ejemplo `kova.com`). El workflow lo publica.
+2. En tu proveedor de dominio crea estos registros:
+   - `A` para `@` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+   - `CNAME` para `www` → `santiintento11-ops.github.io`
+3. En **Settings → Pages** escribe el dominio y activa **Enforce HTTPS**.
+
 ## Publicar en Shopify (sport-less-store.myshopify.com)
 
 1. En Shopify ve a **Tienda online → Temas → ⋯ → Editar código**.
@@ -23,7 +38,7 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 | Qué | Dónde (`index.html`) |
 |---|---|
 | Número de WhatsApp | `var WA_NUMBER = "593969053512";` en el `<script>` |
-| Logo | `<symbol id="i-logo">` (sprite SVG al inicio del `<body>`) y el SVG del `#loader`. Reemplázalo por tu SVG o por `<img src="...">` |
+| Logo | `<symbol id="i-logo">` (sprite SVG al inicio del `<body>`). Es una versión vectorial del logo original. También está suelto en `assets/logo.svg` y el original en `assets/logo-original.png` |
 | Precios y planes | sección `id="planes"` (cada botón lleva el mensaje de WhatsApp en `data-wa`) |
 | Testimonios | array `T` en el `<script>` |
 | Proyectos, estadísticas y garantías | secciones `id="proyectos"`, `.stats` e `id="garantia"` |
