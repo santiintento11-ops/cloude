@@ -1210,12 +1210,12 @@ footer{border-top:1px solid var(--line);padding:70px 0 30px;margin-top:40px}
     fbq("track", "PageView");
   }
   // Google Ads: pega aquí la "etiqueta de conversión" de la acción "Clic en WhatsApp" (ej. "AbC-D_efG-hIjKlM")
-  var ADS_ID = "AW-18359064551", WA_CONV_LABEL = "";
+  var ADS_ID = "AW-18359064551", WA_CONV_LABEL = "XdUvCP_W0dgcEOevpLJE";
   function trackContact(){
     if (window.fbq) fbq("track", "Contact");
     if (typeof window.gtag === "function") {
       gtag("event", "generate_lead", { method: "whatsapp" });
-      if (WA_CONV_LABEL) gtag("event", "conversion", { send_to: ADS_ID + "/" + WA_CONV_LABEL });
+      if (WA_CONV_LABEL) gtag("event", "conversion", { send_to: ADS_ID + "/" + WA_CONV_LABEL, value: 1.0, currency: "USD" });
     }
   }
 
