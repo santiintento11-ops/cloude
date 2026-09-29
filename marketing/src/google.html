@@ -1,0 +1,45 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="fonts.css"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:var(--w);height:var(--h);overflow:hidden;background:#07060d;color:#f4f2ff;font-family:Inter,sans-serif;position:relative}
+.bg{position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,rgba(124,92,255,.45),transparent 55%),radial-gradient(ellipse at 90% 90%,rgba(0,224,255,.28),transparent 55%),#07060d}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%)}
+#root{position:absolute;inset:0}
+.wrap{position:relative;height:100%;display:flex;padding:70px}
+h1{font-family:"Space Grotesk";font-weight:700;letter-spacing:-.02em;line-height:1.02}
+.gt{background:linear-gradient(120deg,#7c5cff,#00e0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand{display:flex;align-items:center;gap:18px;font-family:"Space Grotesk";font-weight:700;letter-spacing:.14em}
+.brand svg{filter:drop-shadow(0 0 20px rgba(79,92,240,.7))}
+.chips{display:flex;flex-wrap:wrap;gap:14px}
+.chip{padding:12px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);font-size:26px;font-weight:600}
+.price{display:inline-flex;align-items:baseline;gap:12px;padding:16px 30px;border-radius:22px;background:rgba(124,92,255,.18);border:1px solid rgba(124,92,255,.6)}
+.price b{font-family:"Space Grotesk";font-size:64px}
+.price span{font-size:26px;color:#cfcae8}
+.cta{display:inline-flex;align-items:center;gap:14px;background:#25d366;color:#04210f;font-weight:700;font-size:28px;padding:18px 32px;border-radius:999px}
+.big{position:absolute;display:grid;place-items:center}
+</style></head><body><svg width="0" height="0" style="position:absolute"><defs><linearGradient id="kl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3fe0"/><stop offset=".55" stop-color="#4f5cf0"/><stop offset="1" stop-color="#2f9bff"/></linearGradient>
+    <mask id="km" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><g fill="none" stroke="#000" stroke-width="2.2"><path d="M32.3 35.5V66.5L63 35.8"/><path d="M53 27.3 70.6 26 69.4 43.6"/><path d="M51.5 55.5 69 72.5"/></g></mask></defs><symbol id="i-logo" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="47" fill="none" stroke="url(#kl)" stroke-width="3"/>
+    <g fill="url(#kl)" mask="url(#km)"><rect x="26" y="31" width="12.6" height="46"/><path d="M26 69.5 60.5 35 68.5 43 38.6 72.9Z"/><path d="M46.5 24.6 75.5 22 73 51Z"/><path d="M42.5 60 50.6 51.8 76.5 77H60.5Z"/></g>
+  </symbol></svg><div class="bg"><div class="grid"></div></div><div id="root"></div>
+<script>
+const q=new URLSearchParams(location.search),m=q.get("m"),c=q.get("c");
+const C={bot:{h:'Tu <span class="gt">bot de WhatsApp</span> vende 24/7',chips:["Responde al instante","Agenda citas","Toma pedidos"],p:"$75",l:"Bots desde"},
+web:{h:'Páginas web que <span class="gt">venden</span>',chips:["Diseño premium","Ultra rápidas","Listas para Google"],p:"$89",l:"Webs desde"},
+auto:{h:'<span class="gt">Automatiza</span> tu negocio',chips:["Facturas","Reportes","CRM y hojas"],p:"$179",l:"Desde"}};
+const L=s=>`<svg width="${s}" height="${s}"><use href="#i-logo"/></svg>`;
+const r=document.getElementById("root"),S=document.body.style;
+const set=(w,h)=>{S.setProperty("--w",w+"px");S.setProperty("--h",h+"px")};
+if(m==="logo-sq"){set(1200,1200);r.innerHTML=`<div class="big" style="inset:0">${L(820)}</div>`}
+else if(m==="logo-wide"){set(1200,300);r.innerHTML=`<div class="wrap" style="padding:0 60px;align-items:center;justify-content:center"><div class="brand" style="font-size:120px">${L(200)}KOVA</div></div>`}
+else{const d=C[c];
+ if(m==="sq"){set(1200,1200);r.innerHTML=`<div class="wrap" style="flex-direction:column;justify-content:space-between">
+  <div class="brand" style="font-size:44px">${L(84)}KOVA</div>
+  <div><h1 style="font-size:104px;margin-bottom:40px">${d.h}</h1><div class="chips">${d.chips.map(x=>`<span class="chip">${x}</span>`).join("")}</div></div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><div class="price"><span>${d.l}</span><b class="gt">${d.p}</b></div><div class="cta">Cotiza por WhatsApp</div></div></div>`}
+ else{set(1200,628);r.innerHTML=`<div class="wrap" style="padding:52px 60px;gap:40px;align-items:center">
+  <div style="flex:1"><div class="brand" style="font-size:30px;margin-bottom:28px">${L(58)}KOVA</div>
+  <h1 style="font-size:68px;margin-bottom:28px">${d.h}</h1>
+  <div style="display:flex;gap:18px;align-items:center"><div class="price" style="padding:10px 22px"><span style="font-size:20px">${d.l}</span><b class="gt" style="font-size:46px">${d.p}</b></div><div class="cta" style="font-size:22px;padding:14px 24px">Cotiza por WhatsApp</div></div></div>
+  <div style="flex:0 0 300px;display:grid;place-items:center">${L(280)}</div></div>`}}
+window.ready=document.fonts.ready;
+</script></body></html>
