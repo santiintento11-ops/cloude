@@ -28,7 +28,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir _site
-          cp -r index.html assets _site/
+          cp -r index.html assets prospector _site/
           [ -f CNAME ] && cp CNAME _site/ || true
       - uses: actions/upload-pages-artifact@v3
         with:

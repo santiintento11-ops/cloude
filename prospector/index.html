@@ -1,0 +1,1475 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>KOVA Prospector</title>
+<meta name="description" content="Busca clientes potenciales para los servicios de KOVA en Google Maps, redes sociales y directorios, y gestiona el seguimiento por WhatsApp.">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07060d;
+  --bg-2:#0d0b18;
+  --card:rgba(255,255,255,.035);
+  --card-hi:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.08);
+  --line-hi:rgba(255,255,255,.16);
+  --text:#f4f2ff;
+  --muted:#a09cb8;
+  --dim:#6d6985;
+  --v:#7c5cff;
+  --c:#00e0ff;
+  --p:#ff4ecd;
+  --g:#25d366;
+  --hot:#ff5c7a;
+  --warm:#ffb547;
+  --ok:#5bf19a;
+  --grad:linear-gradient(120deg,#7c5cff 0%,#00e0ff 50%,#ff4ecd 100%);
+  --grad-2:linear-gradient(135deg,#7c5cff,#00e0ff);
+  --radius:18px;
+  --maxw:1180px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;overflow-x:clip}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;overflow-x:clip;-webkit-font-smoothing:antialiased;min-height:100vh;
+  background-image:radial-gradient(ellipse 70% 40% at 15% -10%,rgba(124,92,255,.22),transparent 70%),radial-gradient(ellipse 60% 35% at 100% 0%,rgba(0,224,255,.10),transparent 70%)}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+h1,h2,h3{font-family:"Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:-.02em;line-height:1.15}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 16px}
+@media(min-width:720px){.container{padding:0 24px}}
+
+/* Header */
+header{position:sticky;top:0;z-index:50;background:rgba(7,6,13,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.head{display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-weight:700;letter-spacing:.12em;text-decoration:none;white-space:nowrap}
+.brand img{width:34px;height:34px}
+.brand small{font-family:Inter;letter-spacing:0;font-weight:500;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 14px;border-radius:999px;color:var(--muted);font-size:14.5px;white-space:nowrap;transition:background .2s,color .2s}
+.tab:hover{color:#fff;background:var(--card-hi)}
+.tab[aria-selected="true"]{color:#fff;background:rgba(124,92,255,.22);box-shadow:inset 0 0 0 1px rgba(124,92,255,.5)}
+.tab .count{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--v);color:#fff;font-size:12px;text-align:center}
+@media(max-width:719px){
+  .head{flex-wrap:wrap;height:auto;padding:10px 0 8px;gap:8px}
+  .brand small{display:none}
+  .tabs{margin-left:0;width:100%}
+}
+
+main{padding:28px 0 80px}
+.panel{display:none}
+.panel.active{display:block}
+.intro{margin-bottom:22px}
+.intro h1{font-size:clamp(24px,4vw,34px)}
+.intro p{color:var(--muted);max-width:760px;margin-top:6px}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* Cards / forms */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card + .card,.section + .section{margin-top:18px}
+.section{margin-top:26px;scroll-margin-top:96px}
+.section-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.section-title h2{font-size:20px}
+.section-title p{color:var(--muted);font-size:14px}
+.grid-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.grid-form .span-2{grid-column:span 2}
+.grid-form .span-4{grid-column:1/-1}
+@media(max-width:900px){.grid-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.grid-form{grid-template-columns:minmax(0,1fr)}.grid-form .span-2{grid-column:auto}}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:500;min-width:0}
+.inp,select.inp,textarea.inp{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line-hi);border-radius:12px;padding:11px 13px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+select.inp option{background:#15122a;color:var(--text)}
+.inp:focus{border-color:var(--v);box-shadow:0 0 0 3px rgba(124,92,255,.25)}
+textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
+.hint{font-size:12.5px;color:var(--dim)}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer;user-select:none}
+.check input{width:17px;height:17px;accent-color:var(--v)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:999px;font-weight:600;font-size:14.5px;white-space:nowrap;transition:transform .2s,box-shadow .2s,background .2s,opacity .2s;text-decoration:none;border:1px solid transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn-primary{background:var(--grad-2);color:#fff;box-shadow:0 8px 26px -10px rgba(124,92,255,.9)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-wa{background:var(--g);color:#04210f}
+.btn-wa:hover{transform:translateY(-1px)}
+.btn-ghost{border-color:var(--line-hi);background:rgba(255,255,255,.03)}
+.btn-ghost:hover{background:rgba(255,255,255,.08)}
+.btn-danger{border-color:rgba(255,92,122,.4);color:#ffb3c1}
+.btn-danger:hover{background:rgba(255,92,122,.12)}
+.btn-sm{padding:7px 12px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row.end{justify-content:flex-end}
+.spacer{flex:1}
+
+/* Engine buttons */
+.engines{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+@media(max-width:720px){.engines{grid-template-columns:minmax(0,1fr)}}
+.engine{border:1px solid var(--line);border-radius:14px;padding:16px;background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:10px}
+.engine h3{font-size:16px;display:flex;align-items:center;gap:8px}
+.engine p{font-size:13.5px;color:var(--muted)}
+.tagfree{font-family:Inter;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(91,241,154,.14);color:var(--ok);letter-spacing:.02em}
+.tagkey{font-family:Inter;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,181,71,.14);color:var(--warm)}
+
+.status{margin-top:14px;font-size:14px;color:var(--muted);display:none;align-items:center;gap:10px}
+.status.show{display:flex}
+.status.err{color:#ffb3c1}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-hi);border-top-color:var(--c);animation:sp .8s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* Link groups */
+.linkgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:960px){.linkgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.linkgrid{grid-template-columns:minmax(0,1fr)}}
+.lgroup{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.02)}
+.lgroup h3{font-size:15px;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.lgroup > p{font-size:12.5px;color:var(--dim);margin-bottom:10px}
+.net{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;font-family:Inter}
+.lk{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:10px;text-decoration:none;font-size:13.5px;color:#dcd8f5;transition:background .15s}
+.lk:hover{background:var(--card-hi);color:#fff}
+.lk::before{content:"↗";color:var(--c);font-size:12px;line-height:1.6}
+.lk span{min-width:0;overflow-wrap:anywhere}
+
+/* Results / leads */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}
+.toolbar .inp{width:auto}
+.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:820px){.results{grid-template-columns:minmax(0,1fr)}}
+.lead{border:1px solid var(--line);border-radius:16px;padding:16px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:10px;min-width:0}
+.lead.saved{border-color:rgba(124,92,255,.45)}
+.lead-top{display:flex;gap:12px;align-items:flex-start}
+.lead-top h3{font-size:16.5px;overflow-wrap:anywhere}
+.lead-top .meta{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.score{margin-left:auto;flex-shrink:0;text-align:center;min-width:58px;padding:6px 8px;border-radius:12px;font-family:"Space Grotesk",Inter,system-ui,sans-serif;line-height:1.1}
+.score b{display:block;font-size:20px}
+.score small{font-size:10.5px;font-family:Inter;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.score.hot{background:rgba(255,92,122,.14);color:var(--hot)}
+.score.warm{background:rgba(255,181,71,.13);color:var(--warm)}
+.score.cold{background:rgba(160,156,184,.12);color:var(--muted)}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.bdg{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line-hi);color:var(--muted)}
+.bdg.hot{border-color:rgba(255,92,122,.4);color:#ff9fb1}
+.bdg.warm{border-color:rgba(255,181,71,.4);color:#ffd08a}
+.bdg.ok{border-color:rgba(91,241,154,.3);color:#9df5c1}
+.bdg.bad{border-color:rgba(255,92,122,.25);color:var(--dim)}
+.bdg.src{border-style:dashed}
+.contacts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
+.contacts a{color:#cfe9ff;text-decoration:none;overflow-wrap:anywhere}
+.contacts a:hover{text-decoration:underline}
+.contacts .na{color:var(--dim)}
+.rec{font-size:13.5px;color:#d9d4ff;background:rgba(124,92,255,.10);border:1px solid rgba(124,92,255,.25);border-radius:10px;padding:8px 11px}
+.rec b{color:#fff}
+.lead-actions{display:flex;flex-wrap:wrap;gap:8px}
+.lead-crm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.lead-crm .inp{padding:8px 11px;font-size:14px}
+.lead-crm textarea.inp{grid-column:1/-1;min-height:60px}
+.lead .small{font-size:12px;color:var(--dim)}
+.empty{text-align:center;color:var(--muted);padding:40px 16px;border:1px dashed var(--line-hi);border-radius:16px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media(max-width:960px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:520px){.stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{padding:8px 10px}.stat b{font-size:19px}.stat span{font-size:11.5px}}
+.stat{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.02);cursor:pointer;text-align:left;transition:border-color .2s}
+.stat:hover,.stat.on{border-color:rgba(124,92,255,.6)}
+.stat b{display:block;font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:24px}
+.stat span{font-size:12.5px;color:var(--muted)}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:200;background:rgba(3,2,8,.72);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal.open{display:flex}
+.modal-box{width:100%;max-width:640px;max-height:92vh;overflow:auto;background:var(--bg-2);border:1px solid var(--line-hi);border-radius:20px 20px 0 0;padding:20px}
+@media(min-width:720px){.modal{align-items:center;padding:24px}.modal-box{border-radius:20px}}
+.modal-box h2{font-size:19px;margin-bottom:4px}
+.modal-box .sub{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+.modal-box textarea.inp{min-height:220px}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#1b1733;border:1px solid var(--line-hi);padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:300;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+.note{font-size:13.5px;color:var(--muted);border-left:3px solid var(--v);padding:8px 12px;background:rgba(124,92,255,.06);border-radius:0 10px 10px 0}
+.note b{color:var(--text)}
+ol.steps{padding-left:20px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:6px}
+ol.steps b{color:var(--text)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.92em;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:6px}
+.tpl{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.02)}
+.tpl + .tpl{margin-top:12px}
+.tpl .inp{margin-top:8px}
+.vars{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vars code{cursor:pointer}
+.vars code:hover{background:rgba(124,92,255,.3)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container head">
+    <a class="brand" href="../" title="Volver a kovaautomatiza.com"><img src="../assets/logo.svg" alt="">KOVA <small>Prospector</small></a>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="buscar" aria-selected="true">Buscar negocios</button>
+      <button class="tab" role="tab" data-tab="radar" aria-selected="false">Radar de intención</button>
+      <button class="tab" role="tab" data-tab="leads" aria-selected="false">Mis leads<span class="count" id="leadCount">0</span></button>
+      <button class="tab" role="tab" data-tab="mensajes" aria-selected="false">Mensajes</button>
+      <button class="tab" role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ============ BUSCAR ============ -->
+  <section class="panel active" id="p-buscar">
+    <div class="intro">
+      <h1>Encuentra negocios que <span class="grad-text">necesitan lo que vendes</span></h1>
+      <p>Elige el servicio, el tipo de negocio y dónde buscar. La app encuentra negocios en mapas, les da un puntaje según qué tan buena oportunidad son (por ejemplo, si no tienen página web) y te arma el mensaje de WhatsApp.</p>
+    </div>
+
+    <div class="card">
+      <div class="grid-form">
+        <label class="f">Servicio que quiero vender
+          <select class="inp" id="fService"></select>
+        </label>
+        <label class="f">Tipo de negocio
+          <select class="inp" id="fNiche"></select>
+        </label>
+        <label class="f">País
+          <select class="inp" id="fCountry"></select>
+        </label>
+        <label class="f">Ciudad
+          <input class="inp" id="fCity" list="cityList" autocomplete="off" placeholder="Escribe o elige">
+          <datalist id="cityList"></datalist>
+        </label>
+        <label class="f span-2" id="customNicheWrap" hidden>Otro tipo de negocio (escríbelo)
+          <input class="inp" id="fCustomNiche" placeholder="Ej: estudio de tatuajes, escuela de surf…">
+        </label>
+        <label class="f span-2">Zonas o barrios (opcional, separados por coma)
+          <input class="inp" id="fZones" placeholder="Ej: norte, centro, Cumbayá">
+          <span class="hint">Con Google Maps hace una búsqueda por zona para encontrar más negocios.</span>
+        </label>
+      </div>
+
+      <div class="engines">
+        <div class="engine">
+          <h3>OpenStreetMap <span class="tagfree">GRATIS · SIN CLAVE</span></h3>
+          <p>Mapa libre con nombre, teléfono, web y redes de los negocios registrados. Funciona sin configurar nada, pero en algunas ciudades tiene menos negocios que Google.</p>
+          <div class="row">
+            <button class="btn btn-primary" id="btnOsm">Buscar en OpenStreetMap</button>
+          </div>
+        </div>
+        <div class="engine">
+          <h3>Google Maps <span class="tagkey">NECESITA API KEY</span></h3>
+          <p>La fuente más completa: teléfono, web, reseñas y calificación. Hasta 20 negocios por ciudad o zona. Configura tu clave en <a href="#" data-goto="ajustes">Ajustes</a>.</p>
+          <div class="row">
+            <button class="btn btn-primary" id="btnGoogle">Buscar en Google Maps</button>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <label class="check"><input type="checkbox" id="fSweep"> Buscar en todas las ciudades principales del país (más lento)</label>
+      </div>
+      <div class="status" id="searchStatus"><span class="spin"></span><span id="searchStatusText"></span></div>
+    </div>
+
+    <div class="section" id="resultsSection" hidden>
+      <div class="section-title">
+        <h2>Resultados</h2>
+        <p id="resultsSummary"></p>
+      </div>
+      <div class="toolbar">
+        <label class="check"><input type="checkbox" id="rNoWeb"> Solo sin web propia</label>
+        <label class="check"><input type="checkbox" id="rPhone"> Solo con teléfono</label>
+        <select class="inp" id="rSort" aria-label="Ordenar">
+          <option value="score">Mejor oportunidad primero</option>
+          <option value="reviews">Más reseñas primero</option>
+          <option value="name">Nombre A-Z</option>
+        </select>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="rCsv">Descargar CSV</button>
+        <button class="btn btn-primary btn-sm" id="rSaveAll">Guardar todos en Mis leads</button>
+      </div>
+      <div class="results" id="results"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <h2>Buscar en redes sociales y directorios</h2>
+        <p>Cada enlace abre la búsqueda ya armada con tu tipo de negocio y ciudad. Cuando encuentres un buen perfil, guárdalo con “Agregar lead a mano”.</p>
+      </div>
+      <div class="linkgrid" id="socialLinks"></div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <div class="section-title"><h2>Agregar lead a mano</h2><p>Para perfiles que encuentres en Instagram, Facebook, TikTok, LinkedIn u otro lugar.</p></div>
+        <form id="manualForm" class="grid-form">
+          <label class="f">Nombre del negocio *<input class="inp" name="name" required></label>
+          <label class="f">Dónde lo encontraste
+            <select class="inp" name="network">
+              <option>Instagram</option><option>Facebook</option><option>TikTok</option><option>LinkedIn</option><option>Google Maps</option><option>X / Twitter</option><option>Grupo de Facebook</option><option>Referido</option><option>Otro</option>
+            </select>
+          </label>
+          <label class="f">Link del perfil<input class="inp" name="profile" type="url" placeholder="https://instagram.com/…"></label>
+          <label class="f">WhatsApp / teléfono<input class="inp" name="phone" inputmode="tel" placeholder="0991234567"></label>
+          <label class="f">Página web (si tiene)<input class="inp" name="website" type="url" placeholder="Vacío si no tiene"></label>
+          <label class="f">Email<input class="inp" name="email" type="email"></label>
+          <label class="f span-2">Notas<input class="inp" name="notes" placeholder="Ej: 12k seguidores, responde tarde los mensajes, vende por DM"></label>
+          <div class="span-4 row end"><button class="btn btn-primary" type="submit">Guardar lead</button></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RADAR ============ -->
+  <section class="panel" id="p-radar">
+    <div class="intro">
+      <h1>Radar de <span class="grad-text">intención de compra</span></h1>
+      <p>Aquí no buscas negocios al azar, sino gente que <b>ya está pidiendo</b> el servicio: publicaciones de “necesito una página web”, empresas contratando personal para tareas que puedes automatizar, proyectos freelance y negocios que ya pagan publicidad. Usa el servicio, país y ciudad de la pestaña “Buscar negocios”.</p>
+    </div>
+    <div class="card">
+      <div class="row">
+        <span id="radarCtx" class="hint" style="font-size:14px"></span>
+        <span class="spacer"></span>
+        <label class="check"><input type="checkbox" id="radarCity" checked> Limitar a la ciudad</label>
+        <button class="btn btn-ghost btn-sm" data-goto="buscar">Cambiar servicio o ciudad</button>
+      </div>
+    </div>
+    <div class="section"><div class="linkgrid" id="radarLinks"></div></div>
+  </section>
+
+  <!-- ============ LEADS ============ -->
+  <section class="panel" id="p-leads">
+    <div class="intro">
+      <h1>Mis <span class="grad-text">leads</span></h1>
+      <p>Tu embudo de ventas. Cambia el estado de cada negocio, anota lo que te dijo y pon fecha para el próximo seguimiento. Se guarda en este navegador: descarga una copia de seguridad de vez en cuando.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <input class="inp" id="lSearch" type="search" placeholder="Buscar por nombre, ciudad, nota…" style="flex:1;min-width:200px">
+      <select class="inp" id="lSort" aria-label="Ordenar leads">
+        <option value="follow">Seguimiento más próximo</option>
+        <option value="score">Mejor oportunidad</option>
+        <option value="recent">Más recientes</option>
+      </select>
+    </div>
+    <div class="results" id="leads"></div>
+    <div class="section card">
+      <div class="section-title"><h2>Exportar e importar</h2><p>Abre el CSV en Excel o Google Sheets. El archivo JSON es tu copia de seguridad completa.</p></div>
+      <div class="row">
+        <button class="btn btn-ghost" id="lCsv">Descargar CSV</button>
+        <button class="btn btn-ghost" id="lJson">Descargar copia de seguridad (JSON)</button>
+        <label class="btn btn-ghost">Importar copia (JSON)<input type="file" id="lImport" accept="application/json,.json" hidden></label>
+        <span class="spacer"></span>
+        <button class="btn btn-danger" id="lClear">Borrar todos los leads</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MENSAJES ============ -->
+  <section class="panel" id="p-mensajes">
+    <div class="intro">
+      <h1>Plantillas de <span class="grad-text">mensajes</span></h1>
+      <p>Se rellenan solas con los datos de cada negocio. Haz clic en una variable para insertarla. Los cambios se guardan automáticamente.</p>
+    </div>
+    <div class="note" style="margin-bottom:18px">
+      <b>Para que WhatsApp no te bloquee y te respondan más:</b> escribe uno por uno (nada de envíos masivos), empieza con algo concreto del negocio, no mandes más de 20–30 chats nuevos al día desde un número y, si alguien dice que no, márcalo como “Perdido” y no insistas. Usa solo datos públicos de negocios.
+    </div>
+    <div id="templates"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-ghost" id="tplAdd">Agregar plantilla</button>
+      <button class="btn btn-ghost" id="tplReset">Restaurar plantillas originales</button>
+    </div>
+  </section>
+
+  <!-- ============ AJUSTES ============ -->
+  <section class="panel" id="p-ajustes">
+    <div class="intro">
+      <h1>Ajustes</h1>
+      <p>Todo se guarda solo en este navegador. Tu clave de Google nunca sale de aquí, salvo hacia Google.</p>
+    </div>
+    <div class="card">
+      <form id="settingsForm" class="grid-form">
+        <label class="f">Tu nombre (para los mensajes)<input class="inp" name="myName" placeholder="Ej: Santiago"></label>
+        <label class="f">Tu WhatsApp<input class="inp" name="myWa" inputmode="tel"></label>
+        <label class="f span-2">Tu web<input class="inp" name="myWeb" type="url"></label>
+        <label class="f span-4">Google Maps API key
+          <input class="inp" name="googleKey" autocomplete="off" spellcheck="false" placeholder="AIza…">
+          <span class="hint">Necesaria solo para “Buscar en Google Maps” y para analizar la velocidad de webs.</span>
+        </label>
+        <div class="span-4 row end"><button class="btn btn-primary" type="submit">Guardar ajustes</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <div class="section-title"><h2>Cómo sacar tu API key de Google (10 minutos)</h2></div>
+      <ol class="steps">
+        <li>Entra a <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> y crea un proyecto (por ejemplo “KOVA Prospector”).</li>
+        <li>Activa la facturación. Google pide tarjeta, pero da un cupo gratis cada mes para Places; con uso normal de prospección no deberías pagar. Para asegurarte, pon un límite diario en <b>APIs y servicios → Cuotas</b>.</li>
+        <li>En <b>APIs y servicios → Biblioteca</b> activa <b>Maps JavaScript API</b>, <b>Places API (New)</b> y, si quieres analizar velocidad de webs, <b>PageSpeed Insights API</b>.</li>
+        <li>En <b>Credenciales → Crear credenciales → Clave de API</b>. Copia la clave y pégala arriba.</li>
+        <li>Muy importante: edita la clave y en <b>Restricciones de aplicación</b> elige “Sitios web” y agrega <code>https://kovaautomatiza.com/*</code> (y la dirección donde abras esta página). Así nadie más puede usarla.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="section-title"><h2>De dónde salen los datos</h2></div>
+      <ol class="steps">
+        <li><b>OpenStreetMap</b> (Overpass API): mapa libre y gratuito. Datos © colaboradores de OpenStreetMap, licencia ODbL.</li>
+        <li><b>Google Maps</b> (Places API): con tu propia clave, según los términos de Google Maps Platform.</li>
+        <li><b>Redes sociales</b>: la app no entra a Instagram, Facebook ni TikTok por ti (eso va contra sus reglas y te pueden cerrar la cuenta). Te arma las búsquedas y tú revisas los perfiles con tu cuenta.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<!-- Modal de mensaje -->
+<div class="modal" id="msgModal" role="dialog" aria-modal="true" aria-labelledby="msgTitle">
+  <div class="modal-box">
+    <h2 id="msgTitle">Mensaje</h2>
+    <p class="sub" id="msgSub"></p>
+    <label class="f">Plantilla
+      <select class="inp" id="msgTpl"></select>
+    </label>
+    <label class="f" style="margin-top:12px">Mensaje (puedes editarlo antes de enviarlo)
+      <textarea class="inp" id="msgText"></textarea>
+    </label>
+    <label class="check" style="margin-top:12px"><input type="checkbox" id="msgMark" checked> Guardar en Mis leads y marcar como “Contactado”</label>
+    <div class="row" style="margin-top:16px">
+      <a class="btn btn-wa" id="msgWa" target="_blank" rel="noopener">Abrir WhatsApp</a>
+      <a class="btn btn-ghost" id="msgMail" target="_blank" rel="noopener">Enviar email</a>
+      <a class="btn btn-ghost" id="msgProfile" target="_blank" rel="noopener">Abrir perfil para DM</a>
+      <button class="btn btn-ghost" id="msgCopy">Copiar</button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" id="msgClose">Cerrar</button>
+    </div>
+    <p class="hint" id="msgWaHint" style="margin-top:10px"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= Configuración ================= */
+  // Planes y precios de kovaautomatiza.com: actualízalos aquí si cambian.
+  var SERVICES = {
+    auto: { label: 'Lo que más le sirva a cada negocio' },
+    web: {
+      label: 'Páginas web', plan: 'Landing Pro / Web Business', price: 'desde $89',
+      kw: 'página web', pitch: 'una página web profesional que aparece en Google y les manda clientes directo a WhatsApp'
+    },
+    bot: {
+      label: 'Bots de WhatsApp con IA', plan: 'Bot IA + Automatización', price: 'desde $75',
+      kw: 'chatbot whatsapp', pitch: 'un asistente de WhatsApp con inteligencia artificial que responde al instante las 24 horas'
+    },
+    automatizacion: {
+      label: 'Automatizaciones', plan: 'Automatización Total', price: 'desde $179',
+      kw: 'automatización', pitch: 'automatizar tareas repetitivas (facturas, reportes, recordatorios, hojas de cálculo) para ahorrar horas cada semana'
+    },
+    ecommerce: {
+      label: 'Tiendas online', plan: 'E-commerce Elite', price: 'desde $389',
+      kw: 'tienda online', pitch: 'una tienda online con pagos y envíos para vender las 24 horas, no solo por mensajes'
+    },
+    ia: {
+      label: 'Inteligencia artificial', plan: 'Bot IA + Automatización', price: 'desde $179',
+      kw: 'inteligencia artificial', pitch: 'un asistente con inteligencia artificial entrenado con la información de su negocio'
+    },
+    app: {
+      label: 'Apps y software a medida', plan: 'MVP Express', price: 'desde $599',
+      kw: 'desarrollo de software', pitch: 'una app o sistema a medida para ordenar su operación'
+    }
+  };
+
+  // g: tipo de negocio → define qué servicio recomendar. osm: etiquetas de OpenStreetMap.
+  var NICHES = [
+    { id: 'restaurante', label: 'Restaurantes', kw: 'restaurante', g: 'pedidos', osm: ['amenity=restaurant', 'amenity=fast_food'] },
+    { id: 'cafeteria', label: 'Cafeterías', kw: 'cafetería', g: 'pedidos', osm: ['amenity=cafe', 'amenity=ice_cream'] },
+    { id: 'panaderia', label: 'Panaderías y pastelerías', kw: 'panadería', g: 'pedidos', osm: ['shop=bakery', 'shop=pastry', 'shop=confectionery'] },
+    { id: 'bar', label: 'Bares y discotecas', kw: 'bar', g: 'reservas', osm: ['amenity=bar', 'amenity=pub', 'amenity=nightclub'] },
+    { id: 'dentista', label: 'Clínicas dentales', kw: 'odontólogo', g: 'citas', osm: ['amenity=dentist', 'healthcare=dentist'] },
+    { id: 'medico', label: 'Clínicas y consultorios médicos', kw: 'consultorio médico', g: 'citas', osm: ['amenity=clinic', 'amenity=doctors'] },
+    { id: 'psicologo', label: 'Psicólogos y terapeutas', kw: 'psicólogo', g: 'citas', osm: ['healthcare=psychotherapist', 'healthcare=counselling', 'healthcare=physiotherapist'] },
+    { id: 'veterinaria', label: 'Veterinarias y pet shops', kw: 'veterinaria', g: 'citas', osm: ['amenity=veterinary', 'shop=pet'] },
+    { id: 'belleza', label: 'Peluquerías y salones de belleza', kw: 'salón de belleza', g: 'citas', osm: ['shop=hairdresser', 'shop=beauty'] },
+    { id: 'spa', label: 'Spas y masajes', kw: 'spa', g: 'citas', osm: ['shop=massage', 'leisure=spa'] },
+    { id: 'gimnasio', label: 'Gimnasios y crossfit', kw: 'gimnasio', g: 'citas', osm: ['leisure=fitness_centre', 'leisure=sports_centre'] },
+    { id: 'academia', label: 'Academias, escuelas e institutos', kw: 'academia', g: 'citas', osm: ['amenity=language_school', 'amenity=music_school', 'amenity=driving_school', 'amenity=dancing_school', 'office=educational_institution'] },
+    { id: 'taller', label: 'Talleres mecánicos', kw: 'taller mecánico', g: 'citas', osm: ['shop=car_repair', 'shop=tyres'] },
+    { id: 'hotel', label: 'Hoteles y hostales', kw: 'hotel', g: 'reservas', osm: ['tourism=hotel', 'tourism=guest_house', 'tourism=hostel', 'tourism=motel'] },
+    { id: 'viajes', label: 'Agencias de viajes y turismo', kw: 'agencia de viajes', g: 'reservas', osm: ['shop=travel_agency', 'office=travel_agent'] },
+    { id: 'ropa', label: 'Tiendas de ropa y calzado', kw: 'tienda de ropa', g: 'tienda', osm: ['shop=clothes', 'shop=shoes', 'shop=boutique'] },
+    { id: 'tecnologia', label: 'Celulares y tecnología', kw: 'tienda de celulares', g: 'tienda', osm: ['shop=mobile_phone', 'shop=electronics', 'shop=computer'] },
+    { id: 'ferreteria', label: 'Ferreterías', kw: 'ferretería', g: 'tienda', osm: ['shop=hardware', 'shop=doityourself'] },
+    { id: 'muebles', label: 'Mueblerías y decoración', kw: 'mueblería', g: 'tienda', osm: ['shop=furniture', 'shop=interior_decoration'] },
+    { id: 'optica', label: 'Ópticas', kw: 'óptica', g: 'tienda', osm: ['shop=optician'] },
+    { id: 'joyeria', label: 'Joyerías', kw: 'joyería', g: 'tienda', osm: ['shop=jewelry'] },
+    { id: 'floristeria', label: 'Floristerías', kw: 'floristería', g: 'tienda', osm: ['shop=florist'] },
+    { id: 'farmacia', label: 'Farmacias', kw: 'farmacia', g: 'tienda', osm: ['amenity=pharmacy', 'shop=chemist'] },
+    { id: 'supermercado', label: 'Minimarkets y supermercados', kw: 'minimarket', g: 'tienda', osm: ['shop=supermarket', 'shop=convenience'] },
+    { id: 'autos', label: 'Venta de autos y motos', kw: 'concesionario', g: 'tienda', osm: ['shop=car', 'shop=motorcycle'] },
+    { id: 'inmobiliaria', label: 'Inmobiliarias', kw: 'inmobiliaria', g: 'oficina', osm: ['office=estate_agent'] },
+    { id: 'abogado', label: 'Abogados', kw: 'abogado', g: 'oficina', osm: ['office=lawyer', 'office=notary'] },
+    { id: 'contador', label: 'Contadores y asesores', kw: 'contador', g: 'oficina', osm: ['office=accountant', 'office=tax_advisor'] },
+    { id: 'seguros', label: 'Agencias de seguros', kw: 'seguros', g: 'oficina', osm: ['office=insurance'] },
+    { id: 'constructora', label: 'Constructoras y arquitectos', kw: 'constructora', g: 'oficina', osm: ['office=architect', 'craft=builder', 'office=construction_company'] },
+    { id: 'lavanderia', label: 'Lavanderías', kw: 'lavandería', g: 'pedidos', osm: ['shop=laundry', 'shop=dry_cleaning'] },
+    { id: 'fotografo', label: 'Fotógrafos y eventos', kw: 'fotógrafo', g: 'citas', osm: ['craft=photographer', 'shop=photo', 'amenity=events_venue'] },
+    { id: 'custom', label: 'Otro (escribirlo)…', kw: '', g: 'otro', osm: [] }
+  ];
+
+  var COUNTRIES = [
+    ['EC', 'Ecuador', '593', 'Quito,Guayaquil,Cuenca,Santo Domingo,Ambato,Manta,Portoviejo,Machala,Loja,Ibarra,Riobamba,Esmeraldas'],
+    ['CO', 'Colombia', '57', 'Bogotá,Medellín,Cali,Barranquilla,Cartagena,Bucaramanga,Pereira,Santa Marta'],
+    ['PE', 'Perú', '51', 'Lima,Arequipa,Trujillo,Chiclayo,Piura,Cusco,Huancayo'],
+    ['MX', 'México', '52', 'Ciudad de México,Guadalajara,Monterrey,Puebla,Querétaro,Tijuana,Mérida,Cancún,León'],
+    ['CL', 'Chile', '56', 'Santiago,Valparaíso,Viña del Mar,Concepción,Antofagasta,La Serena,Temuco'],
+    ['AR', 'Argentina', '54', 'Buenos Aires,Córdoba,Rosario,Mendoza,La Plata,Mar del Plata,Tucumán'],
+    ['ES', 'España', '34', 'Madrid,Barcelona,Valencia,Sevilla,Málaga,Bilbao,Zaragoza,Alicante'],
+    ['US', 'Estados Unidos', '1', 'Miami,Houston,Los Angeles,New York,Dallas,Orlando,Chicago,San Antonio'],
+    ['GT', 'Guatemala', '502', 'Ciudad de Guatemala,Quetzaltenango,Antigua Guatemala,Mixco'],
+    ['SV', 'El Salvador', '503', 'San Salvador,Santa Ana,San Miguel,Santa Tecla'],
+    ['HN', 'Honduras', '504', 'Tegucigalpa,San Pedro Sula,La Ceiba'],
+    ['NI', 'Nicaragua', '505', 'Managua,León,Granada'],
+    ['CR', 'Costa Rica', '506', 'San José,Alajuela,Heredia,Cartago,Liberia'],
+    ['PA', 'Panamá', '507', 'Ciudad de Panamá,David,Colón,La Chorrera'],
+    ['DO', 'República Dominicana', '1', 'Santo Domingo,Santiago de los Caballeros,Punta Cana,La Romana'],
+    ['PR', 'Puerto Rico', '1', 'San Juan,Bayamón,Ponce,Carolina'],
+    ['VE', 'Venezuela', '58', 'Caracas,Maracaibo,Valencia,Barquisimeto,Maracay'],
+    ['BO', 'Bolivia', '591', 'La Paz,Santa Cruz de la Sierra,Cochabamba,El Alto'],
+    ['PY', 'Paraguay', '595', 'Asunción,Ciudad del Este,Encarnación'],
+    ['UY', 'Uruguay', '598', 'Montevideo,Punta del Este,Salto']
+  ].map(function (c) { return { cc: c[0], name: c[1], dial: c[2], cities: c[3].split(',') }; });
+
+  var STATUSES = [
+    ['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['respondio', 'Respondió'],
+    ['propuesta', 'Propuesta enviada'], ['ganado', 'Ganado'], ['perdido', 'Perdido']
+  ];
+
+  var DEFAULT_TEMPLATES = [
+    { id: 'wa1', name: 'WhatsApp · Primer contacto', text:
+      'Hola, ¿qué tal? Soy {firma} 👋\n\n{gancho}\n\nAyudamos a {nicho} de {ciudad} con {propuesta}.\n\n¿Le puedo enviar una idea gratis de cómo quedaría para {nombre}? Sin compromiso.\n\n{mi_web}' },
+    { id: 'dm1', name: 'Instagram / Facebook · Mensaje directo', text:
+      'Hola, equipo de {nombre} 👋 {gancho}\n\nEn KOVA hacemos {propuesta}. Tenemos planes {precio}.\n\n¿Les interesa que les muestre un ejemplo? Pueden escribirme al WhatsApp {mi_whatsapp} 🙌' },
+    { id: 'mail1', name: 'Email · Primer contacto', text:
+      'Asunto: Una idea para {nombre}\n\nHola, equipo de {nombre}:\n\nSoy {firma}. {gancho}\n\nTrabajamos con {nicho} y creamos {propuesta}. Precio fijo, pagan la mitad al empezar y la otra mitad al recibirlo.\n\n¿Tienen 10 minutos esta semana para mostrarles una propuesta sin costo?\n\nSaludos,\n{mi_nombre}\nKOVA · {mi_web}\nWhatsApp: {mi_whatsapp}' },
+    { id: 'wa2', name: 'WhatsApp · Seguimiento (3 días después)', text:
+      'Hola de nuevo 👋 Le escribí hace unos días sobre {propuesta} para {nombre}.\n\nSi le sirve, le preparo un ejemplo gratis en 24 horas para que lo vea antes de decidir nada. ¿Le parece?' },
+    { id: 'wa3', name: 'WhatsApp · Último seguimiento', text:
+      'Hola, no quiero molestarle más 🙂 Si en algún momento {nombre} necesita {servicio}, aquí estoy: {mi_web}\n\n¡Muchos éxitos!' }
+  ];
+
+  var OVERPASS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+
+  /* ================= Utilidades ================= */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { toast('No se pudo guardar en este navegador'); return false; } }
+  };
+  var toastTimer;
+  function toast(msg) {
+    var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+  function enc(s) { return encodeURIComponent(s); }
+  function g(q, extra) { return 'https://www.google.com/search?q=' + enc(q) + (extra || ''); }
+  function slug(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function norm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function today() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  function addDays(n) { var d = new Date(); d.setDate(d.getDate() + n); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function download(name, content, type) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type: type }));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function copy(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } finally { ta.remove(); }
+    return Promise.resolve();
+  }
+
+  /* ================= Estado ================= */
+  var S = Object.assign({ myName: '', myWa: '593969053512', myWeb: 'https://kovaautomatiza.com', googleKey: '' }, store.get('kp_settings', {}));
+  var F = Object.assign({ service: 'auto', niche: 'restaurante', customNiche: '', cc: 'EC', city: 'Quito', zones: '' }, store.get('kp_form', {}));
+  var leads = store.get('kp_leads', []);
+  var results = store.get('kp_results', []);
+  var templates = store.get('kp_templates', null) || DEFAULT_TEMPLATES.slice();
+
+  function country(cc) { return COUNTRIES.filter(function (c) { return c.cc === (cc || F.cc); })[0] || COUNTRIES[0]; }
+  function niche(id) { return NICHES.filter(function (n) { return n.id === (id || F.niche); })[0] || NICHES[0]; }
+  function nicheKw() { var n = niche(); return n.id === 'custom' ? (F.customNiche.trim() || 'negocio') : n.kw; }
+  function nicheLabel() { var n = niche(); return n.id === 'custom' ? (F.customNiche.trim() || 'negocios') : n.label; }
+  function saveLeads() { store.set('kp_leads', leads); renderCount(); }
+
+  /* ================= Análisis de cada negocio ================= */
+  var SOCIAL_RE = /(instagram\.com|facebook\.com|fb\.com|fb\.me|linktr\.ee|wa\.me|whatsapp\.com|tiktok\.com|beacons\.ai|linkin\.bio|taplink\.|bio\.link|x\.com|twitter\.com|youtube\.com)/i;
+  var BUILDER_RE = /(wixsite\.com|blogspot\.|weebly\.com|godaddysites\.com|jimdosite\.com|jimdofree\.com|business\.site|negocio\.site|site123\.me|webnode\.|wordpress\.com|squarespace\.com|mystrikingly\.com|carrd\.co|ueniweb\.com)/i;
+
+  function webStatus(url) {
+    if (!url) return 'none';
+    if (SOCIAL_RE.test(url)) return 'social';
+    if (BUILDER_RE.test(url)) return 'builder';
+    return 'own';
+  }
+
+  function waNumber(phone, dial) {
+    if (!phone) return '';
+    var p = String(phone).split(/[;,/]| o /)[0].trim();
+    var plus = p.charAt(0) === '+';
+    var d = p.replace(/\D/g, '');
+    if (!d) return '';
+    if (d.indexOf('00') === 0) d = d.slice(2);
+    else if (!plus && !(d.indexOf(dial) === 0 && d.length >= dial.length + 8)) d = dial + d.replace(/^0+/, '');
+    return d.length >= 8 ? d : '';
+  }
+
+  function recommendService(l) {
+    if (F.service !== 'auto' && l.source !== 'manual') return F.service;
+    if (l.service && SERVICES[l.service] && l.service !== 'auto') return l.service;
+    if (l.webStatus === 'none' || l.webStatus === 'social') return 'web';
+    return { pedidos: 'bot', citas: 'bot', reservas: 'bot', tienda: 'ecommerce', oficina: 'automatizacion' }[l.group] || 'web';
+  }
+
+  function recommendText(l) {
+    var s = l.service, grp = l.group;
+    var main = SERVICES[s] ? SERVICES[s].plan : '';
+    var extra = '';
+    if (s === 'web') extra = grp === 'tienda' ? 'luego tienda online' : (grp === 'oficina' ? 'luego automatizar su atención' : 'luego un bot de WhatsApp');
+    if (s === 'bot') extra = grp === 'citas' ? 'que agende citas' : (grp === 'pedidos' ? 'que tome pedidos' : 'que responda y reserve');
+    return '<b>Ofrécele:</b> ' + esc(SERVICES[s] ? SERVICES[s].label : '') + (main ? ' (' + esc(main) + ')' : '') + (extra ? ' · ' + esc(extra) : '');
+  }
+
+  function scoreLead(l) {
+    var s = 0, r = [];
+    if (l.closed) return { s: 0, r: [['Cerrado permanentemente', 'bad']] };
+    if (l.webStatus === 'none') { s += l.source === 'osm' ? 25 : 35; r.push([l.source === 'osm' ? 'Sin web registrada' : 'Sin página web', 'hot']); }
+    else if (l.webStatus === 'social') { s += 30; r.push(['Solo redes, sin web propia', 'hot']); }
+    else if (l.webStatus === 'builder') { s += 15; r.push(['Web gratuita o básica', 'warm']); }
+    if (l.psi != null && l.psi < 50) { s += 15; r.push(['Web lenta (' + l.psi + '/100)', 'warm']); }
+    if (l.phone) { s += 20; r.push(['Tiene teléfono', 'ok']); }
+    else if (l.email) { s += 10; r.push(['Tiene email', 'ok']); }
+    if (l.instagram || l.facebook) { s += 10; r.push(['Activo en redes', 'ok']); }
+    if (l.reviews >= 50) { s += 15; r.push([l.reviews + ' reseñas', 'ok']); }
+    else if (l.reviews >= 10) { s += 8; r.push([l.reviews + ' reseñas', 'ok']); }
+    if (l.rating && l.rating < 4 && l.reviews >= 5) { s += 10; r.push(['Calificación ' + l.rating, 'warm']); }
+    if (!l.phone && !l.email && !l.instagram && !l.facebook && !l.website && !l.profile) r.push(['Sin contacto visible', 'bad']);
+    return { s: Math.min(100, s), r: r };
+  }
+
+  function level(s) { return s >= 65 ? ['hot', 'Caliente'] : s >= 40 ? ['warm', 'Tibio'] : ['cold', 'Frío']; }
+
+  function finalize(l, keepService) {
+    l.webStatus = webStatus(l.website);
+    if (l.webStatus === 'social') {
+      if (!l.instagram && /instagram\.com/i.test(l.website)) l.instagram = l.website;
+      if (!l.facebook && /(facebook\.com|fb\.com|fb\.me)/i.test(l.website)) l.facebook = l.website;
+    }
+    l.wa = waNumber(l.whatsapp || l.phone, country(l.cc).dial);
+    if (!keepService || !l.service) l.service = recommendService(l);
+    var sc = scoreLead(l); l.score = sc.s; l.reasons = sc.r;
+    return l;
+  }
+
+  function hook(l) {
+    var n = l.name;
+    var webPitch = l.service === 'web' || l.service === 'ecommerce';
+    if (!webPitch && l.reviews >= 30) return 'Vi que ' + n + ' tiene ' + l.reviews + ' reseñas en Google: se nota que les escriben muchos clientes.';
+    if (!webPitch && (l.instagram || l.facebook || l.webStatus === 'social')) return 'Vi que ' + n + ' atiende a sus clientes por redes y WhatsApp.';
+    if (l.psi != null && l.psi < 50) return 'Revisé la web de ' + n + ' y en celular tarda bastante en cargar (' + l.psi + '/100 en la prueba de Google); muchos clientes se van antes de verla.';
+    if (l.webStatus === 'social') return 'Vi que ' + n + ' atiende por redes sociales pero no encontré una página web propia.';
+    if (l.webStatus === 'none' && l.reviews >= 10) return 'Vi que ' + n + ' tiene ' + l.reviews + ' reseñas en Google, pero no encontré su página web.';
+    if (l.webStatus === 'none') return 'Encontré ' + n + ' en el mapa de ' + (l.city || 'su ciudad') + ' y noté que no tiene página web.';
+    if (l.webStatus === 'builder') return 'Vi la web de ' + n + ' y creo que podría verse más profesional y cargar más rápido.';
+    if (l.reviews >= 50) return 'Vi que ' + n + ' tiene ' + l.reviews + ' reseñas en Google: se nota que les va muy bien.';
+    return 'Encontré ' + n + ' buscando ' + (l.nicheLabel || 'negocios').toLowerCase() + ' en ' + (l.city || 'su ciudad') + '.';
+  }
+
+  function pitch(l) {
+    var s = SERVICES[l.service] || SERVICES.web;
+    if (l.service === 'bot') {
+      if (l.group === 'citas') return 'un asistente de WhatsApp con IA que responde al instante y agenda citas solo, las 24 horas';
+      if (l.group === 'pedidos') return 'un asistente de WhatsApp con IA que responde al instante y toma pedidos solo, las 24 horas';
+      if (l.group === 'reservas') return 'un asistente de WhatsApp con IA que responde al instante y toma reservas solo, las 24 horas';
+    }
+    return s.pitch;
+  }
+
+  function templateVars(l) {
+    var s = SERVICES[l.service] || SERVICES.web;
+    return {
+      nombre: l.name, nicho: (l.nicheLabel || 'negocios').toLowerCase(), ciudad: l.city || '', pais: l.country || '',
+      gancho: hook(l), propuesta: pitch(l), servicio: s.label.toLowerCase(), plan: s.plan, precio: s.price,
+      firma: S.myName ? S.myName + ', de KOVA' : 'del equipo de KOVA', mi_nombre: S.myName || 'Equipo KOVA', mi_web: S.myWeb || '', mi_whatsapp: S.myWa ? '+' + S.myWa.replace(/\D/g, '') : ''
+    };
+  }
+  function fill(t, v) { return t.replace(/\{(\w+)\}/g, function (m, k) { return v[k] != null ? v[k] : m; }); }
+
+  /* ================= OpenStreetMap ================= */
+  var geoCache = {};
+  function geocode(city, c) {
+    var key = c.cc + '|' + norm(city);
+    if (geoCache[key]) return Promise.resolve(geoCache[key]);
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=es&countrycodes=' + c.cc.toLowerCase() + '&q=' + enc(city);
+    return fetch(url, { headers: { Accept: 'application/json' } })
+      .then(function (r) { if (!r.ok) throw new Error('Nominatim ' + r.status); return r.json(); })
+      .then(function (j) {
+        if (!j.length) throw new Error('No encontré la ciudad "' + city + '" en ' + c.name);
+        var b = j[0].boundingbox.map(Number); // [sur, norte, oeste, este]
+        var box = { s: b[0], n: b[1], w: b[2], e: b[3] };
+        geoCache[key] = box; return box;
+      });
+  }
+
+  function overpassQuery(n, box) {
+    var bbox = '(' + [box.s, box.w, box.n, box.e].join(',') + ')';
+    var parts = [];
+    if (n.id === 'custom') {
+      var re = F.customNiche.trim().replace(/[\\"]/g, '').replace(/[.*+?^${}()|[\]]/g, '\\\\$&');
+      ['shop', 'amenity', 'office', 'craft', 'healthcare', 'leisure', 'tourism'].forEach(function (k) {
+        parts.push('nwr["name"~"' + re + '",i]["' + k + '"]' + bbox + ';');
+      });
+    } else {
+      n.osm.forEach(function (t) { var kv = t.split('='); parts.push('nwr["' + kv[0] + '"="' + kv[1] + '"]["name"]' + bbox + ';'); });
+    }
+    return '[out:json][timeout:60];(' + parts.join('') + ');out center tags 400;';
+  }
+
+  function overpass(q) {
+    var i = 0;
+    function attempt() {
+      var ctrl = new AbortController(); var t = setTimeout(function () { ctrl.abort(); }, 75000);
+      return fetch(OVERPASS[i % OVERPASS.length], { method: 'POST', body: 'data=' + enc(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal })
+        .then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('Overpass ' + r.status); return r.json(); })
+        .catch(function (e) { clearTimeout(t); if (++i < OVERPASS.length * 2) return attempt(); throw new Error('los servidores de OpenStreetMap están ocupados, intenta en un minuto'); });
+    }
+    return attempt();
+  }
+
+  function urlish(v, base) {
+    if (!v) return '';
+    v = String(v).split(';')[0].trim();
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(v)) return 'https://' + v;
+    return base ? base + v.replace(/^@/, '') : '';
+  }
+
+  function fromOsm(el, city, c, n) {
+    var t = el.tags || {};
+    var lat = el.lat != null ? el.lat : el.center && el.center.lat;
+    var lon = el.lon != null ? el.lon : el.center && el.center.lon;
+    var addr = [t['addr:street'], t['addr:housenumber'], t['addr:suburb'] || t['addr:neighbourhood']].filter(Boolean).join(' ');
+    return finalize({
+      id: 'osm:' + el.type + '/' + el.id, source: 'osm', name: t.name,
+      niche: n.id, nicheLabel: nicheLabel(), group: n.g, city: t['addr:city'] || city, country: c.name, cc: c.cc,
+      address: addr,
+      phone: t.phone || t['contact:phone'] || t['contact:mobile'] || t.mobile || '',
+      whatsapp: t['contact:whatsapp'] || '',
+      website: urlish(t.website || t['contact:website'] || t.url),
+      instagram: urlish(t['contact:instagram'] || t.instagram, 'https://instagram.com/'),
+      facebook: urlish(t['contact:facebook'] || t.facebook, 'https://facebook.com/'),
+      email: (t.email || t['contact:email'] || '').split(';')[0],
+      rating: null, reviews: 0,
+      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=' + enc(t.name + ' ' + (lat != null ? lat + ',' + lon : city)),
+      osmUrl: 'https://www.openstreetmap.org/' + el.type + '/' + el.id
+    });
+  }
+
+  function citiesToSearch() {
+    var c = country();
+    return $('#fSweep').checked ? c.cities : [F.city.trim() || c.cities[0]];
+  }
+
+  function searchOsm() {
+    var n = niche(), c = country();
+    if (n.id === 'custom' && !F.customNiche.trim()) return toast('Escribe el tipo de negocio');
+    var cities = citiesToSearch(), found = [], errors = [];
+    setBusy(true, 'Buscando en OpenStreetMap…');
+    var chain = Promise.resolve();
+    cities.forEach(function (city, idx) {
+      chain = chain.then(function () {
+        status('Buscando ' + nicheLabel().toLowerCase() + ' en ' + city + ' (' + (idx + 1) + '/' + cities.length + ')…');
+        return geocode(city, c)
+          .then(function (box) { return overpass(overpassQuery(n, box)); })
+          .then(function (j) { j.elements.forEach(function (el) { if (el.tags && el.tags.name) found.push(fromOsm(el, city, c, n)); }); })
+          .catch(function (e) { errors.push(city + ': ' + e.message); })
+          .then(function () { return sleep(1100); }); // respeta el límite de 1 petición/segundo de Nominatim
+      });
+    });
+    chain.then(function () {
+      setBusy(false);
+      showResults(found, 'OpenStreetMap', errors);
+    });
+  }
+
+  /* ================= Google Maps (Places) ================= */
+  var gmapsLoading = null;
+  function loadGmaps() {
+    if (window.google && google.maps && google.maps.importLibrary) return Promise.resolve();
+    if (gmapsLoading) return gmapsLoading;
+    gmapsLoading = new Promise(function (res, rej) {
+      window.__kpGmaps = function () { res(); };
+      window.gm_authFailure = function () { toast('Google rechazó la API key. Revisa Ajustes y las restricciones de la clave.'); };
+      var s = document.createElement('script');
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + enc(S.googleKey) + '&v=weekly&loading=async&libraries=places&language=es&callback=__kpGmaps';
+      s.async = true;
+      s.onerror = function () { gmapsLoading = null; rej(new Error('No se pudo cargar Google Maps')); };
+      document.head.appendChild(s);
+    });
+    return gmapsLoading;
+  }
+
+  var PLACE_FIELDS = ['id', 'displayName', 'formattedAddress', 'nationalPhoneNumber', 'internationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'googleMapsURI', 'businessStatus', 'location'];
+
+  function searchGoogle() {
+    if (!S.googleKey) { toast('Primero pega tu API key de Google en Ajustes'); return go('ajustes'); }
+    var n = niche(), c = country();
+    if (n.id === 'custom' && !F.customNiche.trim()) return toast('Escribe el tipo de negocio');
+    var zones = F.zones.split(',').map(function (z) { return z.trim(); }).filter(Boolean);
+    var queries = [];
+    citiesToSearch().forEach(function (city) {
+      if (zones.length && !$('#fSweep').checked) zones.forEach(function (z) { queries.push({ city: city, q: nicheKw() + ' en ' + z + ', ' + city + ', ' + c.name }); });
+      else queries.push({ city: city, q: nicheKw() + ' en ' + city + ', ' + c.name });
+    });
+    var found = [], errors = [];
+    setBusy(true, 'Conectando con Google Maps…');
+    loadGmaps()
+      .then(function () { return google.maps.importLibrary('places'); })
+      .then(function (lib) {
+        var chain = Promise.resolve();
+        queries.forEach(function (item, idx) {
+          chain = chain.then(function () {
+            status('Google Maps: "' + item.q + '" (' + (idx + 1) + '/' + queries.length + ')…');
+            return lib.Place.searchByText({ textQuery: item.q, fields: PLACE_FIELDS, maxResultCount: 20, language: 'es', region: c.cc.toLowerCase() })
+              .then(function (res) {
+                (res.places || []).forEach(function (p) {
+                  var loc = p.location;
+                  found.push(finalize({
+                    id: 'g:' + p.id, source: 'google', name: p.displayName,
+                    niche: n.id, nicheLabel: nicheLabel(), group: n.g, city: item.city, country: c.name, cc: c.cc,
+                    address: p.formattedAddress || '',
+                    phone: p.internationalPhoneNumber || p.nationalPhoneNumber || '',
+                    website: p.websiteURI || '', instagram: '', facebook: '', email: '',
+                    rating: p.rating || null, reviews: p.userRatingCount || 0,
+                    closed: p.businessStatus && p.businessStatus !== 'OPERATIONAL',
+                    mapsUrl: p.googleMapsURI || ('https://www.google.com/maps/search/?api=1&query=' + enc(p.displayName + ' ' + (loc ? loc.lat() + ',' + loc.lng() : item.city)))
+                  }));
+                });
+              })
+              .catch(function (e) { errors.push(item.q + ': ' + (e && e.message || e)); });
+          });
+        });
+        return chain;
+      })
+      .catch(function (e) { errors.push(e.message || String(e)); })
+      .then(function () {
+        setBusy(false);
+        showResults(found.filter(function (l) { return !l.closed; }), 'Google Maps', errors);
+      });
+  }
+
+  /* ================= PageSpeed (velocidad de la web) ================= */
+  function analyzeSpeed(l, btn) {
+    if (!l.website || l.webStatus === 'social') return;
+    btn.disabled = true; btn.textContent = 'Analizando… (30 s)';
+    var url = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed?strategy=mobile&category=performance&url=' + enc(l.website) + (S.googleKey ? '&key=' + enc(S.googleKey) : '');
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.error) throw new Error(j.error.message);
+      var score = Math.round(j.lighthouseResult.categories.performance.score * 100);
+      var lcp = j.lighthouseResult.audits['largest-contentful-paint'];
+      l.psi = score; l.psiLcp = lcp ? lcp.displayValue : '';
+      finalize(l, true); updateEverywhere(l);
+      toast('Velocidad móvil de ' + l.name + ': ' + score + '/100' + (l.psiLcp ? ' · carga en ' + l.psiLcp : ''));
+    }).catch(function (e) {
+      btn.disabled = false; btn.textContent = 'Analizar velocidad web';
+      toast('No se pudo analizar: ' + (e.message || e).slice(0, 120));
+    });
+  }
+
+  function updateEverywhere(l) {
+    var i = indexOfLead(l);
+    if (i > -1) { leads[i] = Object.assign(leads[i], { psi: l.psi, psiLcp: l.psiLcp, score: l.score, reasons: l.reasons }); saveLeads(); }
+    var j = results.map(function (r) { return r.id; }).indexOf(l.id);
+    if (j > -1) { results[j] = Object.assign(results[j], { psi: l.psi, psiLcp: l.psiLcp, score: l.score, reasons: l.reasons }); store.set('kp_results', results); }
+    renderResults(); renderLeads();
+  }
+
+  /* ================= Resultados ================= */
+  function setBusy(on, text) {
+    $('#btnOsm').disabled = on; $('#btnGoogle').disabled = on;
+    var st = $('#searchStatus'); st.classList.toggle('show', !!on); st.classList.remove('err');
+    $('.spin', st).style.display = on ? '' : 'none';
+    if (text) $('#searchStatusText').textContent = text;
+  }
+  function status(t) { $('#searchStatusText').textContent = t; }
+
+  function showResults(found, src, errors) {
+    var seen = {};
+    results = found.filter(function (l) {
+      var k = norm(l.name) + '|' + norm(l.address || l.city);
+      if (seen[l.id] || seen[k]) return false; seen[l.id] = seen[k] = 1; return true;
+    });
+    store.set('kp_results', results.slice(0, 600));
+    renderResults();
+    var st = $('#searchStatus');
+    if (errors.length) {
+      st.classList.add('show', 'err'); $('.spin', st).style.display = 'none';
+      $('#searchStatusText').textContent = (results.length ? 'Algunas búsquedas fallaron: ' : 'La búsqueda falló: ') + errors.slice(0, 3).join(' · ');
+    } else if (!results.length) {
+      st.classList.add('show'); $('.spin', st).style.display = 'none';
+      $('#searchStatusText').textContent = 'No encontré ' + nicheLabel().toLowerCase() + ' en ' + src + ' para esa ciudad. Prueba otra ciudad, otro tipo de negocio o la otra fuente.';
+    }
+    if (results.length) {
+      toast(results.length + ' negocios encontrados en ' + src);
+      $('#resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function indexOfLead(l) {
+    for (var i = 0; i < leads.length; i++) {
+      if (leads[i].id === l.id) return i;
+      if (norm(leads[i].name) === norm(l.name) && norm(leads[i].city) === norm(l.city)) return i;
+    }
+    return -1;
+  }
+
+  function filteredResults() {
+    var list = results.slice();
+    if ($('#rNoWeb').checked) list = list.filter(function (l) { return l.webStatus === 'none' || l.webStatus === 'social'; });
+    if ($('#rPhone').checked) list = list.filter(function (l) { return l.phone; });
+    var sort = $('#rSort').value;
+    list.sort(function (a, b) {
+      if (sort === 'reviews') return (b.reviews || 0) - (a.reviews || 0);
+      if (sort === 'name') return a.name.localeCompare(b.name, 'es');
+      return b.score - a.score;
+    });
+    return list;
+  }
+
+  function renderResults() {
+    var sec = $('#resultsSection');
+    sec.hidden = !results.length;
+    if (!results.length) return;
+    var list = filteredResults();
+    var noWeb = results.filter(function (l) { return l.webStatus === 'none' || l.webStatus === 'social'; }).length;
+    var hot = results.filter(function (l) { return l.score >= 65; }).length;
+    $('#resultsSummary').textContent = results.length + ' negocios · ' + noWeb + ' sin web propia · ' + hot + ' calientes' + (list.length !== results.length ? ' · mostrando ' + list.length : '');
+    $('#results').innerHTML = list.length ? list.map(function (l) { return leadCard(l, false); }).join('') : '<div class="empty">Ningún resultado con esos filtros.</div>';
+  }
+
+  function contactsHtml(l) {
+    var out = [];
+    if (l.phone) out.push('<a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">📞 ' + esc(l.phone) + '</a>');
+    if (l.website && l.webStatus !== 'social') out.push('<a href="' + esc(l.website) + '" target="_blank" rel="noopener">🌐 ' + esc(l.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '').slice(0, 40)) + '</a>');
+    if (l.instagram) out.push('<a href="' + esc(l.instagram) + '" target="_blank" rel="noopener">Instagram</a>');
+    if (l.facebook) out.push('<a href="' + esc(l.facebook) + '" target="_blank" rel="noopener">Facebook</a>');
+    if (l.profile) out.push('<a href="' + esc(l.profile) + '" target="_blank" rel="noopener">Perfil (' + esc(l.network || 'link') + ')</a>');
+    if (l.email) out.push('<a href="mailto:' + esc(l.email) + '">✉️ ' + esc(l.email) + '</a>');
+    if (l.mapsUrl) out.push('<a href="' + esc(l.mapsUrl) + '" target="_blank" rel="noopener">Ver en Google Maps</a>');
+    if (!l.instagram && !l.facebook && !l.profile) out.push('<a href="' + esc(g('"' + l.name + '" ' + (l.city || '') + ' instagram OR facebook')) + '" target="_blank" rel="noopener">Buscar sus redes</a>');
+    return out.join('');
+  }
+
+  function leadCard(l, crm) {
+    var lv = level(l.score || 0);
+    var saved = !crm && indexOfLead(l) > -1;
+    var src = { osm: 'OpenStreetMap', google: 'Google Maps', manual: l.network || 'Manual' }[l.source] || l.source;
+    var badges = (l.reasons || []).map(function (r) { return '<span class="bdg ' + r[1] + '">' + esc(r[0]) + '</span>'; }).join('')
+      + (l.rating ? '<span class="bdg">★ ' + esc(l.rating) + '</span>' : '')
+      + '<span class="bdg src">' + esc(src) + '</span>';
+    var h = '<article class="lead' + (saved ? ' saved' : '') + '" data-id="' + esc(l.id) + '" data-crm="' + (crm ? 1 : 0) + '">'
+      + '<div class="lead-top"><div style="min-width:0"><h3>' + esc(l.name) + '</h3>'
+      + '<div class="meta">' + esc([l.nicheLabel, l.address || l.city, l.country].filter(Boolean).join(' · ')) + '</div></div>'
+      + '<div class="score ' + lv[0] + '"><b>' + (l.score || 0) + '</b><small>' + lv[1] + '</small></div></div>'
+      + '<div class="badges">' + badges + '</div>'
+      + '<div class="contacts">' + contactsHtml(l) + '</div>'
+      + '<div class="rec">' + recommendText(l) + '</div>';
+    if (crm) {
+      h += '<div class="lead-crm">'
+        + '<select class="inp" data-f="status" aria-label="Estado">' + STATUSES.map(function (s) { return '<option value="' + s[0] + '"' + (l.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select>'
+        + '<input class="inp" type="date" data-f="followUp" value="' + esc(l.followUp || '') + '" aria-label="Próximo seguimiento" title="Próximo seguimiento">'
+        + '<select class="inp" data-f="service" aria-label="Servicio a ofrecer">' + Object.keys(SERVICES).filter(function (k) { return k !== 'auto'; }).map(function (k) { return '<option value="' + k + '"' + (l.service === k ? ' selected' : '') + '>Ofrecer: ' + SERVICES[k].label + '</option>'; }).join('') + '</select>'
+        + '<input class="inp" data-f="phone" value="' + esc(l.phone || '') + '" placeholder="WhatsApp / teléfono" aria-label="Teléfono">'
+        + '<textarea class="inp" data-f="notes" placeholder="Notas: qué te respondió, qué le interesa, presupuesto…">' + esc(l.notes || '') + '</textarea>'
+        + '</div>';
+      var fu = l.followUp && l.followUp <= today() && ['ganado', 'perdido'].indexOf(l.status) < 0;
+      h += '<div class="small">' + (fu ? '<span style="color:var(--warm)">⏰ Toca hacer seguimiento</span> · ' : '') + 'Agregado ' + esc((l.createdAt || '').slice(0, 10)) + (l.lastContact ? ' · Último contacto ' + esc(l.lastContact) : '') + '</div>';
+    }
+    h += '<div class="lead-actions">'
+      + '<button class="btn btn-wa btn-sm" data-act="msg">' + (l.wa ? 'Escribir por WhatsApp' : 'Preparar mensaje') + '</button>';
+    if (l.website && (l.webStatus === 'own' || l.webStatus === 'builder') && l.psi == null) h += '<button class="btn btn-ghost btn-sm" data-act="psi">Analizar velocidad web</button>';
+    if (l.psi != null) h += '<span class="bdg">Velocidad móvil ' + l.psi + '/100' + (l.psiLcp ? ' · ' + esc(l.psiLcp) : '') + '</span>';
+    if (crm) h += '<button class="btn btn-danger btn-sm" data-act="del">Eliminar</button>';
+    else h += saved ? '<button class="btn btn-ghost btn-sm" disabled>Guardado ✓</button>' : '<button class="btn btn-ghost btn-sm" data-act="save">Guardar</button>';
+    h += '</div></article>';
+    return h;
+  }
+
+  function saveLead(l, silent) {
+    if (indexOfLead(l) > -1) return false;
+    var copyL = JSON.parse(JSON.stringify(l));
+    copyL.status = copyL.status || 'nuevo'; copyL.notes = copyL.notes || ''; copyL.followUp = copyL.followUp || '';
+    copyL.createdAt = new Date().toISOString();
+    leads.unshift(copyL); saveLeads();
+    if (!silent) toast('Guardado en Mis leads');
+    return true;
+  }
+
+  function findLead(id, crm) {
+    var arr = crm ? leads : results;
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return arr[i];
+    return null;
+  }
+
+  function onLeadClick(e) {
+    var btn = e.target.closest('[data-act]'); if (!btn) return;
+    var card = btn.closest('.lead'); var crm = card.dataset.crm === '1';
+    var l = findLead(card.dataset.id, crm); if (!l) return;
+    var act = btn.dataset.act;
+    if (act === 'save') { saveLead(l); renderResults(); }
+    else if (act === 'msg') openMsg(l, crm);
+    else if (act === 'psi') analyzeSpeed(l, btn);
+    else if (act === 'del') {
+      if (!confirm('¿Eliminar a ' + l.name + ' de tus leads?')) return;
+      leads = leads.filter(function (x) { return x.id !== l.id; }); saveLeads(); renderLeads(); renderResults();
+    }
+  }
+
+  function onLeadChange(e) {
+    var el = e.target; var f = el.dataset.f; if (!f) return;
+    var card = el.closest('.lead'); var l = findLead(card.dataset.id, true); if (!l) return;
+    l[f] = el.value; l.updatedAt = new Date().toISOString();
+    if (f === 'phone') finalize(l, true);
+    if (f === 'status' && el.value === 'contactado' && !l.followUp) l.followUp = addDays(3);
+    saveLeads();
+    if (f !== 'notes') renderLeads();
+  }
+
+  /* ================= Mis leads ================= */
+  var statusFilter = 'all';
+  function renderCount() { $('#leadCount').textContent = leads.length; }
+
+  function renderStats() {
+    var t = today();
+    var counts = { all: leads.length, due: 0 };
+    STATUSES.forEach(function (s) { counts[s[0]] = 0; });
+    leads.forEach(function (l) {
+      counts[l.status] = (counts[l.status] || 0) + 1;
+      if (l.followUp && l.followUp <= t && ['ganado', 'perdido'].indexOf(l.status) < 0) counts.due++;
+    });
+    var items = [['all', 'Todos'], ['due', 'Seguimiento hoy']].concat(STATUSES.filter(function (s) { return s[0] !== 'perdido'; }));
+    $('#stats').innerHTML = items.map(function (s) {
+      return '<button class="stat' + (statusFilter === s[0] ? ' on' : '') + '" data-s="' + s[0] + '"><b>' + (counts[s[0]] || 0) + '</b><span>' + s[1] + '</span></button>';
+    }).join('');
+  }
+
+  function renderLeads() {
+    renderStats();
+    var q = norm($('#lSearch').value), t = today();
+    var list = leads.filter(function (l) {
+      if (statusFilter === 'due') { if (!(l.followUp && l.followUp <= t && ['ganado', 'perdido'].indexOf(l.status) < 0)) return false; }
+      else if (statusFilter !== 'all' && l.status !== statusFilter) return false;
+      if (q && norm([l.name, l.city, l.notes, l.nicheLabel, l.phone, l.network].join(' ')).indexOf(q) < 0) return false;
+      return true;
+    });
+    var sort = $('#lSort').value;
+    list.sort(function (a, b) {
+      if (sort === 'score') return b.score - a.score;
+      if (sort === 'recent') return (b.createdAt || '').localeCompare(a.createdAt || '');
+      var fa = a.followUp || '9999', fb = b.followUp || '9999';
+      return fa === fb ? b.score - a.score : fa.localeCompare(fb);
+    });
+    $('#leads').innerHTML = list.length ? list.map(function (l) { return leadCard(l, true); }).join('')
+      : '<div class="empty">' + (leads.length ? 'No hay leads con ese filtro.' : 'Todavía no tienes leads. Ve a “Buscar negocios”, busca y guarda los que te interesen.') + '</div>';
+  }
+
+  var CSV_COLS = [['name', 'Negocio'], ['nicheLabel', 'Tipo'], ['city', 'Ciudad'], ['country', 'País'], ['address', 'Dirección'], ['phone', 'Teléfono'], ['wa', 'WhatsApp (link)'],
+    ['email', 'Email'], ['website', 'Web'], ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['profile', 'Perfil'], ['rating', 'Calificación'], ['reviews', 'Reseñas'],
+    ['score', 'Puntaje'], ['service', 'Servicio a ofrecer'], ['status', 'Estado'], ['followUp', 'Próximo seguimiento'], ['notes', 'Notas'], ['mapsUrl', 'Google Maps'], ['source', 'Fuente']];
+  function toCsv(list) {
+    var rows = [CSV_COLS.map(function (c) { return c[1]; })];
+    list.forEach(function (l) {
+      rows.push(CSV_COLS.map(function (c) {
+        var v = l[c[0]];
+        if (c[0] === 'wa') v = l.wa ? 'https://wa.me/' + l.wa : '';
+        if (c[0] === 'service') v = SERVICES[v] ? SERVICES[v].label : v;
+        return v == null ? '' : v;
+      }));
+    });
+    return '﻿' + rows.map(function (r) {
+      return r.map(function (v) { v = String(v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\r\n');
+  }
+
+  /* ================= Mensajes ================= */
+  var msgLead = null, msgCrm = false;
+  function openMsg(l, crm) {
+    msgLead = l; msgCrm = crm;
+    $('#msgTitle').textContent = l.name;
+    $('#msgSub').textContent = (l.wa ? 'WhatsApp: +' + l.wa : 'Sin teléfono: usa el mensaje directo o el email') + ' · Ofrecer: ' + (SERVICES[l.service] ? SERVICES[l.service].label : '');
+    var sel = $('#msgTpl');
+    var def = l.status === 'contactado' ? 'wa2' : (l.wa ? 'wa1' : (l.email ? 'mail1' : 'dm1'));
+    sel.innerHTML = templates.map(function (t) { return '<option value="' + esc(t.id) + '"' + (t.id === def ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('');
+    $('#msgMark').checked = true;
+    fillMsg();
+    $('#msgModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function fillMsg() {
+    var t = templates.filter(function (x) { return x.id === $('#msgTpl').value; })[0] || templates[0];
+    $('#msgText').value = fill(t ? t.text : '', templateVars(msgLead));
+    updateMsgLinks();
+  }
+  function splitSubject(text) {
+    var m = text.match(/^Asunto:\s*(.+)\n+/);
+    return m ? { subject: m[1], body: text.slice(m[0].length) } : { subject: 'Propuesta para ' + msgLead.name, body: text };
+  }
+  function updateMsgLinks() {
+    var text = $('#msgText').value, l = msgLead;
+    var wa = $('#msgWa'), mail = $('#msgMail'), prof = $('#msgProfile');
+    wa.style.display = l.wa ? '' : 'none';
+    wa.href = l.wa ? 'https://wa.me/' + l.wa + '?text=' + enc(splitSubject(text).body) : '#';
+    $('#msgWaHint').textContent = l.wa ? 'Si el número es fijo (no celular), puede que no tenga WhatsApp: en ese caso llama o usa sus redes.' : '';
+    var em = splitSubject(text);
+    mail.style.display = l.email ? '' : 'none';
+    mail.href = l.email ? 'mailto:' + l.email + '?subject=' + enc(em.subject) + '&body=' + enc(em.body) : '#';
+    var p = l.instagram || l.facebook || l.profile;
+    prof.style.display = p ? '' : 'none';
+    prof.href = p || '#';
+  }
+  function markContacted() {
+    if (!$('#msgMark').checked || !msgLead) return;
+    var i = indexOfLead(msgLead);
+    if (i < 0) { saveLead(msgLead, true); i = indexOfLead(msgLead); }
+    var l = leads[i];
+    if (l.status === 'nuevo') l.status = 'contactado';
+    l.lastContact = today();
+    l.followUp = addDays(3);
+    saveLeads(); renderLeads(); renderResults();
+  }
+  function closeMsg() { $('#msgModal').classList.remove('open'); document.body.style.overflow = ''; }
+
+  function renderTemplates() {
+    var vars = ['nombre', 'nicho', 'ciudad', 'gancho', 'propuesta', 'servicio', 'plan', 'precio', 'firma', 'mi_nombre', 'mi_web', 'mi_whatsapp'];
+    $('#templates').innerHTML = templates.map(function (t, i) {
+      return '<div class="tpl" data-i="' + i + '"><div class="row"><input class="inp" data-k="name" value="' + esc(t.name) + '" style="flex:1;margin-top:0" aria-label="Nombre de la plantilla">'
+        + '<button class="btn btn-danger btn-sm" data-del="' + i + '">Eliminar</button></div>'
+        + '<textarea class="inp" data-k="text" rows="7" aria-label="Texto">' + esc(t.text) + '</textarea>'
+        + '<div class="vars">' + vars.map(function (v) { return '<code data-var="' + v + '">{' + v + '}</code>'; }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  /* ================= Enlaces a redes y directorios ================= */
+  var NET = {
+    maps: ['M', '#34a853'], ig: ['IG', 'linear-gradient(45deg,#f58529,#dd2a7b,#8134af)'], fb: ['f', '#1877f2'], tt: ['TT', '#111; box-shadow:inset 0 0 0 1px #333'],
+    li: ['in', '#0a66c2'], g: ['G', '#4285f4'], ads: ['$', '#7c5cff'], dir: ['D', '#00a3a3'], x: ['X', '#000; box-shadow:inset 0 0 0 1px #333'],
+    rd: ['r', '#ff4500'], job: ['J', '#e37400'], fr: ['W', '#1d7fd8'], th: ['@', '#222; box-shadow:inset 0 0 0 1px #333']
+  };
+  function group(net, title, desc, links) {
+    var n = NET[net];
+    return '<div class="lgroup"><h3><span class="net" style="background:' + n[1] + '">' + n[0] + '</span>' + esc(title) + '</h3>'
+      + (desc ? '<p>' + esc(desc) + '</p>' : '')
+      + links.map(function (l) { return '<a class="lk" href="' + esc(l[1]) + '" target="_blank" rel="noopener"><span>' + esc(l[0]) + '</span></a>'; }).join('') + '</div>';
+  }
+
+  function renderSocialLinks() {
+    var c = country(), city = F.city.trim() || c.cities[0], kw = nicheKw(), n = niche();
+    var place = city + ', ' + c.name;
+    var zones = F.zones.split(',').map(function (z) { return z.trim(); }).filter(Boolean);
+    var tagCity = slug(kw.split(' ')[0]) + slug(city), tagCountry = slug(kw.split(' ')[0]) + slug(c.name);
+    var html = '';
+
+    var maps = [[kw + ' en ' + place, 'https://www.google.com/maps/search/' + enc(kw + ' en ' + place)]];
+    zones.forEach(function (z) { maps.push([kw + ' en ' + z + ', ' + city, 'https://www.google.com/maps/search/' + enc(kw + ' en ' + z + ', ' + place)]); });
+    maps.push(['Negocios sin web: ' + kw + ' ' + city + ' (Google, pestaña Lugares)', g(kw + ' ' + city, '&tbm=lcl')]);
+    html += group('maps', 'Google Maps', 'Abre la ficha: si no tiene botón “Sitio web”, es una oportunidad.', maps);
+
+    html += group('ig', 'Instagram', 'Negocios que venden por DM suelen necesitar web, catálogo o bot.', [
+      ['Buscar "' + kw + ' ' + city + '"', 'https://www.instagram.com/explore/search/keyword/?q=' + enc(kw + ' ' + city)],
+      ['#' + tagCity, 'https://www.instagram.com/explore/tags/' + enc(tagCity) + '/'],
+      ['#' + tagCountry, 'https://www.instagram.com/explore/tags/' + enc(tagCountry) + '/'],
+      ['Perfiles con WhatsApp en la bio (Google)', g('site:instagram.com "' + kw + '" "' + city + '" (whatsapp OR "pedidos" OR "citas" OR "agenda")')],
+      ['Venden por DM, candidatos a tienda online', g('site:instagram.com "' + kw + '" "' + city + '" ("envíos" OR "pedidos por DM" OR "catálogo")')]
+    ]);
+
+    html += group('fb', 'Facebook', 'Páginas de negocio y grupos donde están los dueños.', [
+      ['Páginas: ' + kw + ' ' + city, 'https://www.facebook.com/search/pages/?q=' + enc(kw + ' ' + city)],
+      ['Grupos de emprendedores de ' + city, 'https://www.facebook.com/search/groups/?q=' + enc('emprendedores ' + city)],
+      ['Grupos de negocios de ' + city, 'https://www.facebook.com/search/groups/?q=' + enc('negocios ' + city)],
+      ['Páginas de negocio con WhatsApp (Google)', g('site:facebook.com "' + kw + '" "' + city + '" whatsapp -inurl:groups -inurl:posts')]
+    ]);
+
+    html += group('tt', 'TikTok', 'Negocios que hacen contenido pero no tienen web.', [
+      ['Cuentas: ' + kw + ' ' + city, 'https://www.tiktok.com/search/user?q=' + enc(kw + ' ' + city)],
+      ['Videos: ' + kw + ' ' + city, 'https://www.tiktok.com/search?q=' + enc(kw + ' ' + city)],
+      ['Perfiles en Google', g('site:tiktok.com "' + kw + '" "' + city + '"')]
+    ]);
+
+    html += group('li', 'LinkedIn', 'Empresas y gerentes: ideal para automatización y software.', [
+      ['Empresas: ' + kw + ' ' + city, 'https://www.linkedin.com/search/results/companies/?keywords=' + enc(kw + ' ' + city)],
+      ['Dueños y gerentes de ' + nicheLabel().toLowerCase(), 'https://www.linkedin.com/search/results/people/?keywords=' + enc('gerente ' + kw + ' ' + city)],
+      ['Empresas en Google', g('site:linkedin.com/company "' + kw + '" "' + city + '"')]
+    ]);
+
+    html += group('g', 'Google: señales de oportunidad', 'Búsquedas avanzadas que filtran negocios con presencia digital débil.', [
+      ['Solo usan Linktree (sin web propia)', g('site:linktr.ee "' + kw + '" "' + city + '"')],
+      ['Webs gratuitas o viejas (Wix, Blogspot…)', g('"' + kw + '" "' + city + '" (site:wixsite.com OR site:blogspot.com OR site:weebly.com OR site:godaddysites.com OR site:jimdosite.com OR site:site123.me)')],
+      ['Usan correo @gmail/@hotmail (sin dominio)', g('"' + kw + '" "' + city + '" ("@gmail.com" OR "@hotmail.com") -site:instagram.com -site:facebook.com')],
+      ['Piden por WhatsApp, candidatos a bot', g('"' + kw + '" "' + city + '" ("escríbenos al whatsapp" OR "pedidos al whatsapp" OR "agenda tu cita por whatsapp")')]
+    ]);
+
+    html += group('ads', 'Negocios que ya pagan publicidad', 'Tienen presupuesto: si su web o su atención falla, pierden dinero.', [
+      ['Anuncios activos en Facebook e Instagram (' + c.name + ')', 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=' + c.cc + '&q=' + enc(kw + ' ' + city) + '&search_type=keyword_unordered&media_type=all'],
+      ['Anuncios activos (todo ' + c.name + ')', 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=' + c.cc + '&q=' + enc(kw) + '&search_type=keyword_unordered&media_type=all'],
+      ['Anunciantes de Google en ' + c.name, 'https://adstransparency.google.com/?region=' + c.cc]
+    ]);
+
+    var dirs = [['Directorios y guías', g('"' + kw + '" "' + city + '" (directorio OR "páginas amarillas" OR guía) teléfono')]];
+    if (n.g === 'pedidos' || n.g === 'reservas') dirs.push(['TripAdvisor', g('site:tripadvisor.com "' + kw + '" "' + city + '"')]);
+    if (n.id === 'dentista' || n.id === 'medico' || n.id === 'psicologo') dirs.push(['Doctoralia', g('site:doctoralia.com "' + city + '" ' + kw)]);
+    if (c.cc === 'US' || c.cc === 'ES' || c.cc === 'MX' || c.cc === 'CL' || c.cc === 'AR') dirs.push(['Yelp', g('site:yelp.com "' + kw + '" "' + city + '"')]);
+    dirs.push(['Google Negocios con pocas reseñas', g(kw + ' ' + city + ' opiniones', '&tbm=lcl')]);
+    html += group('dir', 'Directorios', 'Listados con teléfonos y datos de contacto.', dirs);
+
+    $('#socialLinks').innerHTML = html;
+  }
+
+  var INTENT = {
+    web: ['necesito una página web', 'busco quien haga páginas web', 'recomienden diseñador web', 'cotizar página web'],
+    bot: ['chatbot para whatsapp', 'bot para whatsapp', 'automatizar whatsapp', 'responder mensajes automáticamente'],
+    automatizacion: ['automatizar procesos', 'automatizar facturas', 'automatizar reportes', 'necesito automatizar'],
+    ecommerce: ['necesito una tienda online', 'crear tienda en shopify', 'tienda virtual para mi negocio', 'vender por internet'],
+    ia: ['inteligencia artificial para mi negocio', 'chatgpt para mi empresa', 'agente de ia', 'asistente virtual con ia'],
+    app: ['necesito desarrollar una app', 'crear aplicación móvil', 'programador de apps', 'sistema a medida']
+  };
+  var JOBS = {
+    web: ['community manager', 'diseñador web', 'desarrollador web'],
+    bot: ['atención al cliente whatsapp', 'asesor de ventas whatsapp', 'recepcionista'],
+    automatizacion: ['asistente administrativo', 'digitador', 'auxiliar contable'],
+    ecommerce: ['vendedor online', 'community manager', 'encargado de tienda online'],
+    ia: ['atención al cliente', 'asistente administrativo', 'analista de datos'],
+    app: ['desarrollador', 'programador', 'analista de sistemas']
+  };
+  var FREELANCE = { web: 'página web', bot: 'chatbot', automatizacion: 'automatización', ecommerce: 'tienda online', ia: 'inteligencia artificial', app: 'aplicación móvil' };
+
+  function radarService() { return F.service === 'auto' ? 'web' : F.service; }
+
+  function renderRadar() {
+    var s = radarService(), c = country(), city = F.city.trim() || c.cities[0];
+    var useCity = $('#radarCity').checked;
+    var loc = useCity ? city : c.name;
+    $('#radarCtx').innerHTML = 'Buscando clientes para <b style="color:var(--text)">' + esc(SERVICES[s].label) + '</b> en <b style="color:var(--text)">' + esc(loc) + '</b>' + (F.service === 'auto' ? ' (elige un servicio en “Buscar negocios” para cambiarlo)' : '');
+    var phrases = INTENT[s];
+    var orQ = phrases.map(function (p) { return '"' + p + '"'; }).join(' OR ');
+    var html = '';
+
+    html += group('x', 'X (Twitter)', 'Publicaciones recientes de gente pidiendo el servicio.', [
+      ['Pedidos recientes' + (useCity ? ' cerca de ' + city : ''), 'https://x.com/search?f=live&q=' + enc('(' + orQ + ') lang:es' + (useCity ? ' near:"' + city + '" within:60km' : ''))],
+      ['"' + phrases[0] + '"', 'https://x.com/search?f=live&q=' + enc('"' + phrases[0] + '" ' + (useCity ? city : ''))]
+    ]);
+    html += group('fb', 'Facebook', 'Posts en grupos y páginas pidiendo recomendaciones.', phrases.slice(0, 3).map(function (p) {
+      return ['"' + p + '" ' + loc, 'https://www.facebook.com/search/posts/?q=' + enc(p + ' ' + loc)];
+    }).concat([['Grupos de emprendedores de ' + loc, 'https://www.facebook.com/search/groups/?q=' + enc('emprendedores ' + loc)]]));
+    html += group('li', 'LinkedIn', 'Posts recientes de empresas y profesionales.', phrases.slice(0, 3).map(function (p) {
+      return ['"' + p + '"', 'https://www.linkedin.com/search/results/content/?keywords=' + enc(p + (useCity ? ' ' + city : '')) + '&sortBy=%22date_posted%22'];
+    }));
+    html += group('g', 'Google · última semana', 'Foros, blogs y redes indexadas en los últimos 7 días.', [
+      ['Pedidos en ' + loc + ' (7 días)', g('(' + orQ + ') "' + loc + '"', '&tbs=qdr:w')],
+      ['Pedidos en foros y redes (7 días)', g('(' + orQ + ') (site:facebook.com OR site:reddit.com OR site:instagram.com)', '&tbs=qdr:w')],
+      ['Todo el mes en ' + loc, g('(' + orQ + ') "' + loc + '"', '&tbs=qdr:m')]
+    ]);
+    html += group('th', 'Threads y Reddit', 'Conversaciones de emprendedores.', [
+      ['Threads: "' + phrases[0] + '"', 'https://www.threads.com/search?q=' + enc(phrases[0] + (useCity ? ' ' + city : ''))],
+      ['Reddit: ' + phrases[0], 'https://www.reddit.com/search/?sort=new&q=' + enc(phrases[0])],
+      ['Reddit: ' + phrases[1], 'https://www.reddit.com/search/?sort=new&q=' + enc(phrases[1])]
+    ]);
+    html += group('job', 'Empresas contratando', 'Si buscan personal para tareas repetitivas o digitales, puedes ofrecerles automatizarlas o hacerlas tú.', JOBS[s].map(function (j) {
+      return ['LinkedIn Empleos: ' + j, 'https://www.linkedin.com/jobs/search/?keywords=' + enc(j) + '&location=' + enc(loc)];
+    }).concat([
+      ['Computrabajo: ' + JOBS[s].join(', '), g('site:computrabajo.com (' + JOBS[s].map(function (j) { return '"' + j + '"'; }).join(' OR ') + ') "' + loc + '"', '&tbs=qdr:m')],
+      ['Indeed: ' + JOBS[s][0], g('site:indeed.com "' + JOBS[s][0] + '" "' + loc + '"', '&tbs=qdr:m')]
+    ]));
+    html += group('fr', 'Proyectos freelance', 'Clientes publicando proyectos con presupuesto.', [
+      ['Workana: ' + FREELANCE[s], 'https://www.workana.com/jobs?language=es&query=' + enc(FREELANCE[s])],
+      ['Upwork: ' + SERVICES[s].kw, 'https://www.upwork.com/nx/search/jobs/?sort=recency&q=' + enc({ web: 'website', bot: 'whatsapp chatbot', automatizacion: 'automation n8n', ecommerce: 'shopify store', ia: 'AI agent', app: 'mobile app' }[s])],
+      ['Freelancer.com: ' + FREELANCE[s], g('site:freelancer.com/projects "' + FREELANCE[s] + '"', '&tbs=qdr:m')],
+      ['Soyfreelancer / otros (Google)', g('"' + FREELANCE[s] + '" proyecto freelance presupuesto "' + c.name + '"', '&tbs=qdr:m')]
+    ]);
+    html += group('ads', 'Negocios que ya invierten', 'Anuncios activos: tienen presupuesto de marketing.', [
+      ['Anuncios activos de ' + nicheLabel().toLowerCase() + ' en ' + c.name, 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=' + c.cc + '&q=' + enc(nicheKw()) + '&search_type=keyword_unordered&media_type=all'],
+      ['Anuncios que mandan a WhatsApp (' + c.name + ')', 'https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=' + c.cc + '&q=' + enc('escríbenos whatsapp ' + nicheKw()) + '&search_type=keyword_unordered&media_type=all']
+    ]);
+    $('#radarLinks').innerHTML = html;
+  }
+
+  /* ================= Formulario de búsqueda ================= */
+  function initForm() {
+    $('#fService').innerHTML = Object.keys(SERVICES).map(function (k) { return '<option value="' + k + '">' + esc(SERVICES[k].label) + '</option>'; }).join('');
+    $('#fNiche').innerHTML = NICHES.map(function (n) { return '<option value="' + n.id + '">' + esc(n.label) + '</option>'; }).join('');
+    $('#fCountry').innerHTML = COUNTRIES.map(function (c) { return '<option value="' + c.cc + '">' + esc(c.name) + '</option>'; }).join('');
+    $('#fService').value = F.service; $('#fNiche').value = F.niche; $('#fCountry').value = F.cc;
+    $('#fCity').value = F.city; $('#fCustomNiche').value = F.customNiche; $('#fZones').value = F.zones;
+    syncForm();
+  }
+  function syncForm() {
+    $('#customNicheWrap').hidden = F.niche !== 'custom';
+    $('#cityList').innerHTML = country().cities.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('');
+    store.set('kp_form', F);
+    renderSocialLinks(); renderRadar();
+  }
+  function readForm(e) {
+    var prevCc = F.cc;
+    F.service = $('#fService').value; F.niche = $('#fNiche').value; F.cc = $('#fCountry').value;
+    F.customNiche = $('#fCustomNiche').value; F.zones = $('#fZones').value; F.city = $('#fCity').value;
+    if (e && e.target.id === 'fCountry' && prevCc !== F.cc) { F.city = country().cities[0]; $('#fCity').value = F.city; }
+    syncForm();
+  }
+
+  /* ================= Pestañas ================= */
+  function go(tab) {
+    $$('.tab').forEach(function (t) { t.setAttribute('aria-selected', t.dataset.tab === tab ? 'true' : 'false'); });
+    $$('.panel').forEach(function (p) { p.classList.toggle('active', p.id === 'p-' + tab); });
+    if (tab === 'leads') renderLeads();
+    if (tab === 'radar') renderRadar();
+    try { history.replaceState(null, '', '#' + tab); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+
+  /* ================= Eventos ================= */
+  $$('.tab').forEach(function (t) { t.addEventListener('click', function () { go(t.dataset.tab); }); });
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-goto]'); if (a) { e.preventDefault(); go(a.dataset.goto); }
+  });
+  ['fService', 'fNiche', 'fCountry'].forEach(function (id) { $('#' + id).addEventListener('change', readForm); });
+  ['fCity', 'fCustomNiche', 'fZones'].forEach(function (id) { $('#' + id).addEventListener('input', readForm); });
+  $('#fService').addEventListener('change', function () {
+    results.forEach(function (l) { finalize(l); }); renderResults();
+  });
+  $('#btnOsm').addEventListener('click', searchOsm);
+  $('#btnGoogle').addEventListener('click', searchGoogle);
+  ['rNoWeb', 'rPhone', 'rSort'].forEach(function (id) { $('#' + id).addEventListener('change', renderResults); });
+  $('#rCsv').addEventListener('click', function () { download('prospectos-' + slug(nicheLabel()) + '-' + slug(F.city) + '.csv', toCsv(filteredResults()), 'text/csv;charset=utf-8'); });
+  $('#rSaveAll').addEventListener('click', function () {
+    var n = 0; filteredResults().forEach(function (l) { if (saveLead(l, true)) n++; });
+    renderResults(); toast(n ? n + ' negocios guardados en Mis leads' : 'Ya estaban todos guardados');
+  });
+  $('#results').addEventListener('click', onLeadClick);
+  $('#leads').addEventListener('click', onLeadClick);
+  $('#leads').addEventListener('change', onLeadChange);
+  $('#stats').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-s]'); if (!b) return; statusFilter = b.dataset.s; renderLeads();
+  });
+  $('#lSearch').addEventListener('input', renderLeads);
+  $('#lSort').addEventListener('change', renderLeads);
+  $('#radarCity').addEventListener('change', renderRadar);
+
+  $('#manualForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var fd = new FormData(e.target), c = country(), n = niche();
+    var profile = fd.get('profile').trim(), net = fd.get('network');
+    var l = finalize({
+      id: 'm:' + Date.now().toString(36), source: 'manual', network: net, name: fd.get('name').trim(),
+      niche: n.id, nicheLabel: nicheLabel(), group: n.g, city: F.city.trim(), country: c.name, cc: c.cc,
+      phone: fd.get('phone').trim(), website: fd.get('website').trim(), email: fd.get('email').trim(),
+      instagram: /instagram\.com/i.test(profile) ? profile : '', facebook: /(facebook\.com|fb\.com)/i.test(profile) ? profile : '',
+      profile: /(instagram\.com|facebook\.com|fb\.com)/i.test(profile) ? '' : profile,
+      notes: fd.get('notes').trim(), reviews: 0, rating: null,
+      service: F.service !== 'auto' ? F.service : '',
+      mapsUrl: ''
+    });
+    if (!l.name) return;
+    if (saveLead(l)) e.target.reset(); else toast('Ese negocio ya está en tus leads');
+  });
+
+  $('#lCsv').addEventListener('click', function () { download('mis-leads-kova.csv', toCsv(leads), 'text/csv;charset=utf-8'); });
+  $('#lJson').addEventListener('click', function () {
+    download('kova-prospector-backup-' + today() + '.json', JSON.stringify({ version: 1, leads: leads, templates: templates }, null, 2), 'application/json');
+  });
+  $('#lImport').addEventListener('change', function (e) {
+    var file = e.target.files[0]; if (!file) return;
+    file.text().then(function (txt) {
+      var data = JSON.parse(txt);
+      var incoming = Array.isArray(data) ? data : data.leads || [];
+      var n = 0;
+      incoming.forEach(function (l) { if (l && l.id && l.name && indexOfLead(l) < 0) { leads.push(l); n++; } });
+      if (data.templates && data.templates.length && confirm('La copia trae plantillas de mensajes. ¿Reemplazar las actuales?')) { templates = data.templates; store.set('kp_templates', templates); renderTemplates(); }
+      saveLeads(); renderLeads(); toast(n + ' leads importados');
+    }).catch(function () { toast('El archivo no es una copia válida'); });
+    e.target.value = '';
+  });
+  $('#lClear').addEventListener('click', function () {
+    if (!leads.length || !confirm('¿Borrar los ' + leads.length + ' leads? Descarga antes una copia de seguridad si los quieres conservar.')) return;
+    leads = []; saveLeads(); renderLeads(); renderResults();
+  });
+
+  $('#msgTpl').addEventListener('change', fillMsg);
+  $('#msgText').addEventListener('input', updateMsgLinks);
+  $('#msgWa').addEventListener('click', markContacted);
+  $('#msgMail').addEventListener('click', markContacted);
+  $('#msgProfile').addEventListener('click', function () { copy($('#msgText').value).then(function () { toast('Mensaje copiado: pégalo en el chat'); }); markContacted(); });
+  $('#msgCopy').addEventListener('click', function () { copy($('#msgText').value).then(function () { toast('Mensaje copiado'); }); markContacted(); });
+  $('#msgClose').addEventListener('click', closeMsg);
+  $('#msgModal').addEventListener('click', function (e) { if (e.target.id === 'msgModal') closeMsg(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMsg(); });
+
+  $('#templates').addEventListener('input', function (e) {
+    var box = e.target.closest('.tpl'); var k = e.target.dataset.k; if (!box || !k) return;
+    templates[+box.dataset.i][k] = e.target.value; store.set('kp_templates', templates);
+  });
+  $('#templates').addEventListener('click', function (e) {
+    var v = e.target.closest('[data-var]');
+    if (v) {
+      var ta = $('textarea', v.closest('.tpl')); var s = ta.selectionStart, ins = '{' + v.dataset.var + '}';
+      ta.value = ta.value.slice(0, s) + ins + ta.value.slice(ta.selectionEnd); ta.focus(); ta.selectionStart = ta.selectionEnd = s + ins.length;
+      ta.dispatchEvent(new Event('input', { bubbles: true })); return;
+    }
+    var d = e.target.closest('[data-del]');
+    if (d && confirm('¿Eliminar esta plantilla?')) { templates.splice(+d.dataset.del, 1); store.set('kp_templates', templates); renderTemplates(); }
+  });
+  $('#tplAdd').addEventListener('click', function () {
+    templates.push({ id: 't' + Date.now().toString(36), name: 'Nueva plantilla', text: 'Hola, {nombre} 👋 ' }); store.set('kp_templates', templates); renderTemplates();
+  });
+  $('#tplReset').addEventListener('click', function () {
+    if (!confirm('¿Volver a las plantillas originales? Perderás tus cambios.')) return;
+    templates = DEFAULT_TEMPLATES.slice(); store.set('kp_templates', templates); renderTemplates();
+  });
+
+  var sf = $('#settingsForm');
+  ['myName', 'myWa', 'myWeb', 'googleKey'].forEach(function (k) { sf.elements[k].value = S[k] || ''; });
+  sf.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var oldKey = S.googleKey;
+    ['myName', 'myWa', 'myWeb', 'googleKey'].forEach(function (k) { S[k] = sf.elements[k].value.trim(); });
+    S.myWa = S.myWa.replace(/\D/g, '');
+    store.set('kp_settings', S);
+    toast(oldKey && oldKey !== S.googleKey ? 'Guardado. Recarga la página para usar la nueva clave.' : 'Ajustes guardados');
+  });
+
+  /* ================= Inicio ================= */
+  initForm();
+  renderResults();
+  renderTemplates();
+  renderCount();
+  var start = (location.hash || '').slice(1);
+  if (['buscar', 'radar', 'leads', 'mensajes', 'ajustes'].indexOf(start) > -1) go(start);
+})();
+</script>
+</body>
+</html>

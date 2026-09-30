@@ -47,6 +47,18 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 
 > La web no muestra testimonios ni cifras inventadas: la sección "Proyectos" son **ejemplos de lo que se puede construir** (sin resultados) y hay un bloque "Pedir referencias" (`id="referencias"`). Si agregas testimonios o cifras, que sean reales y con permiso del cliente: las reseñas falsas van contra las políticas de Meta y las leyes de protección al consumidor.
 
+## KOVA Prospector (buscador de clientes)
+
+Herramienta interna en `prospector/index.html` para encontrar negocios a quienes venderles los servicios de KOVA. Se publica junto con la web en **https://kovaautomatiza.com/prospector/** (no se indexa en Google).
+
+- **Buscar negocios:** por tipo de negocio, país y ciudad en OpenStreetMap (gratis, sin clave) o Google Maps (con tu API key). Cada negocio recibe un puntaje (sin web, solo redes, tiene teléfono, reseñas…) y una recomendación de qué plan ofrecerle.
+- **Redes y directorios:** búsquedas ya armadas en Google Maps, Instagram, Facebook, TikTok, LinkedIn, Google, la Biblioteca de anuncios de Meta y directorios.
+- **Radar de intención:** gente pidiendo el servicio en X, Facebook, LinkedIn, Threads y Reddit, empresas contratando para tareas automatizables y proyectos en Workana/Upwork.
+- **Mis leads:** embudo con estados, notas y fechas de seguimiento; exporta CSV y copia de seguridad JSON.
+- **Mensajes:** plantillas de WhatsApp, DM y email que se rellenan con los datos de cada negocio.
+
+Los datos (leads, plantillas y la API key) se guardan solo en el navegador donde uses la herramienta. Precios y planes se editan en `SERVICES` dentro del `<script>`.
+
 ## Publicidad en Meta
 
 La campaña de Facebook/Instagram (estrategia, paso a paso y textos) está en [`marketing/CAMPANA-META.md`](marketing/CAMPANA-META.md). Los 3 videos están en `marketing/videos/` y las 3 imágenes en `marketing/imagenes/`.
