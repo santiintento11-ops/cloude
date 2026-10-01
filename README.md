@@ -51,7 +51,8 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 
 Herramienta interna en `prospector/index.html` para encontrar negocios a quienes venderles los servicios de KOVA. Se publica junto con la web en **https://kovaautomatiza.com/prospector/** (no se indexa en Google).
 
-- **Buscar negocios:** por tipo de negocio, país y ciudad en OpenStreetMap (gratis, sin clave) o Google Maps (con tu API key). Cada negocio recibe un puntaje (sin web, solo redes, tiene teléfono, reseñas…) y una recomendación de qué plan ofrecerle.
+- **Buscar negocios:** cualquier tipo de negocio (texto libre, con sinónimos) y cualquier lugar (ciudad, parroquia, barrio o provincia; en Ecuador sugiere todos los cantones principales y las 24 provincias). Fuentes: OpenStreetMap (gratis, sin clave, pero en Ecuador tiene pocos negocios) o Google Maps (con tu API key; divide el lugar en hasta 16 zonas para traer más resultados).
+- **Actividad reciente:** con Google Maps lee la fecha de las últimas reseñas; con un token de Meta revisa el Instagram de cada negocio (último post, posts del mes, seguidores y WhatsApp de la bio). Los negocios inactivos bajan de puntaje y los números fijos se marcan como “sin WhatsApp”.
 - **Redes y directorios:** búsquedas ya armadas en Google Maps, Instagram, Facebook, TikTok, LinkedIn, Google, la Biblioteca de anuncios de Meta y directorios.
 - **Radar de intención:** gente pidiendo el servicio en X, Facebook, LinkedIn, Threads y Reddit, empresas contratando para tareas automatizables y proyectos en Workana/Upwork.
 - **Mis leads:** embudo con estados, notas y fechas de seguimiento; exporta CSV y copia de seguridad JSON.
