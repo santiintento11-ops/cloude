@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>KOVA · TikTok y Reels</title>
+<link rel="stylesheet" href="fonts.css">
+<!--
+  Plantilla de los 10 videos de KOVA para TikTok e Instagram Reels (1080×1920).
+  Parámetros: ?c=noche|antes|senales|precio|construye|horas|negocios|google|proceso|tienda  &t=segundos (vista previa)
+  render-tiktok.js la graba cuadro por cuadro: todas las animaciones son CSS en pausa y se posicionan con seek(t).
+  Cada idea define data-dur (duración), data-end (cuando empieza el cierre) y data-cover (segundo de la portada).
+  Los elementos con data-sfx marcan dónde suena un efecto (pop, ding, type, success, cash, whoosh); audio.py los mezcla con la música.
+  Zona segura de TikTok: nada importante arriba de 250 px, debajo de 1480 px ni en los 140 px de la derecha (botones de la app).
+-->
+<style>
+:root{
+  --bg:#07060d; --text:#f4f2ff; --muted:#a09cb8; --line:rgba(255,255,255,.1);
+  --v:#7c5cff; --c:#00e0ff; --p:#ff4ecd; --g:#25d366; --r:#ff4d6d;
+  --grad:linear-gradient(120deg,#7c5cff 0%,#00e0ff 55%,#ff4ecd 100%);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+body{font-family:Inter,"Noto Color Emoji",sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+h1,h2,h3,.sg{font-family:"Space Grotesk",Inter,"Noto Color Emoji",sans-serif;letter-spacing:-.025em;line-height:1.04;font-weight:700}
+.mono{font-family:"JetBrains Mono",monospace}
+.gt{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.red{color:var(--r)}
+.nw{white-space:nowrap}
+
+/* ---------- Fondo ---------- */
+.bg{position:absolute;inset:0;overflow:hidden}
+.bg .grid{position:absolute;inset:-100px;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:90px 90px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);animation:gridmove 18s linear both}
+@keyframes gridmove{to{transform:translate(90px,180px)}}
+.orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.55}
+.o1{width:700px;height:700px;background:#7c5cff;left:-250px;top:8%;animation:drift1 18s ease-in-out both}
+.o2{width:620px;height:620px;background:#00b8d9;right:-260px;top:45%;animation:drift2 18s ease-in-out both}
+.o3{width:520px;height:520px;background:#ff4ecd;left:20%;bottom:-300px;opacity:.35;animation:drift1 18s ease-in-out reverse both}
+@keyframes drift1{50%{transform:translate(160px,120px) scale(1.15)}}
+@keyframes drift2{50%{transform:translate(-180px,-140px) scale(1.1)}}
+
+/* ---------- Escenas ---------- */
+.safe{position:absolute;top:250px;bottom:440px;left:84px;right:140px}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:40px;
+  animation:scIn .5s var(--ease) backwards, scOut .35s ease-in forwards;
+  animation-delay:calc(var(--s) * 1s), calc(var(--e) * 1s - .35s)}
+.sc.first{animation:scOut .35s ease-in forwards;animation-delay:calc(var(--e) * 1s - .35s)}
+.sc.last{animation:scIn .5s var(--ease) backwards;animation-delay:calc(var(--s) * 1s)}
+@keyframes scIn{from{opacity:0;transform:translateY(70px) scale(.96)}}
+@keyframes scOut{to{opacity:0;transform:translateY(-60px) scale(.98)}}
+
+/* Animaciones de elementos: --d = segundo absoluto en el video */
+.a{animation-duration:.55s;animation-timing-function:var(--ease);animation-fill-mode:both;animation-delay:calc(var(--d) * 1s)}
+.up{animation-name:up} @keyframes up{from{opacity:0;transform:translateY(50px)}}
+.pop{animation-name:pop;animation-timing-function:cubic-bezier(.3,1.6,.5,1)} @keyframes pop{from{opacity:0;transform:scale(.55)}}
+.left{animation-name:left} @keyframes left{from{opacity:0;transform:translateX(-90px)}}
+.right{animation-name:right} @keyframes right{from{opacity:0;transform:translateX(90px)}}
+.down{animation-name:down} @keyframes down{from{opacity:0;transform:translateY(-60px)}}
+.fi{animation-name:fi} @keyframes fi{from{opacity:0}}
+.fadeout{animation-name:fo;animation-duration:.3s} @keyframes fo{to{opacity:0}}
+.hookin{animation-name:hookin;animation-duration:1.4s} @keyframes hookin{from{transform:scale(1.08)}}
+.shake{animation-name:shake;animation-duration:.5s;animation-timing-function:linear} @keyframes shake{0%{opacity:0;transform:scale(.8)}20%{opacity:1;transform:scale(1.04) translateX(-14px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(5px)}}
+.stamp{animation-name:stamp;animation-timing-function:cubic-bezier(.3,1.5,.5,1)} @keyframes stamp{from{opacity:0;transform:scale(2.2) rotate(-14deg)}to{transform:rotate(-8deg)}}
+.dim{animation-name:dim;animation-duration:.4s} @keyframes dim{to{opacity:.55;filter:grayscale(.85)}}
+
+/* Texto */
+.hook{font-size:96px}
+.cap{font-size:66px}
+.sub{font-size:38px;color:var(--muted);font-weight:500;line-height:1.35}
+.note{font-size:24px;color:#7d7996;font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:14px;padding:16px 30px;border-radius:99px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);font-size:36px;font-weight:600}
+.dot{width:16px;height:16px;border-radius:50%;background:var(--g);box-shadow:0 0 0 6px rgba(37,211,102,.2)}
+.step{font:700 30px "JetBrains Mono";letter-spacing:.1em;color:var(--muted);padding:10px 22px;border-radius:99px;border:1.5px solid rgba(255,255,255,.14)}
+.chip{position:absolute;padding:14px 24px;border-radius:99px;background:rgba(15,14,26,.95);border:1.5px solid rgba(255,255,255,.18);font-size:28px;font-weight:600;white-space:nowrap;box-shadow:0 16px 40px rgba(0,0,0,.45);z-index:6}
+.tw .chr{animation:chr .01s linear both;animation-delay:calc(var(--d) * 1s)}
+@keyframes chr{from{display:none}}
+.caret{display:inline-block;width:4px;height:1.05em;margin-left:3px;vertical-align:-.15em;background:currentColor;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Teléfono y chat de WhatsApp */
+.phone{position:relative;width:520px;height:840px;border-radius:64px;background:#0b0a14;border:10px solid #23213a;box-shadow:0 40px 120px rgba(124,92,255,.35),0 0 0 2px rgba(255,255,255,.08);overflow:hidden;flex:none}
+.phone .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:150px;height:36px;border-radius:99px;background:#000;z-index:8}
+.chat-h{display:flex;align-items:center;gap:18px;padding:66px 26px 20px;background:#1f2c34;text-align:left}
+.chat-h .av{width:66px;height:66px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font:800 28px Inter}
+.chat-h b{display:block;font-size:28px}
+.chat-h small{font-size:22px;color:#8fe3b0}
+.chat-b{position:absolute;left:0;right:0;top:152px;bottom:0;padding:24px 20px 34px;display:flex;flex-direction:column;justify-content:flex-end;gap:16px;background:#0b141a;background-image:radial-gradient(rgba(255,255,255,.035) 2px,transparent 2px);background-size:26px 26px}
+.msg{max-width:86%;padding:16px 20px 14px;border-radius:22px;font-size:27px;line-height:1.35;text-align:left;white-space:pre-line;flex:none}
+.msg small{display:block;text-align:right;font-size:18px;opacity:.6;margin-top:4px}
+.msg.in{align-self:flex-start;background:#202c33;border-top-left-radius:6px}
+.msg.out{align-self:flex-end;background:#005c4b;border-top-right-radius:6px}
+.typing{align-self:flex-end;display:flex;gap:8px;padding:20px 24px;border-radius:22px;background:#005c4b;border-top-right-radius:6px;flex:none}
+.typing i{width:12px;height:12px;border-radius:50%;background:#bfe;animation:blink2 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink2{50%{opacity:.25}}
+.msgin{animation:msgin .45s var(--ease) both;animation-delay:calc(var(--d) * 1s)}
+@keyframes msgin{from{display:none;opacity:0;transform:translateY(30px)}}
+.typing{animation:msgin .3s var(--ease) both, tout .01s linear forwards;animation-delay:calc(var(--d) * 1s), calc((var(--d) + var(--len)) * 1s)}
+@keyframes tout{to{display:none}}
+.menu{background:#005c4b;align-self:flex-end;border-radius:22px;border-top-right-radius:6px;overflow:hidden;width:78%;text-align:left;flex:none}
+.menu .mh{padding:16px 20px;background:linear-gradient(120deg,#e8590c,#f59f00);font:700 28px "Space Grotesk"}
+.menu div:not(.mh){display:flex;justify-content:space-between;padding:10px 20px;font-size:25px;border-top:1px solid rgba(255,255,255,.08)}
+/* Burbujas grandes (fuera del teléfono) */
+.bub{max-width:90%;padding:24px 32px;border-radius:34px;font-size:44px;line-height:1.3;text-align:left;font-weight:500}
+.bub.in{align-self:flex-start;background:#202c33;border-top-left-radius:8px}
+.bub.out{align-self:flex-end;background:#005c4b;border-top-right-radius:8px}
+.convo{display:flex;flex-direction:column;gap:20px;width:100%}
+
+/* Pantalla de bloqueo */
+.lock{position:relative;width:640px;height:720px;border-radius:64px;border:10px solid #23213a;overflow:hidden;flex:none;background:radial-gradient(circle at 20% 10%,#3b2a8f,transparent 55%),radial-gradient(circle at 90% 80%,#0f6d84,transparent 50%),#120f26;box-shadow:0 40px 120px rgba(124,92,255,.35)}
+.lock.day{background:radial-gradient(circle at 80% 10%,#ffb347,transparent 50%),radial-gradient(circle at 10% 90%,#ff6f91,transparent 55%),#3a2556}
+.lock .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:150px;height:36px;border-radius:99px;background:#000}
+.lk-time{font:700 150px "Space Grotesk";letter-spacing:-.04em;margin-top:70px;line-height:1}
+.lk-date{font-size:30px;font-weight:600;color:#e3e1ff;margin-top:6px}
+.lns{position:absolute;left:20px;right:20px;bottom:24px;display:flex;flex-direction:column;gap:14px}
+.ln{display:flex;gap:18px;align-items:center;text-align:left;padding:20px 22px;border-radius:28px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.12)}
+.ln .ic{flex:none;width:66px;height:66px;border-radius:18px;background:var(--g);display:grid;place-items:center;font-size:36px}
+.ln .ic svg{width:42px;height:42px;fill:#fff}
+.ln b{display:block;font-size:24px;color:#e9e7ff}
+.ln span{font-size:29px;font-weight:600}
+.ln small{margin-left:auto;align-self:flex-start;font-size:21px;color:#ddd;flex:none}
+.sum{padding:26px 26px}
+.sum .rows{display:grid;gap:10px;margin-top:10px}
+.sum .rows div{display:flex;justify-content:space-between;font-size:30px;font-weight:600}
+.sum .rows i{font-style:normal;font:700 34px "Space Grotesk";color:#8dffbd}
+
+/* Listas y tarjetas */
+.feats{display:flex;flex-direction:column;gap:18px;width:100%}
+.feat{display:flex;align-items:center;gap:22px;padding:24px 30px;border-radius:26px;background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.1);font-size:38px;font-weight:600;text-align:left}
+.feat em{font-style:normal;font-size:44px;flex:none}
+.price{display:flex;align-items:baseline;justify-content:center;gap:16px;flex-wrap:wrap}
+.price .from{font-size:40px;color:var(--muted);font-weight:600}
+.price .n{font:700 150px "Space Grotesk";letter-spacing:-.04em;line-height:1}
+.card{width:100%;padding:42px 44px;border-radius:40px;background:linear-gradient(160deg,rgba(124,92,255,.22),rgba(0,224,255,.08));border:2px solid rgba(124,92,255,.5);box-shadow:0 30px 90px rgba(124,92,255,.25);text-align:left;position:relative}
+.card h3{font-size:58px}
+.card ul{list-style:none;display:grid;gap:14px}
+.card li{font-size:37px;font-weight:500;display:flex;gap:16px;align-items:center}
+.card li::before{content:"✓";flex:none;width:44px;height:44px;border-radius:50%;background:rgba(37,211,102,.18);color:var(--g);display:grid;place-items:center;font-weight:800;font-size:28px}
+.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.trust span{font-size:30px;font-weight:600;padding:12px 24px;border-radius:99px;background:rgba(0,224,255,.1);border:1.5px solid rgba(0,224,255,.3);color:#bdf6ff}
+
+/* Ventana de código / navegador */
+.win{width:100%;border-radius:30px;background:#0d0c17;border:1.5px solid rgba(255,255,255,.12);box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden;text-align:left;position:relative}
+.win .bar{display:flex;gap:12px;align-items:center;padding:20px 26px;border-bottom:1.5px solid rgba(255,255,255,.08);font-size:24px;color:var(--muted)}
+.win .bar i{width:18px;height:18px;border-radius:50%;background:#ff5f57;flex:none}.win .bar i:nth-child(2){background:#febc2e}.win .bar i:nth-child(3){background:#28c840;margin-right:14px}
+.addr{flex:1;padding:10px 20px;border-radius:99px;background:rgba(255,255,255,.07);font-size:24px;color:#d8d4ee}
+.code{padding:26px 30px;font-size:27px;line-height:1.65;white-space:pre}
+.code .ln2{display:block;overflow:hidden;white-space:nowrap;animation:typeln .4s steps(30) both;animation-delay:calc(var(--d) * 1s)}
+@keyframes typeln{from{width:0}to{width:100%}}
+.k{color:#c792ea}.s{color:#c3e88d}.f{color:#82aaff}.c{color:#6d6985}.t{color:#f07178}
+
+/* ===== Concepto: antes / después ===== */
+.vs{display:flex;flex-direction:column;align-items:center;gap:0}
+.vs b{font:700 168px/1 "Space Grotesk";letter-spacing:-.04em}
+.vs .x{font:700 48px "JetBrains Mono";color:var(--muted);margin:8px 0}
+.ba{width:100%;padding:42px 44px;border-radius:36px;text-align:left}
+.ba .tag{display:inline-block;font:800 28px Inter;letter-spacing:.1em;padding:8px 20px;border-radius:99px}
+.ba p{font:700 64px/1.1 "Space Grotesk";letter-spacing:-.02em;margin-top:18px}
+.before{background:rgba(255,77,109,.09);border:2px solid rgba(255,77,109,.45)}
+.before .tag{background:rgba(255,77,109,.2);color:#ff9aac}
+.after{background:linear-gradient(160deg,rgba(37,211,102,.2),rgba(0,224,255,.08));border:2px solid rgba(37,211,102,.6);box-shadow:0 30px 80px rgba(37,211,102,.22)}
+.after .tag{background:rgba(37,211,102,.22);color:#86ffb6}
+.arrow{font-size:80px;line-height:1;margin:-10px 0}
+
+/* ===== Concepto: 3 señales ===== */
+.big3{font:700 400px/.82 "Space Grotesk";letter-spacing:-.06em}
+.nb{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;font:700 70px "Space Grotesk";background:var(--grad);color:#0b0a14;flex:none;box-shadow:0 0 0 12px rgba(124,92,255,.18)}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+.photos div{height:170px;border-radius:24px;display:grid;place-items:center;font-size:64px;background:linear-gradient(140deg,#2b2745,#191729);border:1.5px solid rgba(255,255,255,.1)}
+.flip{position:relative;width:640px;height:300px;perspective:1200px}
+.flip > div{position:absolute;inset:0;border-radius:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;backface-visibility:hidden}
+.flip b{font:700 104px/1 "Space Grotesk";letter-spacing:.04em}
+.flip small{font-size:34px;font-weight:600}
+.closed{border:6px solid #ff4d6d;color:#ff4d6d;text-shadow:0 0 30px rgba(255,77,109,.8);box-shadow:0 0 60px rgba(255,77,109,.35),inset 0 0 40px rgba(255,77,109,.2);background:rgba(40,8,18,.6)}
+.open{border:6px solid var(--g);color:#5dff9a;text-shadow:0 0 30px rgba(37,211,102,.9);box-shadow:0 0 70px rgba(37,211,102,.4),inset 0 0 40px rgba(37,211,102,.2);background:rgba(6,40,20,.6)}
+.flipout{animation-name:flipout;animation-duration:.3s;animation-timing-function:ease-in} @keyframes flipout{to{transform:rotateX(90deg);opacity:0}}
+.flipin{animation-name:flipin;animation-duration:.45s;animation-timing-function:cubic-bezier(.3,1.5,.5,1)} @keyframes flipin{from{transform:rotateX(-90deg);opacity:0}}
+
+/* ===== Buscador ===== */
+.search{width:100%;display:flex;align-items:center;gap:20px;padding:26px 34px;border-radius:99px;background:#fff;color:#202124;font-size:40px;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:left}
+.search .q{flex:1;white-space:nowrap;overflow:hidden}
+.search .caret{background:#1a73e8}
+.mag{width:44px;height:44px;flex:none;border:5px solid #9aa0a6;border-radius:50%;position:relative}
+.mag::after{content:"";position:absolute;width:5px;height:18px;background:#9aa0a6;right:-9px;bottom:-14px;transform:rotate(-45deg);border-radius:3px}
+.results{display:flex;flex-direction:column;gap:18px;width:100%}
+.res{width:100%;padding:24px 30px;border-radius:26px;background:#fff;color:#202124;text-align:left;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.res small{display:block;color:#188038;font-size:24px}
+.res b{display:block;color:#1a0dab;font-size:36px;margin:4px 0}
+.res span{font-size:26px;color:#4d5156}
+.nores{width:100%;padding:30px 30px;border-radius:26px;background:rgba(255,77,109,.14);border:2.5px dashed var(--r);font:700 46px "Space Grotesk";color:#ffb3c0}
+
+/* ===== Precio ===== */
+.pcard{width:100%;padding:44px 44px;border-radius:40px;background:linear-gradient(160deg,rgba(124,92,255,.22),rgba(0,224,255,.08));border:2px solid rgba(124,92,255,.5);box-shadow:0 30px 90px rgba(124,92,255,.25);text-align:left;position:relative}
+.pcard h3{font-size:56px}
+.prices{display:flex;align-items:center;gap:30px;margin:10px 0 22px;position:relative}
+.old{position:relative;font:700 100px "Space Grotesk";color:#8c88a8;letter-spacing:-.04em}
+.old i{position:absolute;left:-8px;right:-8px;top:52%;height:9px;border-radius:9px;background:var(--r);transform-origin:left;animation:strike .35s ease-out both;animation-delay:calc(var(--d) * 1s)}
+@keyframes strike{from{transform:scaleX(0)}}
+.new{font:700 170px/1 "Space Grotesk";letter-spacing:-.05em}
+.off{position:absolute;right:-20px;top:-30px;padding:14px 22px;border-radius:20px;background:var(--r);font:800 32px Inter;color:#fff;box-shadow:0 14px 40px rgba(255,77,109,.5);transform:rotate(-8deg)}
+.ladder{display:flex;flex-direction:column;gap:16px;width:100%}
+.rung{display:flex;align-items:center;gap:20px;padding:24px 30px;border-radius:26px;background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.1);font-size:36px;font-weight:600;text-align:left}
+.rung em{font-style:normal;font-size:44px}
+.rung span{margin-left:auto;font-size:26px;color:var(--muted);font-weight:500;white-space:nowrap}
+.rung span b{font:700 46px "Space Grotesk";color:#fff;margin-left:6px}
+
+/* ===== Construcción de web ===== */
+.site{position:relative;height:640px;overflow:hidden}
+.wf,.pt{position:absolute;inset:0}
+.wf i{position:absolute;display:block;border-radius:12px;background:rgba(255,255,255,.12);border:2px dashed rgba(255,255,255,.22)}
+.pt{background:radial-gradient(circle at 85% 20%,rgba(245,159,0,.35),transparent 45%),linear-gradient(160deg,#2a160c,#5a2e14 60%,#24120a);clip-path:inset(0 0 0 0);animation:paint .9s cubic-bezier(.6,0,.2,1) both;animation-delay:calc(var(--d) * 1s)}
+@keyframes paint{from{clip-path:inset(0 0 100% 0)}}
+.pt nav{position:absolute;left:34px;right:34px;top:26px;display:flex;align-items:center;gap:24px;font-size:24px;color:#f6e7d6}
+.pt nav b{font:700 30px "Space Grotesk";margin-right:auto;color:#fff}
+.pt h4{position:absolute;left:34px;top:110px;width:600px;font:700 62px/1.04 "Space Grotesk";letter-spacing:-.03em;color:#fff}
+.pt p{position:absolute;left:34px;top:262px;font-size:28px;color:#f3d9bf}
+.pt .btn{position:absolute;left:34px;top:322px;padding:18px 30px;border-radius:99px;background:var(--g);color:#06140b;font-size:28px;font-weight:800}
+.pt .cards{position:absolute;left:34px;right:34px;bottom:30px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pt .cards div{height:170px;border-radius:20px;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:24px;font-weight:600;color:#fff}
+.pt .cards div em{font-style:normal;font-size:56px}
+.pt .cards div small{color:#f5c26b;font-size:24px}
+.pt .hero-img{position:absolute;right:40px;top:110px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c98a4b,#6b3a1e);display:grid;place-items:center;font-size:100px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.msite{position:absolute;inset:0;border-radius:52px;overflow:hidden;background:radial-gradient(circle at 85% 15%,rgba(245,159,0,.35),transparent 45%),linear-gradient(170deg,#2a160c,#5a2e14 55%,#24120a);text-align:left}
+.msite nav{display:flex;justify-content:space-between;align-items:center;padding:70px 28px 0;font-size:22px;color:#f6e7d6}
+.msite nav b{font:700 28px "Space Grotesk";color:#fff}
+.msite .hero-img{width:200px;height:200px;margin:34px auto 0;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c98a4b,#6b3a1e);display:grid;place-items:center;font-size:110px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.msite h4{padding:28px 28px 0;font:700 50px/1.05 "Space Grotesk";letter-spacing:-.03em;color:#fff;text-align:center}
+.msite p{padding:14px 28px 0;font-size:24px;color:#f3d9bf;text-align:center}
+.msite .btn{display:block;margin:24px 28px 0;padding:20px;border-radius:99px;background:var(--g);color:#06140b;font-size:27px;font-weight:800;text-align:center}
+.msite .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:26px 28px}
+.msite .cards div{height:130px;border-radius:20px;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#fff}
+.msite .cards div em{font-style:normal;font-size:46px}
+.published{position:absolute;left:50%;bottom:-36px;margin-left:-190px;width:380px;padding:22px 0;border-radius:24px;border:6px solid var(--g);color:var(--g);background:rgba(4,30,14,.85);font:800 54px "Space Grotesk";letter-spacing:.06em;text-align:center;z-index:7;box-shadow:0 0 60px rgba(37,211,102,.5)}
+
+/* ===== Horas ===== */
+.calc{width:100%;padding:30px 38px;border-radius:36px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12);text-align:left}
+.cr{display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:36px;font-weight:600;padding:16px 0;border-bottom:2px dashed rgba(255,255,255,.12)}
+.cr b{color:#ff8a8a;white-space:nowrap}
+.mult{display:flex;justify-content:flex-end;font:600 34px "JetBrains Mono";color:var(--muted);padding-top:16px}
+@property --n{syntax:'<integer>';inherits:false;initial-value:0}
+.count{counter-reset:n var(--n);animation-delay:calc(var(--d) * 1s);animation-duration:1.2s;animation-timing-function:cubic-bezier(.2,.7,.25,1);animation-fill-mode:both}
+.count::before{content:counter(n)}
+.c30{animation-name:c30} @keyframes c30{from{--n:0}to{--n:30}}
+.c120{animation-name:c120} @keyframes c120{from{--n:0}to{--n:120}}
+.c99{animation-name:c99} @keyframes c99{from{--n:3}to{--n:99}}
+.total{display:flex;align-items:baseline;justify-content:center;gap:16px}
+.total .big{font:700 210px/1 "Space Grotesk";letter-spacing:-.05em;color:var(--r);text-shadow:0 0 60px rgba(255,77,109,.45)}
+.total small{font:700 56px/1.05 "Space Grotesk";color:var(--r);text-align:left}
+.tasks{display:grid;gap:16px;width:100%}
+.task{display:flex;align-items:center;gap:20px;padding:22px 26px;border-radius:24px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);font-size:34px;font-weight:600;text-align:left}
+.task .st{margin-left:auto;font-size:25px;font-weight:700;position:relative;min-width:220px;height:50px;flex:none}
+.task .st span{position:absolute;inset:0;display:grid;place-items:center;border-radius:99px}
+.task .st .todo{background:rgba(255,94,94,.15);color:#ff8a8a}
+.task .st .done{background:rgba(37,211,102,.18);color:var(--g)}
+
+/* ===== Tipos de negocio ===== */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:22px;width:100%}
+.tile{height:250px;border-radius:34px;background:rgba(255,255,255,.055);border:1.5px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font:700 40px "Space Grotesk"}
+.tile em{font-style:normal;font-size:110px;line-height:1}
+.biz{display:flex;align-items:center;gap:26px}
+.biz em{font-style:normal;font-size:160px;line-height:1}
+.biz b{font:700 78px/1.02 "Space Grotesk";letter-spacing:-.03em;text-align:left}
+.res-tag{display:inline-flex;align-items:center;gap:14px;padding:22px 38px;border-radius:99px;background:rgba(37,211,102,.16);border:2px solid rgba(37,211,102,.5);color:#8dffbd;font-size:46px;font-weight:700}
+
+/* ===== Proceso ===== */
+.tl{position:relative;width:100%;display:flex;flex-direction:column;gap:20px}
+.tl .rail{position:absolute;left:52px;top:50px;bottom:50px;width:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}
+.tl .rail i{position:absolute;inset:0;background:linear-gradient(#7c5cff,#00e0ff,#25d366);transform-origin:top;animation:grow linear both;animation-delay:calc(var(--d) * 1s);animation-duration:calc(var(--len) * 1s)}
+@keyframes grow{from{transform:scaleY(0)}}
+.st5{display:flex;align-items:center;gap:26px;text-align:left;position:relative}
+.st5 .n{width:110px;height:110px;border-radius:50%;flex:none;background:#16142a;border:3px solid var(--v);font:700 40px "Space Grotesk";display:grid;place-items:center;box-shadow:0 0 0 8px var(--bg)}
+.st5.ok .n{border-color:var(--g);background:#0d2a1a}
+.st5 b{display:block;font:700 42px/1.1 "Space Grotesk";letter-spacing:-.02em}
+.st5 small{font-size:28px;color:var(--muted);font-weight:500}
+.shield{font-size:120px;line-height:1;filter:drop-shadow(0 0 40px rgba(37,211,102,.5))}
+.gcards{display:grid;gap:16px;width:100%}
+.gc{display:flex;gap:22px;align-items:center;padding:24px 28px;border-radius:26px;background:rgba(37,211,102,.07);border:1.5px solid rgba(37,211,102,.3);text-align:left;font-size:33px;font-weight:600;line-height:1.25}
+.gc em{font-style:normal;font-size:46px;flex:none}
+
+/* ===== Tienda ===== */
+.dms{position:relative;width:100%;height:670px}
+.dm{position:absolute;display:flex;align-items:center;gap:18px;padding:18px 30px 18px 18px;border-radius:99px;background:#262338;border:1.5px solid rgba(255,255,255,.12);font-size:40px;font-weight:600;box-shadow:0 16px 40px rgba(0,0,0,.4);white-space:nowrap}
+.dm i{width:62px;height:62px;border-radius:50%;flex:none;background:linear-gradient(45deg,#f9a825,#e1306c,#833ab4)}
+.inbox{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:52px;background:linear-gradient(45deg,#f9a825,#e1306c 50%,#833ab4);display:grid;place-items:center;font-size:100px;box-shadow:0 30px 80px rgba(225,48,108,.45)}
+.inbox .bdg{position:absolute;top:-30px;right:-46px;min-width:110px;padding:8px 18px;border-radius:99px;background:#ff3040;font:800 46px Inter;color:#fff;text-align:center;border:5px solid var(--bg)}
+.store{position:absolute;inset:0;border-radius:52px;overflow:hidden;background:#f6f5f9;color:#14121c;text-align:left}
+.store .top{display:flex;justify-content:space-between;align-items:center;padding:66px 28px 18px;font:800 28px "Space Grotesk";letter-spacing:.12em}
+.store .top span{font-size:34px;letter-spacing:0;position:relative}
+.store .top span i{position:absolute;top:-8px;right:-14px;width:30px;height:30px;border-radius:50%;background:var(--r);color:#fff;font:800 18px Inter;font-style:normal;display:grid;place-items:center;letter-spacing:0}
+.store .img{height:330px;margin:0 22px;border-radius:30px;background:radial-gradient(circle at 70% 25%,#c4b5fd,transparent 55%),linear-gradient(140deg,#e0e7ff,#fbcfe8);display:grid;place-items:center;font-size:190px}
+.store .body{padding:22px 28px}
+.store h5{font:700 38px "Space Grotesk";letter-spacing:-.02em}
+.store .pr{font:700 40px "Space Grotesk";color:#7c5cff;margin:4px 0 14px}
+.sizes{display:flex;gap:12px;margin-bottom:22px;position:relative}
+.sizes span{width:76px;height:60px;border-radius:16px;border:2px solid #d4d1e0;display:grid;place-items:center;font-size:26px;font-weight:700;position:relative}
+.sizes span.on{position:absolute;left:88px;top:0;border-color:#14121c;background:#14121c;color:#fff}
+.store .add{display:block;padding:24px;border-radius:20px;background:#14121c;color:#fff;font-size:29px;font-weight:800;text-align:center;position:relative;overflow:hidden}
+.tap{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:rgba(255,255,255,.55);border:4px solid #fff;z-index:9;pointer-events:none;animation:tap .5s ease-out both;animation-delay:calc(var(--d) * 1s)}
+@keyframes tap{from{transform:scale(.2);opacity:1}to{transform:scale(1.3);opacity:0}}
+.tap.dark{background:rgba(124,92,255,.35);border-color:#7c5cff}
+.sheet{position:absolute;left:0;right:0;bottom:0;padding:30px 28px 40px;border-radius:36px 36px 0 0;background:#fff;color:#14121c;box-shadow:0 -20px 60px rgba(0,0,0,.25);text-align:left;z-index:5}
+.sheet h6{font:700 34px "Space Grotesk";margin-bottom:14px}
+.sheet .r{display:flex;justify-content:space-between;font-size:26px;padding:10px 0;border-bottom:1.5px solid #eee;color:#55526a}
+.sheet .r.t{color:#14121c;font-weight:800;font-size:30px;border:0}
+.sheet .pay{margin-top:16px;padding:24px;border-radius:20px;background:#7c5cff;color:#fff;text-align:center;font-size:29px;font-weight:800}
+.slideup{animation-name:slideup;animation-duration:.5s} @keyframes slideup{from{transform:translateY(100%)}}
+.okv{position:absolute;inset:0;z-index:6;background:#f6f5f9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#14121c;text-align:center}
+.okv .ck{width:170px;height:170px;border-radius:50%;background:var(--g);display:grid;place-items:center;font-size:96px;color:#fff;font-weight:800;box-shadow:0 20px 60px rgba(37,211,102,.45)}
+.okv b{font:700 44px "Space Grotesk"}
+.okv span{font-size:26px;color:#55526a}
+.banner{position:absolute;left:14px;right:14px;top:58px;z-index:9;display:flex;gap:16px;align-items:center;padding:18px 20px;border-radius:26px;background:rgba(28,26,40,.97);color:#fff;text-align:left;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.banner .ic{width:62px;height:62px;border-radius:16px;background:var(--grad);display:grid;place-items:center;font-size:34px;flex:none}
+.banner b{display:block;font-size:22px;color:#cfcbe6}
+.banner span{font-size:27px;font-weight:700}
+
+/* ===== Cierre ===== */
+.logo{width:210px;height:210px;filter:drop-shadow(0 0 50px rgba(79,92,240,.7))}
+.brand{font:700 108px "Space Grotesk";letter-spacing:.14em;margin-top:-14px}
+.cta{display:inline-flex;align-items:center;gap:24px;padding:26px 50px 26px 40px;border-radius:99px;color:#06140b;background:var(--g);text-align:left;box-shadow:0 24px 60px rgba(37,211,102,.35);animation:pulse 1.2s ease-out infinite}
+.cta svg{width:76px;height:76px;fill:#06140b;flex:none}
+.cta small{display:block;font-size:28px;font-weight:700;opacity:.8}
+.cta b{display:block;font:800 52px Inter;letter-spacing:-.01em;white-space:nowrap}
+.cta.a{animation-name:pop,pulse;animation-duration:.55s,1.2s;animation-iteration-count:1,infinite;animation-timing-function:cubic-bezier(.3,1.6,.5,1),ease-out;animation-fill-mode:both,none;animation-delay:calc(var(--d) * 1s),calc(var(--d) * 1s + .6s)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,.6),0 24px 60px rgba(37,211,102,.35)}70%{box-shadow:0 0 0 34px rgba(37,211,102,0),0 24px 60px rgba(37,211,102,.35)}100%{box-shadow:0 0 0 0 rgba(37,211,102,0),0 24px 60px rgba(37,211,102,.35)}}
+.hand{font-size:36px;font-weight:600;color:#d8d4ee}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="kl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3fe0"/><stop offset=".55" stop-color="#4f5cf0"/><stop offset="1" stop-color="#2f9bff"/></linearGradient>
+    <mask id="km" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><g fill="none" stroke="#000" stroke-width="2.2"><path d="M32.3 35.5V66.5L63 35.8"/><path d="M53 27.3 70.6 26 69.4 43.6"/><path d="M51.5 55.5 69 72.5"/></g></mask>
+  </defs>
+  <symbol id="wa" viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4c-1-1.6-1.5-3.4-1.5-5.2 0-5.4 4.4-9.8 9.8-9.8 2.6 0 5.1 1 6.9 2.9 1.8 1.8 2.9 4.3 2.9 6.9 0 5.4-4.4 9.8-9.8 9.8zm8.4-18.2C18.1 1.3 15.2.1 12 .1 5.5.1.1 5.4.1 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.2-3.5-8.3z"/></symbol>
+  <symbol id="logo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="none" stroke="url(#kl)" stroke-width="3"/><g fill="url(#kl)" mask="url(#km)"><rect x="26" y="31" width="12.6" height="46"/><path d="M26 69.5 60.5 35 68.5 43 38.6 72.9Z"/><path d="M46.5 24.6 75.5 22 73 51Z"/><path d="M42.5 60 50.6 51.8 76.5 77H60.5Z"/></g></symbol>
+</svg>
+
+<div class="bg"><div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div class="safe">
+
+<!-- ================= 01 · NOCHE: POV, tu bot vende mientras duermes ================= -->
+<div data-c="noche" data-dur="16" data-end="12.8" data-cover="2.7">
+  <div class="sc first" style="--e:3.6;gap:44px">
+    <h1 class="hook a hookin" style="--d:0;font-size:90px">POV: son las 11:48 pm y tu negocio <span class="gt">sigue vendiendo</span></h1>
+    <div class="lock a up" style="--d:.15">
+      <div class="notch"></div>
+      <div class="lk-time">23:48</div><div class="lk-date">viernes</div>
+      <div class="lns">
+        <div class="ln a right" data-sfx="ding" style="--d:.7"><div class="ic"><svg><use href="#wa"/></svg></div><div><b>Tu bot · WhatsApp</b><span>Pedido confirmado: 2 pizzas 🍕</span></div><small>ahora</small></div>
+        <div class="ln a right" data-sfx="ding" style="--d:1.35"><div class="ic"><svg><use href="#wa"/></svg></div><div><b>Tu bot · WhatsApp</b><span>Cita agendada: mañana 10:00 📅</span></div><small>ahora</small></div>
+        <div class="ln a right" data-sfx="cash" style="--d:2.0"><div class="ic" style="background:var(--grad)">💳</div><div><b>Pagos</b><span>Pago recibido: $22,00 ✅</span></div><small>ahora</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:3.6;--e:9.6;gap:34px">
+    <h2 class="cap a up" style="--d:3.7">Tu <span class="gt">bot con IA</span> atiende por ti</h2>
+    <div style="position:relative">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="chat-h"><div class="av">IA</div><div><b>Pizzería · Tu Negocio</b><small>● en línea · bot con IA</small></div></div>
+        <div class="chat-b">
+          <div class="msg in msgin" data-sfx="pop" style="--d:4.0">Hola! ¿Hacen envíos a Cumbayá? 🙏 <small>23:47</small></div>
+          <div class="typing" style="--d:4.45;--len:.5"><i></i><i></i><i></i></div>
+          <div class="msg out msgin" data-sfx="pop" style="--d:4.95">¡Hola! 👋 Sí, envío gratis desde $20. Te paso el menú 👇 <small>23:47 ✓✓</small></div>
+          <div class="menu msgin" data-sfx="pop" style="--d:5.5"><div class="mh">📋 Menú de hoy</div><div><span>🍕 Pizza familiar</span><b>$11</b></div><div><span>🍝 Lasaña</span><b>$8</b></div><div><span>🥤 Bebida 1 L</span><b>$2</b></div></div>
+          <div class="msg in msgin" data-sfx="pop" style="--d:6.7">2 pizzas familiares porfa 🙌 <small>23:48</small></div>
+          <div class="typing" style="--d:7.1;--len:.5"><i></i><i></i><i></i></div>
+          <div class="msg out msgin" data-sfx="pop" style="--d:7.6">✅ Listo: total $22. Paga aquí 👉 pago.link/tu-negocio <small>23:48 ✓✓</small></div>
+        </div>
+      </div>
+      <div class="a fadeout" style="--d:7.4;position:absolute;right:-60px;top:190px;z-index:6"><div class="chip a pop" style="--d:5.1;position:static;display:inline-block">⚡ Responde en segundos</div></div>
+      <div class="chip a pop" style="--d:7.8;right:-60px;top:190px">💳 Cobra solo</div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:9.6;--e:12.8;gap:34px">
+    <h2 class="cap a up" style="--d:9.7">Y tú despiertas con esto ☀️</h2>
+    <div class="lock day a up" style="--d:9.85;height:560px">
+      <div class="notch"></div>
+      <div class="lk-time" style="font-size:120px">07:00</div><div class="lk-date">sábado</div>
+      <div class="lns">
+        <div class="ln sum a pop" data-sfx="ding" style="--d:10.3;display:block"><b>🤖 Tu bot · resumen de la noche</b>
+          <div class="rows"><div>💬 Chats atendidos <i>14</i></div><div>🛒 Pedidos tomados <i>5</i></div><div>📅 Citas agendadas <i>3</i></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="price a pop" data-sfx="success" style="--d:11.1"><span class="from">Bots con IA desde</span><span class="n gt">$75</span></div>
+    <div class="note a fi" style="--d:11.3;margin-top:-24px">Ejemplo ilustrativo de un bot en funcionamiento</div>
+  </div>
+</div>
+
+<!-- ================= 02 · ANTES vs DESPUÉS ================= -->
+<div data-c="antes" data-dur="16" data-end="12.8" data-cover="1.9">
+  <div class="sc first" style="--e:2.8;gap:30px">
+    <h2 class="cap a hookin" style="--d:0;font-size:72px">Tu negocio</h2>
+    <div class="vs">
+      <b class="red a hookin" style="--d:0">ANTES</b>
+      <span class="x a pop" data-sfx="pop" style="--d:.4">vs</span>
+      <b class="gt a pop" data-sfx="pop" style="--d:.6">DESPUÉS</b>
+    </div>
+    <div class="sub a up" style="--d:.9;font-size:44px;color:#d8d4ee">de trabajar con <b style="color:#fff">KOVA</b></div>
+    <div class="pill a pop" style="--d:1.3">¿En cuál estás tú? 👇</div>
+  </div>
+
+  <div class="sc" style="--s:2.8;--e:5.3;gap:24px">
+    <div class="step a fi" style="--d:2.9">1 / 4</div>
+    <div class="a dim" style="--d:3.75;width:100%"><div class="ba before a left" style="--d:2.9"><span class="tag">❌ ANTES</span><p>Respondes el WhatsApp hasta la medianoche 😩</p></div></div>
+    <div class="arrow a pop" style="--d:3.6">⬇️</div>
+    <div class="ba after a up" data-sfx="success" style="--d:3.75"><span class="tag">✅ DESPUÉS</span><p>Un bot con IA responde por ti, 24/7 🤖</p></div>
+  </div>
+
+  <div class="sc" style="--s:5.3;--e:7.8;gap:24px">
+    <div class="step a fi" style="--d:5.4">2 / 4</div>
+    <div class="a dim" style="--d:6.25;width:100%"><div class="ba before a left" style="--d:5.4"><span class="tag">❌ ANTES</span><p>Te buscan en Google y aparece tu competencia 👻</p></div></div>
+    <div class="arrow a pop" style="--d:6.1">⬇️</div>
+    <div class="ba after a up" data-sfx="success" style="--d:6.25"><span class="tag">✅ DESPUÉS</span><p>Tu página web profesional, lista para Google 🌐</p></div>
+  </div>
+
+  <div class="sc" style="--s:7.8;--e:10.3;gap:24px">
+    <div class="step a fi" style="--d:7.9">3 / 4</div>
+    <div class="a dim" style="--d:8.75;width:100%"><div class="ba before a left" style="--d:7.9"><span class="tag">❌ ANTES</span><p>Pasas horas haciendo facturas y Excel a mano 📊</p></div></div>
+    <div class="arrow a pop" style="--d:8.6">⬇️</div>
+    <div class="ba after a up" data-sfx="success" style="--d:8.75"><span class="tag">✅ DESPUÉS</span><p>Se hacen solas con automatizaciones ⚙️</p></div>
+  </div>
+
+  <div class="sc" style="--s:10.3;--e:12.8;gap:24px">
+    <div class="step a fi" style="--d:10.4">4 / 4</div>
+    <div class="a dim" style="--d:11.25;width:100%"><div class="ba before a left" style="--d:10.4"><span class="tag">❌ ANTES</span><p>Vendes solo por mensajes directos 📩</p></div></div>
+    <div class="arrow a pop" style="--d:11.1">⬇️</div>
+    <div class="ba after a up" data-sfx="success" style="--d:11.25"><span class="tag">✅ DESPUÉS</span><p>Tu tienda online vende mientras duermes 🛒</p></div>
+  </div>
+</div>
+
+<!-- ================= 03 · 3 SEÑALES de que necesitas una web ================= -->
+<div data-c="senales" data-dur="17.5" data-end="14.3" data-cover="1.6">
+  <div class="sc first" style="--e:2.9;gap:20px">
+    <div class="big3 gt a hookin" style="--d:0">3</div>
+    <h1 class="hook a hookin" style="--d:0;font-size:86px">señales de que tu negocio necesita una <span class="gt">página web</span></h1>
+    <div class="pill a pop" data-sfx="pop" style="--d:1.0">La #2 duele 😬</div>
+  </div>
+
+  <div class="sc" style="--s:2.9;--e:6.3;gap:30px">
+    <div class="nb a pop" style="--d:3.0">1</div>
+    <h2 class="cap a up" style="--d:3.1;font-size:58px">Te piden precios y mandas <span class="gt">20 fotos</span> por WhatsApp</h2>
+    <div class="convo">
+      <div class="bub in a left" data-sfx="pop" style="--d:3.6">¿Tienen página web para ver los precios?</div>
+      <div class="bub out a right" data-sfx="pop" style="--d:4.1">No 😅 te mando fotos…</div>
+    </div>
+    <div class="photos">
+      <div class="a pop" data-sfx="pop" style="--d:4.5">📸</div><div class="a pop" style="--d:4.65">🖼️</div><div class="a pop" data-sfx="pop" style="--d:4.8">📸</div>
+      <div class="a pop" style="--d:4.95">🖼️</div><div class="a pop" data-sfx="pop" style="--d:5.1">📸</div><div class="a pop" style="--d:5.25">🖼️</div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:6.3;--e:9.9;gap:26px">
+    <div class="nb a pop" style="--d:6.4">2</div>
+    <h2 class="cap a up" style="--d:6.5;font-size:58px">Te buscan en Google… y aparece <span class="gt">tu competencia</span></h2>
+    <div class="search a up" style="--d:6.7"><div class="mag"></div><div class="q"><span class="tw" data-sfx="type" data-t="6.9" data-cps="16">pastelería en quito</span><span class="caret"></span></div></div>
+    <div class="results">
+      <div class="res a up" style="--d:8.2"><small>competencia-1.com</small><b>Tu competencia #1</b><span>Pedidos online · WhatsApp · Envíos</span></div>
+      <div class="res a up" style="--d:8.45"><small>competencia-2.com</small><b>Tu competencia #2</b><span>Catálogo y precios en su web</span></div>
+    </div>
+    <div class="nores a shake" data-sfx="pop" style="--d:8.9">Tu negocio: ❌ no aparece</div>
+  </div>
+
+  <div class="sc" style="--s:9.9;--e:12.6;gap:40px">
+    <div class="nb a pop" style="--d:10.0">3</div>
+    <h2 class="cap a up" style="--d:10.1;font-size:58px">Tu negocio “cierra” cuando tú te desconectas</h2>
+    <div class="flip a pop" style="--d:10.35">
+      <div class="closed a flipout" style="--d:11.3"><b>CERRADO</b><small>😴 vuelve mañana</small></div>
+      <div class="open a flipin" data-sfx="success" style="--d:11.55"><b>ABIERTO</b><small>🌐 tu web atiende 24/7</small></div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:12.6;--e:14.3;gap:30px">
+    <h2 class="cap a up" style="--d:12.7">La solución: tu web lista en <span class="gt nw">2–3 días</span></h2>
+    <div class="price a pop" data-sfx="success" style="--d:13.0"><span class="from">Landing Pro desde</span><span class="n gt">$89</span></div>
+    <div class="trust a up" style="--d:13.3"><span>Diseño premium</span><span>Botón a WhatsApp</span><span>Lista para Google</span></div>
+  </div>
+</div>
+
+<!-- ================= 04 · ¿CUÁNTO CUESTA una página web? ================= -->
+<div data-c="precio" data-dur="16" data-end="12.8" data-cover="1.9">
+  <div class="sc first" style="--e:3.0;gap:44px">
+    <div class="a pop" data-sfx="pop" style="--d:.1;font-size:150px;line-height:1">🤔</div>
+    <h1 class="hook a hookin" style="--d:0">¿Cuánto cuesta una <span class="gt">página web</span> en Ecuador?</h1>
+    <div class="pill a pop" data-sfx="pop" style="--d:1.2">Te lo digo sin rodeos 👇</div>
+  </div>
+
+  <div class="sc" style="--s:3.0;--e:8.4;gap:30px">
+    <div class="pcard a pop" style="--d:3.1">
+      <h3>Landing Pro</h3>
+      <div class="prices">
+        <span class="old">$299<i style="--d:4.2" data-sfx="whoosh"></i></span>
+        <span class="new gt a pop" data-sfx="cash" style="--d:4.6">$89</span>
+        <span class="off a stamp" style="--d:5.0">-70%</span>
+      </div>
+      <ul class="card" style="background:none;border:0;box-shadow:none;padding:0">
+        <li class="a left" style="--d:5.5">Lista en 2–3 días</li>
+        <li class="a left" style="--d:5.75">Diseño premium con animaciones</li>
+        <li class="a left" style="--d:6.0">Botón directo a WhatsApp</li>
+        <li class="a left" style="--d:6.25">SEO + Google Analytics</li>
+        <li class="a left" style="--d:6.5">100% adaptada al celular</li>
+      </ul>
+    </div>
+    <div class="pill a up" style="--d:6.9">🔥 Oferta de lanzamiento</div>
+  </div>
+
+  <div class="sc" style="--s:8.4;--e:12.8;gap:28px">
+    <h2 class="cap a up" style="--d:8.5">¿Necesitas <span class="gt">algo más?</span></h2>
+    <div class="ladder">
+      <div class="rung a left" data-sfx="pop" style="--d:8.8"><em>🏢</em>Web corporativa<span>desde<b>$209</b></span></div>
+      <div class="rung a left" data-sfx="pop" style="--d:9.1"><em>🛒</em>Tienda online<span>desde<b>$389</b></span></div>
+      <div class="rung a left" data-sfx="pop" style="--d:9.4"><em>🤖</em>Bot de WhatsApp<span>desde<b>$75</b></span></div>
+      <div class="rung a left" data-sfx="pop" style="--d:9.7"><em>⚙️</em>Bot IA + automatización<span>desde<b>$179</b></span></div>
+    </div>
+    <div class="trust a up" style="--d:10.3"><span>Precio fijo</span><span>50% al iniciar · 50% al entregar</span></div>
+  </div>
+</div>
+
+<!-- ================= 05 · CONSTRUYE: así nace tu web ================= -->
+<div data-c="construye" data-dur="16" data-end="12.8" data-cover="1.4">
+  <div class="sc first" style="--e:2.7;gap:40px">
+    <h1 class="hook a hookin" style="--d:0;font-size:116px">Así nace <span class="gt">tu página web</span> ⚡</h1>
+    <div class="a pop" style="--d:.4;font-size:110px;line-height:1;display:flex;gap:26px;align-items:center">💻<span style="font-size:60px;color:var(--muted)">→</span>🎨<span style="font-size:60px;color:var(--muted)">→</span>📱</div>
+    <div class="pill a pop" data-sfx="pop" style="--d:.8">⏩ en cámara rápida</div>
+  </div>
+
+  <div class="sc" style="--s:2.7;--e:5.4;gap:34px">
+    <div class="step a fi" style="--d:2.8">1 · CÓDIGO</div>
+    <h2 class="cap a up" style="--d:2.8">Programado <span class="gt">a mano</span>, rápido y limpio</h2>
+    <div class="win a up" style="--d:3.0">
+      <div class="bar"><i></i><i></i><i></i>cafe-andino/index.html</div>
+<div class="code mono" data-sfx="type" data-sfx-t="3.3" data-len="1.7"><span class="ln2" style="--d:3.3"><span class="t">&lt;section</span> <span class="f">class</span>=<span class="s">"hero"</span><span class="t">&gt;</span></span><span class="ln2" style="--d:3.65">  <span class="t">&lt;h1&gt;</span>Café Andino<span class="t">&lt;/h1&gt;</span></span><span class="ln2" style="--d:4.0">  <span class="t">&lt;p&gt;</span>Tostado en Quito<span class="t">&lt;/p&gt;</span></span><span class="ln2" style="--d:4.35">  <span class="t">&lt;a</span> <span class="f">href</span>=<span class="s">"wa.me/…"</span><span class="t">&gt;</span>Pedir<span class="t">&lt;/a&gt;</span></span><span class="ln2" style="--d:4.7"><span class="t">&lt;/section&gt;</span> <span class="c">&lt;!-- ✓ --&gt;</span></span></div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:5.4;--e:9.4;gap:34px">
+    <div class="step a fi" style="--d:5.5">2 · DISEÑO</div>
+    <h2 class="cap a up" style="--d:5.5">Diseño <span class="gt">premium</span></h2>
+    <div class="win a up" style="--d:5.6">
+      <div class="bar"><i></i><i></i><i></i><div class="addr">🔒 cafeandino.com</div></div>
+      <div class="site">
+        <div class="wf">
+          <i class="a pop" style="--d:5.9;left:34px;top:26px;width:200px;height:36px"></i>
+          <i class="a pop" style="--d:6.0;right:34px;top:26px;width:300px;height:36px"></i>
+          <i class="a pop" style="--d:6.15;left:34px;top:110px;width:560px;height:130px"></i>
+          <i class="a pop" style="--d:6.25;right:40px;top:110px;width:180px;height:180px;border-radius:50%"></i>
+          <i class="a pop" style="--d:6.35;left:34px;top:262px;width:380px;height:34px"></i>
+          <i class="a pop" style="--d:6.45;left:34px;top:322px;width:300px;height:66px;border-radius:99px"></i>
+          <i class="a pop" style="--d:6.6;left:34px;bottom:30px;width:240px;height:170px"></i>
+          <i class="a pop" style="--d:6.7;left:300px;bottom:30px;width:240px;height:170px"></i>
+          <i class="a pop" style="--d:6.8;right:34px;bottom:30px;width:240px;height:170px"></i>
+        </div>
+        <div class="pt" data-sfx="whoosh" style="--d:7.3">
+          <nav><b>☕ Café Andino</b><span>Menú</span><span>Nosotros</span><span>Contacto</span></nav>
+          <h4>Café de especialidad, tostado en Quito</h4>
+          <div class="hero-img">☕</div>
+          <p>Envíos a domicilio todos los días</p>
+          <div class="btn">💬 Pedir por WhatsApp</div>
+          <div class="cards"><div><em>☕</em>Espresso<small>$2,00</small></div><div><em>🥐</em>Croissant<small>$2,50</small></div><div><em>🍰</em>Postres<small>$3,00</small></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="chip a pop" data-sfx="pop" style="--d:8.2;position:static">✨ Animaciones y estilo de tu marca</div>
+  </div>
+
+  <div class="sc" style="--s:9.4;--e:12.8;gap:30px">
+    <div class="step a fi" style="--d:9.5">3 · ONLINE</div>
+    <div style="position:relative">
+      <div class="phone a up" style="--d:9.5;height:780px;width:480px">
+        <div class="notch"></div>
+        <div class="msite">
+          <nav><b>☕ Café Andino</b><span>☰</span></nav>
+          <div class="hero-img">☕</div>
+          <h4>Café de especialidad, tostado en Quito</h4>
+          <p>Envíos a domicilio todos los días</p>
+          <div class="btn">💬 Pedir por WhatsApp</div>
+          <div class="cards"><div><em>☕</em>Espresso</div><div><em>🥐</em>Croissant</div></div>
+        </div>
+      </div>
+      <div class="chip a pop" data-sfx="pop" style="--d:10.0;left:-70px;top:120px">📱 Perfecta en el celular</div>
+      <div class="chip a pop" data-sfx="pop" style="--d:10.4;right:-60px;top:280px">🔍 Lista para Google</div>
+      <div class="chip a pop" data-sfx="pop" style="--d:10.8;left:-60px;top:440px">⚡ Carga ultra rápida</div>
+      <div class="published a stamp" data-sfx="cash" style="--d:11.4">✓ PUBLICADA</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 06 · HORAS: haz la cuenta ================= -->
+<div data-c="horas" data-dur="17" data-end="13.8" data-cover="1.8">
+  <div class="sc first" style="--e:3.0;gap:44px">
+    <div class="a pop" style="--d:.1;font-size:150px;line-height:1">⏳</div>
+    <h1 class="hook a hookin" style="--d:0">¿Cuántas horas pierdes en <span class="gt">tareas repetitivas</span>?</h1>
+    <div class="pill a pop" data-sfx="pop" style="--d:1.1">Haz la cuenta conmigo 👇</div>
+  </div>
+
+  <div class="sc" style="--s:3.0;--e:8.7;gap:30px">
+    <div class="calc a up" style="--d:3.1">
+      <div class="cr a left" data-sfx="pop" style="--d:3.3">💬 Contestar mensajes<b>2 h/día</b></div>
+      <div class="cr a left" data-sfx="pop" style="--d:3.65">🧾 Hacer facturas<b>1 h/día</b></div>
+      <div class="cr a left" data-sfx="pop" style="--d:4.0">📊 Pasar datos al Excel<b>1 h/día</b></div>
+      <div class="cr a left" data-sfx="pop" style="--d:4.35">📦 Confirmar pedidos<b>1 h/día</b></div>
+      <div class="mult a fi" style="--d:4.8">5 h × 6 días =</div>
+    </div>
+    <div class="total a pop" data-sfx="whoosh" style="--d:5.2"><span class="big count c30" style="--d:5.2"></span><small>horas<br>a la semana</small></div>
+    <div class="pill a pop" data-sfx="pop" style="--d:6.6">😳 Más de <span class="count c120" style="--d:6.6;font-weight:800"></span> horas al mes</div>
+  </div>
+
+  <div class="sc" style="--s:8.7;--e:13.8;gap:30px">
+    <h2 class="cap a up" style="--d:8.8">Un programa lo hace <span class="gt">por ti</span></h2>
+    <div class="tasks">
+      <div class="task a left" style="--d:9.0">💬 Mensajes<span class="st"><span class="todo a fadeout" style="--d:9.6">⏳ manual</span><span class="done a pop" data-sfx="success" style="--d:9.6">✓ automático</span></span></div>
+      <div class="task a left" style="--d:9.15">🧾 Facturas<span class="st"><span class="todo a fadeout" style="--d:10.0">⏳ manual</span><span class="done a pop" data-sfx="success" style="--d:10.0">✓ automático</span></span></div>
+      <div class="task a left" style="--d:9.3">📊 Excel<span class="st"><span class="todo a fadeout" style="--d:10.4">⏳ manual</span><span class="done a pop" data-sfx="success" style="--d:10.4">✓ automático</span></span></div>
+      <div class="task a left" style="--d:9.45">📦 Pedidos<span class="st"><span class="todo a fadeout" style="--d:10.8">⏳ manual</span><span class="done a pop" data-sfx="success" style="--d:10.8">✓ automático</span></span></div>
+    </div>
+    <div class="sub a up" style="--d:11.3;color:#fff;font-weight:600">Tú te dedicas a vender ⏱️</div>
+    <div class="trust a up" style="--d:11.7"><span>Bot IA + 5 automatizaciones desde $179</span></div>
+  </div>
+</div>
+
+<!-- ================= 07 · NEGOCIOS: un bot para cada negocio ================= -->
+<div data-c="negocios" data-dur="18" data-end="14.8" data-cover="2.0">
+  <div class="sc first" style="--e:2.8;gap:40px">
+    <h1 class="hook a hookin" style="--d:0;font-size:90px">¿Tienes uno de <span class="gt">estos negocios</span>? 👇</h1>
+    <div class="tiles">
+      <div class="tile a pop" data-sfx="pop" style="--d:.5"><em>💇‍♀️</em>Salón</div>
+      <div class="tile a pop" data-sfx="pop" style="--d:.75"><em>🍕</em>Restaurante</div>
+      <div class="tile a pop" data-sfx="pop" style="--d:1.0"><em>🦷</em>Consultorio</div>
+      <div class="tile a pop" data-sfx="pop" style="--d:1.25"><em>🛍️</em>Tienda</div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:2.8;--e:5.3;gap:36px">
+    <div class="biz a pop" style="--d:2.9"><em>💇‍♀️</em><b>Salón de<br>belleza</b></div>
+    <div class="convo">
+      <div class="bub in a left" data-sfx="pop" style="--d:3.2">¿Hay turno el sábado? 💅</div>
+      <div class="bub out a right" data-sfx="pop" style="--d:3.75">¡Sí! Tengo 10:00 o 15:00. ¿Te agendo? 📅</div>
+    </div>
+    <div class="res-tag a pop" data-sfx="success" style="--d:4.3">✓ Agenda turnos sola</div>
+  </div>
+
+  <div class="sc" style="--s:5.3;--e:7.8;gap:36px">
+    <div class="biz a pop" style="--d:5.4"><em>🍕</em><b>Restaurante</b></div>
+    <div class="convo">
+      <div class="bub in a left" data-sfx="pop" style="--d:5.7">¿Me pasas el menú? 😋</div>
+      <div class="bub out a right" data-sfx="pop" style="--d:6.25">Aquí está 📋 ¿Qué te preparo hoy?</div>
+    </div>
+    <div class="res-tag a pop" data-sfx="success" style="--d:6.8">✓ Toma pedidos solo</div>
+  </div>
+
+  <div class="sc" style="--s:7.8;--e:10.3;gap:36px">
+    <div class="biz a pop" style="--d:7.9"><em>🦷</em><b>Consultorio</b></div>
+    <div class="convo">
+      <div class="bub in a left" data-sfx="pop" style="--d:8.2">¿Atienden mañana? Me duele una muela 😣</div>
+      <div class="bub out a right" data-sfx="pop" style="--d:8.75">Sí, hay cita a las 9:00. ¿La reservo? ✅</div>
+    </div>
+    <div class="res-tag a pop" data-sfx="success" style="--d:9.3">✓ Agenda citas 24/7</div>
+  </div>
+
+  <div class="sc" style="--s:10.3;--e:12.8;gap:36px">
+    <div class="biz a pop" style="--d:10.4"><em>🛍️</em><b>Tienda</b></div>
+    <div class="convo">
+      <div class="bub in a left" data-sfx="pop" style="--d:10.7">¿Tienen esta blusa en talla M? 👚</div>
+      <div class="bub out a right" data-sfx="pop" style="--d:11.25">¡Sí! Te envío el link de pago 💳</div>
+    </div>
+    <div class="res-tag a pop" data-sfx="success" style="--d:11.8">✓ Vende y cobra solo</div>
+  </div>
+
+  <div class="sc" style="--s:12.8;--e:14.8;gap:34px">
+    <h2 class="cap a up" style="--d:12.9">Un bot con IA <span class="gt">entrenado con tu negocio</span></h2>
+    <div class="price a pop" data-sfx="success" style="--d:13.3"><span class="from">desde</span><span class="n gt">$75</span><span class="from">· listo en 2–3 días</span></div>
+  </div>
+</div>
+
+<!-- ================= 08 · GOOGLE: alguien te está buscando ================= -->
+<div data-c="google" data-dur="15.6" data-end="12.4" data-cover="2.5">
+  <div class="sc first" style="--e:3.4;gap:50px">
+    <h1 class="hook a hookin" style="--d:0;font-size:90px">Ahora mismo alguien busca <span class="gt">tu servicio</span> en Google…</h1>
+    <div class="search a up" style="--d:.3"><div class="mag"></div><div class="q"><span class="tw" data-sfx="type" data-t=".7" data-cps="14">dentista cerca de mí</span><span class="caret"></span></div></div>
+  </div>
+
+  <div class="sc" style="--s:3.4;--e:7.6;gap:26px">
+    <h2 class="cap a up" style="--d:3.5">…y encuentra a <span class="gt">tu competencia</span> 😬</h2>
+    <div class="search" style="font-size:34px;padding:20px 30px"><div class="mag" style="width:36px;height:36px"></div><div class="q">dentista cerca de mí</div></div>
+    <div class="results">
+      <div class="res a up" data-sfx="pop" style="--d:3.8"><small>competencia-1.com</small><b>Tu competencia #1</b><span>Reserva tu cita online · WhatsApp</span></div>
+      <div class="res a up" data-sfx="pop" style="--d:4.15"><small>competencia-2.com</small><b>Tu competencia #2</b><span>Precios, horarios y ubicación</span></div>
+      <div class="res a up" data-sfx="pop" style="--d:4.5"><small>competencia-3.com</small><b>Tu competencia #3</b><span>Agenda en línea las 24 horas</span></div>
+    </div>
+    <div class="nores a shake" data-sfx="pop" style="--d:5.4">Y tu negocio… ❌ no aparece</div>
+  </div>
+
+  <div class="sc" style="--s:7.6;--e:12.4;gap:30px">
+    <h2 class="cap a up" style="--d:7.7">Con una web hecha por <span class="gt">KOVA</span>:</h2>
+    <div class="feats">
+      <div class="feat a left" data-sfx="pop" style="--d:8.0"><em>🔍</em>Optimizada para Google (SEO)</div>
+      <div class="feat a left" data-sfx="pop" style="--d:8.3"><em>💬</em>Te escriben directo al WhatsApp</div>
+      <div class="feat a left" data-sfx="pop" style="--d:8.6"><em>⚡</em>Carga ultra rápida</div>
+      <div class="feat a left" data-sfx="pop" style="--d:8.9"><em>📱</em>Perfecta en el celular</div>
+    </div>
+    <div class="price a pop" data-sfx="success" style="--d:9.6"><span class="from">desde</span><span class="n gt">$89</span><span class="from">· lista en 2–3 días</span></div>
+  </div>
+</div>
+
+<!-- ================= 09 · PROCESO: sin miedo a pagar ================= -->
+<div data-c="proceso" data-dur="17" data-end="13.8" data-cover="1.8">
+  <div class="sc first" style="--e:3.0;gap:44px">
+    <div class="a pop" style="--d:.1;font-size:150px;line-height:1">😰</div>
+    <h1 class="hook a hookin" style="--d:0">¿Miedo de pagar y que <span class="gt">no te entreguen</span>?</h1>
+    <div class="pill a pop" data-sfx="pop" style="--d:1.1">Así trabajamos en KOVA 👇</div>
+  </div>
+
+  <div class="sc" style="--s:3.0;--e:9.6;gap:30px">
+    <div class="tl">
+      <div class="rail"><i style="--d:3.3;--len:5"></i></div>
+      <div class="st5 a left" data-sfx="pop" style="--d:3.3"><div class="n">01</div><div><b>Asesoría gratis por WhatsApp</b><small>Día 1</small></div></div>
+      <div class="st5 a left" data-sfx="pop" style="--d:4.5"><div class="n">02</div><div><b>Propuesta con precio fijo</b><small>En 24–48 h · sin costos ocultos</small></div></div>
+      <div class="st5 a left" data-sfx="pop" style="--d:5.7"><div class="n">03</div><div><b>Pagas solo el 50% para empezar</b><small>Transferencia, tarjeta o PayPal</small></div></div>
+      <div class="st5 a left" data-sfx="pop" style="--d:6.9"><div class="n">04</div><div><b>Ves avances cada semana</b><small>Pides cambios sobre la marcha</small></div></div>
+      <div class="st5 ok a left" data-sfx="success" style="--d:8.1"><div class="n">✓</div><div><b>Pagas el otro 50% al recibir</b><small>Y el código es tuyo</small></div></div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:9.6;--e:13.8;gap:26px">
+    <div class="shield a pop" data-sfx="success" style="--d:9.7">🛡️</div>
+    <h2 class="cap a up" style="--d:9.8">Y todo con <span class="gt">garantía por escrito</span></h2>
+    <div class="gcards">
+      <div class="gc a left" style="--d:10.2"><em>↩️</em>Si la 1.ª entrega no cumple lo acordado, te devolvemos el anticipo</div>
+      <div class="gc a left" style="--d:10.5"><em>🛠️</em>90 días corrigiendo errores gratis</div>
+      <div class="gc a left" style="--d:10.8"><em>📝</em>Contrato y acuerdo de confidencialidad</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 10 · TIENDA: deja de vender solo por DM ================= -->
+<div data-c="tienda" data-dur="16.4" data-end="13.2" data-cover="2.8">
+  <div class="sc first" style="--e:3.2;gap:30px">
+    <h1 class="hook a hookin" style="--d:0">¿Sigues vendiendo <span class="gt">solo por DM</span>? 📩</h1>
+    <div class="dms">
+      <div class="inbox a pop" style="--d:.2">✉️<span class="bdg"><span class="count c99" style="--d:.3;animation-duration:2.4s"></span>+</span></div>
+      <div class="dm a pop" data-sfx="pop" style="--d:.5;left:0;top:0;transform:rotate(-4deg)"><i></i>precio? 💰</div>
+      <div class="dm a pop" data-sfx="pop" style="--d:.85;right:0;top:30px;transform:rotate(3deg)"><i></i>info 🙏</div>
+      <div class="dm a pop" data-sfx="pop" style="--d:1.2;left:10px;top:240px;transform:rotate(-3deg)"><i></i>???</div>
+      <div class="dm a pop" data-sfx="pop" style="--d:1.55;right:0;top:260px;transform:rotate(3deg)"><i></i>precio</div>
+      <div class="dm a pop" data-sfx="pop" style="--d:1.9;left:0;top:450px;transform:rotate(2deg)"><i></i>¿tienen talla M?</div>
+      <div class="dm a pop" data-sfx="pop" style="--d:2.2;right:0;top:570px;transform:rotate(-3deg)"><i></i>¿hacen envíos?</div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:3.2;--e:9.2;gap:30px">
+    <h2 class="cap a up" style="--d:3.3;font-size:60px">Con tu <span class="gt">tienda online</span>, el cliente compra solo</h2>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="store">
+        <div class="top">URBAN<span>🛍️<i class="a pop" style="--d:5.3">1</i></span></div>
+        <div class="img">👟</div>
+        <div class="body">
+          <h5>Zapatillas Urban</h5>
+          <div class="pr">$45,00</div>
+          <div class="sizes"><span>S</span><span>M</span><span>L</span><span class="on a pop" style="--d:4.5">M</span></div>
+          <div class="add">Agregar al carrito</div>
+        </div>
+        <div class="tap dark" data-sfx="pop" style="--d:4.4;left:126px;top:612px"></div>
+        <div class="tap" data-sfx="pop" style="--d:5.1;left:250px;top:705px"></div>
+        <div class="sheet a slideup" data-sfx="whoosh" style="--d:5.7">
+          <h6>Tu pedido</h6>
+          <div class="r"><span>Zapatillas Urban · M</span><span>$45,00</span></div>
+          <div class="r"><span>Envío</span><span>Gratis</span></div>
+          <div class="r t"><span>Total</span><span>$45,00</span></div>
+          <div class="pay">💳 Pagar con tarjeta</div>
+        </div>
+        <div class="tap" data-sfx="pop" style="--d:6.6;left:250px;top:752px"></div>
+        <div class="okv a fi" data-sfx="success" style="--d:7.0"><div class="ck a pop" style="--d:7.05">✓</div><b>¡Compra confirmada!</b><span>Pedido #1043 · llega en 24 h</span></div>
+        <div class="banner a down" data-sfx="cash" style="--d:7.8"><div class="ic">🛒</div><div><b>Tu tienda · ahora</b><span>Nueva venta: $45,00 🎉</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sc" style="--s:9.2;--e:13.2;gap:30px">
+    <h2 class="cap a up" style="--d:9.3">Tu tienda vendiendo <span class="gt">24/7</span></h2>
+    <div class="pcard a pop" style="--d:9.45">
+      <h3>Tienda online</h3>
+      <div class="prices" style="margin:4px 0 18px">
+        <span class="old" style="font-size:76px">$1,290<i style="--d:9.8" data-sfx="whoosh"></i></span>
+        <span class="new gt a pop" data-sfx="cash" style="--d:10.1;font-size:140px">$389</span>
+        <span class="off a stamp" style="--d:10.4">-70%</span>
+      </div>
+      <ul class="card" style="background:none;border:0;box-shadow:none;padding:0">
+        <li class="a left" style="--d:10.4">Shopify o WooCommerce</li>
+        <li class="a left" style="--d:10.65">Pagos con tarjeta y envíos</li>
+        <li class="a left" style="--d:10.9">Pixel de Meta, TikTok y Google</li>
+        <li class="a left" style="--d:11.15">Bot de WhatsApp para pedidos</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Cierre (común) · empieza en data-end ================= -->
+<div class="sc last" id="end" style="gap:34px">
+  <svg class="logo a pop" data-o=".1"><use href="#logo"/></svg>
+  <div class="brand a up" data-o=".25">KOVA</div>
+  <div class="sub a up" data-o=".4" style="margin-top:-24px">Webs · Bots con IA · Automatizaciones</div>
+  <div class="cta a pop" data-o=".6" data-sfx="pop"><svg><use href="#wa"/></svg><span><small>Escríbenos por WhatsApp</small><b>+593 96 905 3512</b></span></div>
+  <div class="pill a up" data-o=".85"><span class="dot"></span>kovaautomatiza.com</div>
+  <div class="hand a up" data-o="1.05">Asesoría gratis · link en el perfil</div>
+</div>
+
+</div>
+
+<script>
+  var q = new URLSearchParams(location.search);
+  var c = q.get("c") || "noche";
+  document.querySelectorAll("[data-c]").forEach(function (el) { if (el.dataset.c !== c) el.remove(); });
+  var cur = document.querySelector("[data-c]");
+  var E = +cur.dataset.end;
+
+  // El cierre empieza en data-end; sus elementos usan data-o (segundos después de E)
+  var end = document.getElementById("end");
+  end.style.setProperty("--s", E);
+  end.querySelectorAll("[data-o]").forEach(function (el) { el.style.setProperty("--d", (E + +el.dataset.o).toFixed(2)); });
+
+  // Texto que se escribe letra por letra
+  var seg = new Intl.Segmenter("es", { granularity: "grapheme" });
+  document.querySelectorAll(".tw").forEach(function (el) {
+    var t0 = +el.dataset.t, cps = +(el.dataset.cps || 14), chars = Array.from(seg.segment(el.textContent), function (s) { return s.segment; });
+    el.textContent = "";
+    chars.forEach(function (ch, i) {
+      var s = document.createElement("span"); s.className = "chr"; s.textContent = ch;
+      s.style.setProperty("--d", (t0 + i / cps).toFixed(3)); el.appendChild(s);
+    });
+    el.style.setProperty("--d", t0); el.dataset.len = (chars.length / cps).toFixed(2);
+  });
+
+  // Momentos de sonido para audio.py: efectos marcados con data-sfx, transición en cada escena y golpe en el cierre
+  function num(el, prop) { return parseFloat(getComputedStyle(el).getPropertyValue(prop)); }
+  var cues = [];
+  document.querySelectorAll("[data-sfx]").forEach(function (el) {
+    var t = el.dataset.sfxT ? +el.dataset.sfxT : num(el, "--d");
+    if (!isNaN(t)) cues.push({ t: t, type: el.dataset.sfx, len: +(el.dataset.len || 0) });
+  });
+  document.querySelectorAll(".sc:not(.first):not(.last)").forEach(function (el) { cues.push({ t: num(el, "--s") - .25, type: "whoosh" }); });
+  cues.push({ t: E - .9, type: "riser", len: .9 }, { t: E, type: "impact" });
+  cues.sort(function (a, b) { return a.t - b.t; });
+  window.META = { concept: c, dur: +cur.dataset.dur, end: E, cover: +cur.dataset.cover, cues: cues };
+
+  // Congela todas las animaciones y las coloca en el segundo t (lo usa render-tiktok.js)
+  window.seek = function (t) {
+    document.getAnimations().forEach(function (a) { a.pause(); a.currentTime = t * 1000; });
+  };
+  window.ready = document.fonts.ready.then(function () { if (q.has("t")) seek(parseFloat(q.get("t"))); });
+</script>
+</body>
+</html>

@@ -51,4 +51,8 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 
 La campaña de Facebook/Instagram (estrategia, paso a paso y textos) está en [`marketing/CAMPANA-META.md`](marketing/CAMPANA-META.md). Los 3 videos están en `marketing/videos/` y las 3 imágenes en `marketing/imagenes/`.
 
+## TikTok e Instagram Reels
+
+10 videos verticales con música original, listos para publicar o promocionar, en `marketing/tiktok/` (portadas en `marketing/tiktok/portadas/`). Descripciones, hashtags, calendario y cómo promocionarlos: [`marketing/TIKTOK-REELS.md`](marketing/TIKTOK-REELS.md).
+
 La web marca los chats que llegan desde un anuncio: si la URL trae `utm_content`, el mensaje de WhatsApp termina en `[ref: nombre-del-anuncio]`. Para activar el Pixel de Meta, pega su ID en `var META_PIXEL_ID = "";`.
