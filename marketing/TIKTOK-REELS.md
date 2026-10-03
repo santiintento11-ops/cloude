@@ -1,6 +1,13 @@
 # KOVA en TikTok e Instagram Reels · 10 videos
 
-10 videos verticales (1080×1920, 9:16, 15–18 s) para publicar en **TikTok** e **Instagram Reels**, y también para promocionarlos con anuncios.
+10 videos verticales (1080×1920, 9:16) para publicar en **TikTok** e **Instagram Reels**, y también para promocionarlos con anuncios. Cada video viene en dos versiones:
+
+| Versión | Carpeta | Duración | Cuándo usarla |
+|---|---|---|---|
+| **Con voz en off (IA)** | `marketing/tiktok-voz/` (`…-voz.mp4`) | 24–35 s | **La principal para TikTok y Reels.** Una voz narra paso a paso lo que aparece en pantalla, como los videos que hoy funcionan en TikTok |
+| Solo música | `marketing/tiktok/` | 15–18 s | Anuncios cortos, o si quieres poner tu propia voz o un sonido en tendencia |
+
+**La voz:** es una voz neuronal en español latino (Piper `es_MX claude-high`, licencia Apache 2.0, se permite el uso comercial). Lee los textos de cada escena justo cuando aparecen. Mientras termina una frase, el video espera a que acabe y el fondo se sigue moviendo, así la imagen nunca se ve congelada. La música baja sola cuando habla la voz. Al final dice: "Escríbenos por WhatsApp. La asesoría es gratis, y el link está en el perfil."
 
 - Cada uno trae **música original y efectos de sonido** hechos para el video, sin derechos de autor de terceros. Puedes promocionarlos sin que TikTok o Meta los silencien.
 - Los textos son grandes y se leen sin sonido. Nada importante queda debajo de los botones de TikTok (derecha), del nombre de usuario ni de la descripción (abajo).
@@ -9,7 +16,7 @@
 
 ## Archivos
 
-Todo está en `marketing/tiktok/`. La portada (miniatura) de cada video está en `marketing/tiktok/portadas/`, con el mismo nombre.
+Videos con voz en `marketing/tiktok-voz/` y solo con música en `marketing/tiktok/`. Las portadas (miniaturas) están en la carpeta `portadas/` de cada una, con el mismo nombre que el video. Las de las dos versiones son iguales.
 
 | # | Video | Idea | Gancho (primer segundo) |
 |---|---|---|---|
@@ -59,7 +66,7 @@ Cuando alguien entra a la web con esos enlaces y te escribe por el botón de Wha
 
 **TikTok** (desde el celular)
 1. **+** → Subir → elige el video.
-2. **Sonido:** el video ya trae música. Si quieres usar un sonido en tendencia, tócalo en **Sonidos**, súbelo al 100 % y baja el **Sonido original** a 20–30 %, así siguen sonando los efectos. Si vas a promocionar el video, usa solo sonidos de la **Biblioteca de música comercial** o deja el original.
+2. **Sonido:** el video ya trae voz, música y efectos. En la versión con voz deja el **Sonido original al 100 %**. Si le sumas un sonido en tendencia, ponlo bajito (10–15 %) para que no tape la voz. Si vas a promocionar el video, usa solo sonidos de la **Biblioteca de música comercial** o deja el original.
 3. **Portada:** "Seleccionar portada" → sube la imagen de `portadas/` con el mismo nombre. Si no te deja subirla, elige el segundo 1–2, donde ya se lee el gancho.
 4. Pega la descripción de la sección 3.
 5. Activa **"Contenido de marca: tu propia marca"** (Más opciones). Es obligatorio cuando promocionas tu propio negocio.
@@ -188,9 +195,12 @@ Los videos salen de `src/tiktok.html` (cada idea es un bloque `data-c="…"`). P
 
 ```bash
 cd marketing/src
-node render-tiktok.js                 # los 10
-node render-tiktok.js precio tienda   # solo esos
+node render-tiktok.js                 # los 10, solo con música
+node render-tiktok.js --voz           # los 10 con voz en off
+node render-tiktok.js --voz precio    # solo ese, con voz
 node render-tiktok.js preview noche 1.4 6 11   # capturas sueltas para revisar
 ```
 
-Requisitos: Node con `playwright` (Chromium), `ffmpeg` y Python 3 con `numpy` y `scipy` (`pip install numpy scipy`). La música y los efectos los genera `src/audio.py` en el momento de grabar.
+Requisitos: Node con `playwright` (Chromium), `ffmpeg` y Python 3 con `numpy`, `scipy` y, para la voz, `piper-tts` (`pip install numpy scipy piper-tts`). La música y los efectos los genera `src/audio.py`. La voz la genera `src/tts.py`, que la primera vez descarga el modelo de voz en `src/voces/` (63 MB, no se sube al repositorio).
+
+**Cambiar lo que dice la voz:** en `src/tiktok.html`, busca `var VO = {`. Cada frase es `[segundo, "texto"]`, y el segundo indica cuándo empieza en la plantilla. Escribe los números y las marcas como se pronuncian ("setenta y cinco dólares", "Kova"). Para ponerle tu propia voz, usa la versión solo con música y graba encima desde TikTok (Voz en off).

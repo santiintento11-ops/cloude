@@ -3,7 +3,8 @@
     python3 audio.py cues.json salida.wav
 
 cues.json lo genera render-tiktok.js a partir de tiktok.html: duración del video, segundo en que empieza
-el cierre y la lista de momentos con efecto (pop, ding, type, success, cash, whoosh, riser, impact).
+el cierre, la lista de momentos con efecto (pop, ding, type, success, cash, whoosh, riser, impact) y,
+en la versión con voz, las frases ya grabadas por tts.py con su segundo de inicio.
 Todo se sintetiza aquí (sin samples ni música de terceros), así que se puede usar en anuncios sin
 problemas de derechos de autor. Requiere numpy y scipy.
 """
@@ -12,7 +13,7 @@ import sys
 
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import butter, sosfilt
+from scipy.signal import butter, resample_poly, sosfilt
 
 SR = 44100
 BPM = 112
@@ -241,6 +242,25 @@ SFX = {"pop": (sfx_pop, .4), "ding": (sfx_ding, .45), "success": (sfx_success, .
        "whoosh": (sfx_whoosh, .55), "impact": (sfx_impact, .6)}
 
 
+def voice_track(items, n):
+    """Voz en off: cada frase en su segundo, con filtro de graves y un poco de compresión para que se entienda."""
+    out = np.zeros(n)
+    active = np.zeros(n)
+    for item in items:
+        sr, x = wavfile.read(item["file"])
+        x = resample_poly(x.astype(float) / 32768, SR, sr)
+        x = filt(x, "highpass", 90)
+        x = np.sign(x) * np.abs(x / (np.abs(x).max() + 1e-9)) ** .8
+        i = int(item["t"] * SR)
+        x = x[: max(0, n - i)]
+        out[i:i + len(x)] += x
+        active[i:i + len(x)] = 1
+    # La música baja mientras habla la voz, con rampas suaves de ~120 ms
+    k = int(.12 * SR)
+    active = np.convolve(active, np.ones(k) / k, "same")
+    return out, np.clip(active, 0, 1)
+
+
 def main(src, dst):
     meta = json.load(open(src))
     dur, end = meta["dur"], meta["end"]
@@ -254,6 +274,10 @@ def main(src, dst):
         elif typ in SFX:
             fn, g = SFX[typ]
             place(out, fn(), t, g, pan=RNG.uniform(-.15, .15))
+    if meta.get("voice"):
+        out /= max(1e-9, np.abs(out).max()) / .6
+        vo, active = voice_track(meta["voice"], out.shape[1])
+        out = out * (1 - .65 * active) + vo * .85
     out /= max(1e-9, np.abs(out).max()) / .89
     wavfile.write(dst, SR, (out.T * 32767).astype(np.int16))
 

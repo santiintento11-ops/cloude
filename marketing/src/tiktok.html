@@ -30,12 +30,12 @@ h1,h2,h3,.sg{font-family:"Space Grotesk",Inter,"Noto Color Emoji",sans-serif;let
 
 /* ---------- Fondo ---------- */
 .bg{position:absolute;inset:0;overflow:hidden}
-.bg .grid{position:absolute;inset:-100px;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:90px 90px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);animation:gridmove 18s linear both}
+.bg .grid{position:absolute;inset:-100px;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:90px 90px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%);animation:gridmove 40s linear both}
 @keyframes gridmove{to{transform:translate(90px,180px)}}
 .orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.55}
-.o1{width:700px;height:700px;background:#7c5cff;left:-250px;top:8%;animation:drift1 18s ease-in-out both}
-.o2{width:620px;height:620px;background:#00b8d9;right:-260px;top:45%;animation:drift2 18s ease-in-out both}
-.o3{width:520px;height:520px;background:#ff4ecd;left:20%;bottom:-300px;opacity:.35;animation:drift1 18s ease-in-out reverse both}
+.o1{width:700px;height:700px;background:#7c5cff;left:-250px;top:8%;animation:drift1 40s ease-in-out both}
+.o2{width:620px;height:620px;background:#00b8d9;right:-260px;top:45%;animation:drift2 40s ease-in-out both}
+.o3{width:520px;height:520px;background:#ff4ecd;left:20%;bottom:-300px;opacity:.35;animation:drift1 40s ease-in-out reverse both}
 @keyframes drift1{50%{transform:translate(160px,120px) scale(1.15)}}
 @keyframes drift2{50%{transform:translate(-180px,-140px) scale(1.1)}}
 
@@ -835,6 +835,97 @@ h1,h2,h3,.sg{font-family:"Space Grotesk",Inter,"Noto Color Emoji",sans-serif;let
     el.style.setProperty("--d", t0); el.dataset.len = (chars.length / cps).toFixed(2);
   });
 
+  // Voz en off (render-tiktok.js --voz): [segundo de la plantilla en que empieza la frase, texto].
+  // Los números y las marcas van escritos como se pronuncian. El video se alarga lo justo para que cada frase
+  // termine antes de la siguiente, sin acelerar las animaciones (ver setWarp).
+  var VO = {
+    noche: [
+      [0, "Son las once y cuarenta y ocho de la noche… y tu negocio sigue vendiendo."],
+      [3.6, "Mientras tú descansas, un bot con inteligencia artificial atiende a tus clientes por WhatsApp."],
+      [5.5, "Responde en segundos y les manda el menú…"],
+      [7.6, "…y hasta cobra el pedido con un link de pago."],
+      [9.6, "Y tú despiertas con todo listo."],
+      [11.1, "Bots con inteligencia artificial, desde setenta y cinco dólares."]
+    ],
+    antes: [
+      [0, "Tu negocio, antes y después de Kova. ¿En cuál estás tú?"],
+      [2.9, "Antes: contestabas el WhatsApp hasta la medianoche."],
+      [3.75, "Después: un bot responde por ti, todo el día."],
+      [5.4, "Antes: en Google solo salía tu competencia."],
+      [6.25, "Después: tienes tu propia web profesional."],
+      [7.9, "Antes: facturas y Excel a mano."],
+      [8.75, "Después: se hacen solas."],
+      [10.4, "Antes: vendías solo por mensajes."],
+      [11.25, "Después: tu tienda online vende sola."]
+    ],
+    senales: [
+      [0, "Tres señales de que tu negocio necesita una página web. Y la número dos, duele."],
+      [3.0, "Uno: te piden los precios… y terminas mandando veinte fotos por WhatsApp."],
+      [6.4, "Dos: te buscan en Google… y aparece tu competencia. Tú no."],
+      [10.0, "Tres: tu negocio cierra cuando tú te desconectas."],
+      [11.5, "Con una web, sigue abierto día y noche."],
+      [12.7, "La solución: tu página web lista en dos o tres días, desde ochenta y nueve dólares."]
+    ],
+    precio: [
+      [0, "¿Cuánto cuesta una página web en Ecuador? Te lo digo sin rodeos."],
+      [3.1, "Nuestra Landing Pro costaba doscientos noventa y nueve…"],
+      [4.6, "…y hoy, con la oferta de lanzamiento, ochenta y nueve dólares."],
+      [5.5, "Lista en dos o tres días, con botón a WhatsApp y perfecta en el celular."],
+      [8.5, "¿Algo más grande? También hacemos tiendas online, bots y automatizaciones."],
+      [10.3, "Siempre a precio fijo: mitad al iniciar, mitad al entregar."]
+    ],
+    construye: [
+      [0, "Así nace tu página web. En cámara rápida."],
+      [2.8, "Primero, la programamos a mano: código limpio y rápido."],
+      [5.5, "Después, el diseño…"],
+      [7.3, "…premium, con los colores y el estilo de tu marca."],
+      [9.5, "Y al final: perfecta en el celular, lista para Google y súper rápida."],
+      [11.4, "¡Publicada!"]
+    ],
+    horas: [
+      [0, "¿Cuántas horas pierdes en tareas repetitivas? Haz la cuenta conmigo."],
+      [3.2, "Contestar mensajes, hacer facturas, pasar datos al Excel, confirmar pedidos…"],
+      [5.2, "Son treinta horas a la semana."],
+      [6.6, "¡Más de ciento veinte horas al mes!"],
+      [8.8, "Un programa lo puede hacer por ti. Lo programamos una vez, y funciona solo."],
+      [11.3, "Y tú te dedicas a vender."]
+    ],
+    negocios: [
+      [0, "¿Tienes un salón, un restaurante, un consultorio o una tienda? Mira esto."],
+      [2.9, "En un salón de belleza, el bot agenda los turnos solo."],
+      [5.4, "En un restaurante, manda el menú y toma los pedidos."],
+      [7.9, "En un consultorio, agenda citas a cualquier hora."],
+      [10.4, "Y en una tienda, vende y cobra con un link de pago."],
+      [12.9, "Un bot con inteligencia artificial, entrenado con tu negocio, desde setenta y cinco dólares."]
+    ],
+    google: [
+      [0, "Ahora mismo, alguien está buscando tu servicio en Google…"],
+      [3.5, "…y encuentra a tu competencia."],
+      [5.4, "¿Y tu negocio? No aparece."],
+      [7.7, "Con una web hecha por Kova, optimizada para Google, tus clientes te encuentran y te escriben al WhatsApp."],
+      [9.6, "Desde ochenta y nueve dólares, lista en dos o tres días."]
+    ],
+    proceso: [
+      [0, "¿Te da miedo pagar y que no te entreguen? Así trabajamos en Kova."],
+      [3.3, "Uno: asesoría gratis por WhatsApp."],
+      [4.5, "Dos: te enviamos una propuesta con precio fijo."],
+      [5.7, "Tres: pagas solo la mitad para empezar."],
+      [6.9, "Cuatro: ves avances cada semana."],
+      [8.1, "Y pagas el resto, solo cuando recibes tu proyecto."],
+      [9.7, "Todo con garantía por escrito: si la primera entrega no cumple lo acordado, te devolvemos el anticipo."],
+      [10.5, "Además, noventa días de corrección de errores gratis, y todo por contrato."]
+    ],
+    tienda: [
+      [0, "¿Sigues vendiendo solo por mensajes? Precio, info, ¿hacen envíos?…"],
+      [3.3, "Con tu tienda online, el cliente compra solo."],
+      [4.4, "Elige su talla, lo agrega al carrito…"],
+      [6.6, "…paga con tarjeta…"],
+      [7.8, "…y a ti te llega la venta."],
+      [9.3, "Tu tienda online, con pagos, envíos y bot de WhatsApp, desde trescientos ochenta y nueve dólares."]
+    ],
+    end: "Escríbenos por WhatsApp. La asesoría es gratis, y el link está en el perfil."
+  };
+
   // Momentos de sonido para audio.py: efectos marcados con data-sfx, transición en cada escena y golpe en el cierre
   function num(el, prop) { return parseFloat(getComputedStyle(el).getPropertyValue(prop)); }
   var cues = [];
@@ -845,11 +936,31 @@ h1,h2,h3,.sg{font-family:"Space Grotesk",Inter,"Noto Color Emoji",sans-serif;let
   document.querySelectorAll(".sc:not(.first):not(.last)").forEach(function (el) { cues.push({ t: num(el, "--s") - .25, type: "whoosh" }); });
   cues.push({ t: E - .9, type: "riser", len: .9 }, { t: E, type: "impact" });
   cues.sort(function (a, b) { return a.t - b.t; });
-  window.META = { concept: c, dur: +cur.dataset.dur, end: E, cover: +cur.dataset.cover, cues: cues };
+  var bounds = Array.prototype.map.call(document.querySelectorAll(".sc:not(.last)"), function (el) { return num(el, "--e"); });
+  window.META = { concept: c, dur: +cur.dataset.dur, end: E, cover: +cur.dataset.cover, cues: cues, bounds: bounds,
+    vo: VO[c].concat([[E + .15, VO.end]]) };
 
-  // Congela todas las animaciones y las coloca en el segundo t (lo usa render-tiktok.js)
+  // Reloj del video. Sin voz, el segundo t del video es el segundo t de la plantilla. Con voz, render-tiktok.js
+  // pasa puntos [segundo de plantilla, segundo de video] y entre ellos la plantilla avanza o se queda quieta
+  // mientras termina una frase. El fondo siempre usa el tiempo real, así nunca se ve congelado.
+  var warp = null;
+  window.setWarp = function (knots) { warp = knots; };
+  function tpl(v) {
+    if (!warp) return v;
+    for (var i = 1; i < warp.length; i++) {
+      var a = warp[i - 1], b = warp[i];
+      if (v <= b[1]) return b[1] === a[1] ? b[0] : a[0] + (v - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+    }
+    var l = warp[warp.length - 1];
+    return l[0] + v - l[1];
+  }
+  // Congela todas las animaciones y las coloca en el segundo t del video (lo usa render-tiktok.js)
   window.seek = function (t) {
-    document.getAnimations().forEach(function (a) { a.pause(); a.currentTime = t * 1000; });
+    var tt = tpl(t);
+    document.getAnimations().forEach(function (a) {
+      var bg = a.effect && a.effect.target && a.effect.target.closest(".bg");
+      a.pause(); a.currentTime = (bg ? t : tt) * 1000;
+    });
   };
   window.ready = document.fonts.ready.then(function () { if (q.has("t")) seek(parseFloat(q.get("t"))); });
 </script>

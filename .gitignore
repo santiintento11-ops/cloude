@@ -1,0 +1,5 @@
+# Modelo de voz de Piper (se descarga solo con tts.py)
+marketing/src/voces/
+# Carpetas temporales de render-tiktok.js
+marketing/tiktok*/*.tmp/
+__pycache__/

@@ -53,6 +53,6 @@ La campaña de Facebook/Instagram (estrategia, paso a paso y textos) está en [`
 
 ## TikTok e Instagram Reels
 
-10 videos verticales con música original, listos para publicar o promocionar, en `marketing/tiktok/` (portadas en `marketing/tiktok/portadas/`). Descripciones, hashtags, calendario y cómo promocionarlos: [`marketing/TIKTOK-REELS.md`](marketing/TIKTOK-REELS.md).
+10 videos verticales listos para publicar o promocionar: con voz en off de IA en `marketing/tiktok-voz/` y solo con música original en `marketing/tiktok/` (cada carpeta con sus `portadas/`). Descripciones, hashtags, calendario y cómo promocionarlos: [`marketing/TIKTOK-REELS.md`](marketing/TIKTOK-REELS.md).
 
 La web marca los chats que llegan desde un anuncio: si la URL trae `utm_content`, el mensaje de WhatsApp termina en `[ref: nombre-del-anuncio]`. Para activar el Pixel de Meta, pega su ID en `var META_PIXEL_ID = "";`.
