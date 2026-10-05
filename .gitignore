@@ -3,3 +3,6 @@ marketing/src/voces/
 # Carpetas temporales de render-tiktok.js
 marketing/tiktok*/*.tmp/
 __pycache__/
+
+# Voces generadas por render-tiktok2.js (se regeneran solas)
+marketing/src/.voz-cache/

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>KOVA · TikTok serie 2</title>
+<link rel="stylesheet" href="fonts.css">
+<!--
+  Serie 2 de videos de KOVA para TikTok / Reels (1080×1920), con voz en off y subtítulos palabra por palabra.
+  ?v=empleado|errores|flujo|demo|costo|instagram|rediseno|agente|detras|dudas   (&t=segundos para vista previa)
+
+  Cada video es una lista de "beats": una frase de la voz (vo) + la escena que se ve mientras se dice.
+  render-tiktok2.js genera la voz (voz.py), mide cuánto dura cada frase y en qué segundo se dice cada palabra,
+  y llama a build(info). Así cada escena dura exactamente lo que su frase, sin pausas muertas.
+
+  Dentro de una escena, cada elemento con a="pop|up|left|..." aparece:
+    w="palabra"   cuando la voz dice esa palabra (w="dos#2" = la segunda vez que la dice)
+    t="0.4"       a los 0,4 s de empezar la escena
+  sfx="pop|ding|success|cash|whoosh|type" marca un efecto de sonido en ese momento.
+  En el texto de la voz, las *palabras entre asteriscos* salen resaltadas en los subtítulos.
+-->
+<style>
+:root{
+  --bg:#05060f; --text:#f5f4ff; --muted:#a3a1bd; --g:#25d366; --r:#ff4d6d;
+  --a1:#7c5cff; --a2:#00e0ff; --a3:#ff4ecd;
+  --grad:linear-gradient(120deg,var(--a1),var(--a2));
+  --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.3,1.5,.5,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+body{font-family:Inter,"Noto Color Emoji",sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+.sg,h1,h2,h3{font-family:"Space Grotesk",Inter,"Noto Color Emoji",sans-serif;letter-spacing:-.03em;line-height:1.02;font-weight:700}
+.mono{font-family:"JetBrains Mono",monospace}
+.gt{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.g{color:var(--g)} .r{color:var(--r)} .mut{color:var(--muted)}
+
+/* ---------- Fondo con profundidad ---------- */
+.bg{position:absolute;inset:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(120px)}
+.b1{width:900px;height:900px;left:-380px;top:-120px;background:var(--a1);opacity:.42;animation:bd1 60s ease-in-out infinite alternate}
+.b2{width:800px;height:800px;right:-420px;top:640px;background:var(--a2);opacity:.28;animation:bd2 60s ease-in-out infinite alternate}
+.b3{width:700px;height:700px;left:120px;bottom:-460px;background:var(--a3);opacity:.22;animation:bd1 50s ease-in-out infinite alternate-reverse}
+@keyframes bd1{to{transform:translate(260px,180px) scale(1.2)}}
+@keyframes bd2{to{transform:translate(-240px,-220px) scale(1.15)}}
+.floor{position:absolute;left:-50%;right:-50%;bottom:-200px;height:1100px;background-image:linear-gradient(rgba(255,255,255,.07) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.07) 2px,transparent 2px);background-size:120px 120px;transform:perspective(900px) rotateX(64deg);transform-origin:bottom;-webkit-mask-image:linear-gradient(transparent,#000 60%);animation:floor 4s linear infinite}
+@keyframes floor{to{background-position:0 120px}}
+.beam{position:absolute;top:-400px;left:-300px;width:420px;height:3000px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transform:rotate(24deg);animation:beam 9s ease-in-out infinite}
+@keyframes beam{0%{transform:translateX(-200px) rotate(24deg)}100%{transform:translateX(1700px) rotate(24deg)}}
+.vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 45%,rgba(0,0,0,.65))}
+.grain{position:absolute;inset:0;opacity:.07;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>")}
+
+/* Marca */
+.bug{position:absolute;left:70px;top:196px;display:flex;align-items:center;gap:14px;font:700 30px "Space Grotesk";letter-spacing:.16em;opacity:.9}
+.bug svg{width:46px;height:46px}
+
+/* ---------- Escenario y escenas ---------- */
+.stage{position:absolute;left:70px;right:140px;top:258px;height:910px}
+.scene{position:absolute;inset:0;visibility:hidden}
+.cam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;text-align:center}
+/* Entradas y salidas de escena (los segundos los pone build()) */
+@keyframes vis{from,to{visibility:visible}}
+@keyframes in-whip{from{transform:translateX(110%) skewX(-8deg);filter:blur(24px);opacity:.3}}
+@keyframes in-zoom{from{transform:scale(1.5);filter:blur(30px);opacity:0}}
+@keyframes in-rise{from{transform:translateY(240px) scale(.92);opacity:0}}
+@keyframes in-drop{from{transform:translateY(-260px) scale(.95);opacity:0}}
+@keyframes in-flip{from{transform:perspective(1400px) rotateY(70deg);opacity:0}}
+@keyframes out-whip{to{transform:translateX(-110%) skewX(8deg);filter:blur(24px);opacity:.3}}
+@keyframes out-zoom{to{transform:scale(.7);filter:blur(20px);opacity:0}}
+@keyframes out-rise{to{transform:translateY(-220px);opacity:0}}
+@keyframes out-drop{to{transform:translateY(240px);opacity:0}}
+@keyframes out-flip{to{transform:perspective(1400px) rotateY(-70deg);opacity:0}}
+@keyframes ken{from{transform:scale(1)}to{transform:scale(1.06)}}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50}
+@keyframes flash{0%{opacity:.55}100%{opacity:0}}
+
+/* Animaciones de elementos (las activa build() con --d) */
+.an{animation-duration:.5s;animation-timing-function:var(--ease);animation-fill-mode:both;animation-delay:calc(var(--d) * 1s)}
+.an-pop{animation-name:pop;animation-timing-function:var(--spring)} @keyframes pop{from{opacity:0;transform:scale(.4)}}
+.an-up{animation-name:up} @keyframes up{from{opacity:0;transform:translateY(70px)}}
+.an-down{animation-name:down} @keyframes down{from{opacity:0;transform:translateY(-70px)}}
+.an-left{animation-name:left} @keyframes left{from{opacity:0;transform:translateX(-120px)}}
+.an-right{animation-name:right} @keyframes right{from{opacity:0;transform:translateX(120px)}}
+.an-fi{animation-name:fi} @keyframes fi{from{opacity:0}}
+.an-zoom{animation-name:zoom;animation-duration:.6s} @keyframes zoom{from{opacity:0;transform:scale(1.6);filter:blur(16px)}}
+.an-stamp{animation-name:stamp;animation-timing-function:var(--spring)} @keyframes stamp{from{opacity:0;transform:scale(2.4) rotate(-16deg)}to{transform:rotate(-7deg)}}
+.an-shake{animation-name:shake;animation-duration:.55s;animation-timing-function:linear} @keyframes shake{0%{opacity:0;transform:scale(.8)}20%{opacity:1;transform:translateX(-16px) scale(1.03)}40%{transform:translateX(13px)}60%{transform:translateX(-9px)}80%{transform:translateX(5px)}}
+.an-grow{animation-name:grow;animation-duration:.8s;transform-origin:left} @keyframes grow{from{transform:scaleX(0)}}
+.an-growy{animation-name:growy;animation-duration:.8s;transform-origin:bottom} @keyframes growy{from{transform:scaleY(0)}}
+.an-out{animation-name:outx;animation-duration:.3s} @keyframes outx{to{opacity:0;transform:scale(.9)}}
+.an-dim{animation-name:dim;animation-duration:.4s} @keyframes dim{to{opacity:.35;filter:grayscale(1)}}
+.an-draw{animation-name:draw;animation-duration:.7s;animation-timing-function:ease-in-out} @keyframes draw{from{stroke-dashoffset:var(--len,1000)}}
+.an-chr{animation-name:chr;animation-duration:.01s;animation-timing-function:linear} @keyframes chr{from{display:none}}
+.an-wipe{animation-name:wipe;animation-duration:1.1s;animation-timing-function:cubic-bezier(.65,0,.25,1)} @keyframes wipe{from{clip-path:inset(0 0 0 100%)}}
+.an-handle{animation-name:handle;animation-duration:1.1s;animation-timing-function:cubic-bezier(.65,0,.25,1)} @keyframes handle{from{left:100%}}
+@property --n{syntax:'<integer>';inherits:false;initial-value:0}
+.count{counter-reset:n var(--n)} .count::before{content:counter(n)}
+.float{animation:float 5s ease-in-out infinite alternate} @keyframes float{from{transform:translateY(-10px)}to{transform:translateY(12px)}}
+.pulse{animation:pulseg 1.4s ease-out infinite} @keyframes pulseg{0%{box-shadow:0 0 0 0 rgba(37,211,102,.55)}80%,100%{box-shadow:0 0 0 30px rgba(37,211,102,0)}}
+.spin{animation:spin 1s linear infinite} @keyframes spin{to{transform:rotate(360deg)}}
+.blinkc{animation:blinkc 1s steps(1) infinite} @keyframes blinkc{50%{opacity:0}}
+
+/* ---------- Subtítulos palabra por palabra ---------- */
+.caps{position:absolute;left:70px;right:140px;top:1196px;height:270px}
+.chunk{position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:4px 18px;visibility:hidden}
+.wd{font:800 70px/1.12 Inter,"Noto Color Emoji",sans-serif;letter-spacing:-.02em;padding:2px 12px;border-radius:16px;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.55)}
+.wd.em{color:#7dffb2}
+@keyframes win{from{opacity:0;transform:translateY(18px) scale(.86)}}
+@keyframes hl{from,to{background:var(--grad);color:#07060d;text-shadow:none;transform:scale(1.08)}}
+@keyframes cin{from{transform:scale(.94)}}
+
+/* ---------- Piezas reutilizables ---------- */
+.kick{font:700 30px "JetBrains Mono";letter-spacing:.18em;text-transform:uppercase;padding:12px 26px;border-radius:99px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.16);color:#d9d6f5}
+.h{font-size:84px}
+.h2{font-size:64px}
+.glass{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1.5px solid rgba(255,255,255,.14);border-radius:36px;box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(6px)}
+.row{display:flex;align-items:center;gap:22px;padding:24px 30px;text-align:left;width:100%}
+.row .ic{flex:none;width:86px;height:86px;border-radius:24px;display:grid;place-items:center;font-size:48px;background:rgba(255,255,255,.08)}
+.row b{display:block;font:700 40px "Space Grotesk";letter-spacing:-.02em}
+.row small{display:block;font-size:28px;color:var(--muted);margin-top:4px}
+.row .tag{margin-left:auto;font:700 26px Inter;padding:10px 18px;border-radius:99px;background:rgba(37,211,102,.16);color:#7dffb2;white-space:nowrap}
+.stack{display:flex;flex-direction:column;gap:20px;width:100%}
+.price{display:flex;flex-direction:column;align-items:center;gap:6px}
+.price small{font:600 40px Inter;color:var(--muted)}
+.price b{font:700 250px/0.9 "Space Grotesk";letter-spacing:-.06em}
+.price span{font:600 38px Inter;color:#d9d6f5}
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}
+.badge{font:700 34px Inter;padding:18px 30px;border-radius:99px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.16)}
+.badge.ok{background:rgba(37,211,102,.14);border-color:rgba(37,211,102,.45);color:#9dffc4}
+.big{font:700 330px/.85 "Space Grotesk";letter-spacing:-.07em}
+.chk{display:flex;align-items:center;gap:20px;font:600 40px Inter;text-align:left;padding:18px 26px;width:100%}
+.chk i{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:32px;background:var(--g);color:#06140b}
+.chk i.no{background:var(--r);color:#fff}
+
+/* Teléfono 3D */
+.ph{position:relative;width:420px;height:760px;border-radius:66px;background:#0b0a14;border:11px solid #26243c;box-shadow:0 60px 140px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.1),0 0 120px color-mix(in srgb,var(--a1) 35%,transparent);overflow:hidden;flex:none}
+.ph::before{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:140px;height:36px;border-radius:99px;background:#000;z-index:20}
+.tilt{transform:perspective(1800px) rotateY(-16deg) rotateX(5deg);animation:tilt 7s ease-in-out infinite alternate}
+.tilt-r{transform:perspective(1800px) rotateY(16deg) rotateX(5deg);animation:tiltr 7s ease-in-out infinite alternate}
+@keyframes tilt{to{transform:perspective(1800px) rotateY(-4deg) rotateX(2deg) translateY(-12px)}}
+@keyframes tiltr{to{transform:perspective(1800px) rotateY(4deg) rotateX(2deg) translateY(-12px)}}
+.wa-h{display:flex;align-items:center;gap:16px;padding:64px 22px 18px;background:#1f2c34;text-align:left}
+.wa-h .av{width:62px;height:62px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font:800 26px Inter;flex:none}
+.wa-h b{display:block;font-size:26px}
+.wa-h small{font-size:20px;color:#8fe3b0}
+.wa-b{position:absolute;left:0;right:0;top:146px;bottom:0;padding:20px 16px 30px;display:flex;flex-direction:column;justify-content:flex-end;gap:14px;background:#0b141a;background-image:radial-gradient(rgba(255,255,255,.035) 2px,transparent 2px);background-size:26px 26px}
+.m{max-width:86%;padding:14px 18px 12px;border-radius:22px;font-size:26px;line-height:1.32;text-align:left;flex:none}
+.m small{display:block;text-align:right;font-size:17px;opacity:.6;margin-top:3px}
+.m.in{align-self:flex-start;background:#202c33;border-top-left-radius:6px}
+.m.out{align-self:flex-end;background:#005c4b;border-top-right-radius:6px}
+.m-coll{animation-name:mcoll} @keyframes mcoll{from{display:none;opacity:0;transform:translateY(30px)}}
+
+/* Navegador */
+.br{width:100%;border-radius:30px;background:#0d0c17;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 40px 100px rgba(0,0,0,.55);overflow:hidden;text-align:left;position:relative}
+.br .bar{display:flex;gap:12px;align-items:center;padding:18px 24px;border-bottom:1.5px solid rgba(255,255,255,.08);font-size:24px;color:var(--muted)}
+.br .bar i{width:17px;height:17px;border-radius:50%;background:#ff5f57;flex:none}.br .bar i:nth-child(2){background:#febc2e}.br .bar i:nth-child(3){background:#28c840;margin-right:10px}
+.br .url{flex:1;padding:9px 18px;border-radius:99px;background:rgba(255,255,255,.07);font-size:23px;color:#d8d4ee}
+.br .view{position:relative;height:560px;overflow:hidden}
+
+/* Sitio premium (ficticio) */
+.site{position:absolute;inset:0;background:radial-gradient(circle at 85% 18%,color-mix(in srgb,var(--a2) 40%,transparent),transparent 45%),linear-gradient(160deg,#0f1630,#1b1050 60%,#0a0d22);padding:26px 34px}
+.site nav{display:flex;align-items:center;gap:24px;font-size:22px;color:#cfd3ff}
+.site nav b{font:700 28px "Space Grotesk";color:#fff;margin-right:auto}
+.site nav .cta{padding:10px 18px;border-radius:99px;background:var(--g);color:#06140b;font-weight:800}
+.site h4{margin-top:56px;width:560px;font:700 60px/1.02 "Space Grotesk";letter-spacing:-.03em;color:#fff}
+.site p{margin-top:16px;font-size:26px;color:#c7cbef;width:520px}
+.site .btn{display:inline-block;margin-top:26px;padding:20px 32px;border-radius:99px;background:var(--g);color:#06140b;font-size:27px;font-weight:800}
+.site .orb{position:absolute;right:40px;top:110px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--a2) 30%,var(--a1) 70%);box-shadow:0 0 80px color-mix(in srgb,var(--a2) 60%,transparent)}
+.site .cards{position:absolute;left:34px;right:34px;bottom:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.site .cards div{height:110px;border-radius:20px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);display:grid;place-items:center;font-size:24px;font-weight:700}
+/* Sitio viejo (ficticio) */
+.old{position:absolute;inset:0;background:#e9e6dc;color:#333;font-family:"Times New Roman",serif;padding:20px 26px}
+.old .ban{background:#3a5f9e;color:#ff0;font:bold 40px "Comic Sans MS","Times New Roman",serif;text-align:center;padding:16px;border:4px ridge #999}
+.old marquee,.old .mq{display:block;margin:12px 0;color:#c00;font-size:24px}
+.old .cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+.old .cols div{height:120px;background:#ccc;border:2px inset #999;display:grid;place-items:center;font-size:20px;color:#666}
+.old p{font-size:22px;line-height:1.3;margin-top:12px;color:#444}
+.old .hit{position:absolute;right:20px;bottom:20px;font-size:18px;color:#777}
+
+/* Buscador */
+.search{width:100%;display:flex;align-items:center;gap:20px;padding:24px 32px;border-radius:99px;background:#fff;color:#202124;font-size:38px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.mag{width:42px;height:42px;flex:none;border:5px solid #9aa0a6;border-radius:50%;position:relative}
+.mag::after{content:"";position:absolute;width:5px;height:17px;background:#9aa0a6;right:-9px;bottom:-13px;transform:rotate(-45deg);border-radius:3px}
+.res{width:100%;padding:22px 28px;border-radius:24px;background:#fff;color:#202124;text-align:left}
+.res small{display:block;color:#188038;font-size:23px}
+.res b{display:block;color:#1a0dab;font-size:34px;margin:2px 0}
+.res span{font-size:24px;color:#4d5156}
+
+/* Flujo de automatización */
+.flow{position:relative;width:870px;height:900px}
+.flow svg.links{position:absolute;inset:0;overflow:visible}
+.flow path{fill:none;stroke:color-mix(in srgb,var(--a2) 70%,transparent);stroke-width:5;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:0;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--a2) 60%,transparent))}
+.node{position:absolute;width:360px;display:flex;align-items:center;gap:18px;padding:22px 24px;border-radius:28px;text-align:left;background:linear-gradient(160deg,#18243a,#0e1424)!important;z-index:2}
+.node .ic{width:84px;height:84px;border-radius:24px;display:grid;place-items:center;font-size:46px;background:linear-gradient(140deg,color-mix(in srgb,var(--a1) 60%,#111),color-mix(in srgb,var(--a2) 50%,#111));flex:none}
+.node b{display:block;font:700 38px "Space Grotesk"}
+.node small{font-size:26px;color:var(--muted)}
+.pkt{position:absolute;left:0;top:0;offset-anchor:center;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 0 20px #fff,0 0 40px var(--a2);offset-rotate:0deg;animation:pkt 1.6s linear infinite}
+@keyframes pkt{from{offset-distance:0%}to{offset-distance:100%}}
+
+/* Contadores y barras */
+.calc{width:100%;padding:34px 40px;text-align:left}
+.cl{display:flex;justify-content:space-between;align-items:baseline;font:600 38px Inter;padding:14px 0;border-bottom:2px dashed rgba(255,255,255,.12)}
+.cl b{font:700 46px "Space Grotesk"}
+.bars{display:flex;align-items:flex-end;justify-content:center;gap:70px;height:560px;width:100%}
+.barc{display:flex;flex-direction:column;align-items:center;gap:16px;width:250px}
+.barc .v{font:700 64px "Space Grotesk"}
+.barc .b{width:200px;border-radius:26px 26px 10px 10px}
+.barc small{font:600 30px Inter;color:#d9d6f5;text-align:center}
+
+/* Instagram (genérico) */
+.ig{width:600px;padding:34px;border-radius:40px;text-align:left}
+.ig .top{display:flex;align-items:center;gap:26px}
+.ig .av{width:130px;height:130px;border-radius:50%;padding:6px;background:linear-gradient(45deg,#f9a825,#e1306c,#833ab4);flex:none}
+.ig .av div{width:100%;height:100%;border-radius:50%;background:#1d1b2b;display:grid;place-items:center;font-size:60px}
+.ig .st{display:flex;gap:30px;font-size:24px;color:var(--muted)} .ig .st b{display:block;font:700 34px Inter;color:#fff}
+.ig .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:26px}
+.ig .grid div{aspect-ratio:1;border-radius:10px;background:linear-gradient(140deg,#2b2745,#191729)}
+.meter{width:100%;height:46px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0;border-radius:99px;transform-origin:left}
+.lockc{display:flex;flex-direction:column;align-items:center;gap:18px;padding:50px 40px;width:100%}
+.lockc .ico{font-size:150px;line-height:1}
+
+/* Antes / después */
+.ba{position:relative;width:100%;height:640px;border-radius:30px;overflow:hidden;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 40px 100px rgba(0,0,0,.55)}
+.ba .layer{position:absolute;inset:0}
+.ba .handle{position:absolute;top:0;bottom:0;left:0;width:6px;margin-left:-3px;background:#fff;box-shadow:0 0 30px rgba(255,255,255,.8);z-index:5}
+.ba .handle::after{content:"⟷";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;font:800 34px Inter}
+.lbl{position:absolute;top:18px;padding:10px 20px;border-radius:99px;font:800 24px Inter;letter-spacing:.1em;z-index:6}
+
+/* IA */
+.core{position:relative;width:420px;height:420px;display:grid;place-items:center}
+.core .ring{position:absolute;inset:0;border-radius:50%;border:3px solid color-mix(in srgb,var(--a2) 60%,transparent);animation:ring 6s linear infinite}
+.core .ring:nth-child(2){inset:40px;border-style:dashed;animation-duration:9s;animation-direction:reverse}
+.core .ring:nth-child(3){inset:80px;border-color:color-mix(in srgb,var(--a1) 70%,transparent);animation-duration:4s}
+@keyframes ring{to{transform:rotate(360deg)}}
+.core .nucleus{width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--a2) 35%,var(--a1) 75%);box-shadow:0 0 120px var(--a2),0 0 60px var(--a1);display:grid;place-items:center;font:800 64px "Space Grotesk";color:#07060d}
+.doc{position:absolute;display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:20px;font:700 26px Inter;white-space:nowrap}
+.doc em{font-style:normal;font-size:36px}
+@keyframes suck{0%{opacity:1;transform:translate(0,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+.an-suck{animation-name:suck;animation-duration:1.2s;animation-timing-function:cubic-bezier(.6,0,.4,1)}
+
+/* Código, terminal y panel */
+.code{padding:24px 28px;font:500 27px/1.6 "JetBrains Mono";white-space:pre;text-align:left}
+.k{color:#c792ea}.s{color:#c3e88d}.f{color:#82aaff}.cm{color:#6d6985}.t{color:#f07178}
+.term{padding:24px 28px;font:500 27px/1.7 "JetBrains Mono";text-align:left;color:#d7d4ee}
+.term .ok{color:#7dffb2}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%}
+.kpi{padding:24px 26px;text-align:left}
+.kpi small{display:block;font-size:24px;color:var(--muted)}
+.kpi b{font:700 64px "Space Grotesk"}
+.chart{display:flex;align-items:flex-end;gap:16px;height:260px;padding:26px 30px;width:100%}
+.chart i{flex:1;border-radius:12px 12px 4px 4px;background:linear-gradient(var(--a2),var(--a1));transform-origin:bottom}
+.sticky{position:absolute;width:250px;padding:22px;border-radius:8px;color:#1b1b1b;font:700 28px/1.2 Inter;box-shadow:0 18px 40px rgba(0,0,0,.4);text-align:left}
+
+/* Preguntas */
+.q{align-self:flex-start;max-width:92%;padding:28px 34px;border-radius:40px 40px 40px 10px;background:#262338;border:1.5px solid rgba(255,255,255,.14);font:700 54px/1.1 "Space Grotesk";text-align:left}
+.ans{align-self:flex-end;max-width:92%;padding:30px 36px;border-radius:40px 40px 10px 40px;background:linear-gradient(140deg,color-mix(in srgb,var(--a1) 75%,#000),color-mix(in srgb,var(--a2) 60%,#000));font:700 46px/1.15 "Space Grotesk";text-align:left;box-shadow:0 30px 80px color-mix(in srgb,var(--a1) 35%,transparent)}
+.qn{font:700 30px "JetBrains Mono";letter-spacing:.14em;color:var(--a2)}
+
+/* Credencial */
+.idc{width:600px;padding:40px 40px 34px;border-radius:44px;text-align:left;position:relative}
+.idc .clip{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:120px;height:56px;border-radius:16px;background:#2a2840;border:2px solid rgba(255,255,255,.18)}
+.idc .who{display:flex;align-items:center;gap:26px;margin-bottom:24px}
+.idc .pic{width:160px;height:160px;border-radius:40px;display:grid;place-items:center;font-size:96px;background:linear-gradient(140deg,#2b2745,#191729);flex:none;position:relative;overflow:hidden}
+.idc .f{display:flex;justify-content:space-between;font:600 32px Inter;padding:16px 0;border-top:1.5px solid rgba(255,255,255,.1)}
+.idc .f b{font:700 34px "Space Grotesk"}
+
+/* Cierre */
+.logo{width:230px;height:230px;filter:drop-shadow(0 0 60px color-mix(in srgb,var(--a1) 80%,transparent))}
+.brand{font:700 120px "Space Grotesk";letter-spacing:.16em;margin-top:-10px}
+.wa{display:inline-flex;align-items:center;gap:24px;padding:28px 52px 28px 40px;border-radius:99px;background:var(--g);color:#06140b;text-align:left;box-shadow:0 24px 70px rgba(37,211,102,.4)}
+.wa svg{width:78px;height:78px;fill:#06140b;flex:none}
+.wa small{display:block;font:700 28px Inter;opacity:.8}
+.wa b{display:block;font:800 54px Inter;white-space:nowrap}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="kl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3fe0"/><stop offset=".55" stop-color="#4f5cf0"/><stop offset="1" stop-color="#2f9bff"/></linearGradient>
+    <mask id="km" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><g fill="none" stroke="#000" stroke-width="2.2"><path d="M32.3 35.5V66.5L63 35.8"/><path d="M53 27.3 70.6 26 69.4 43.6"/><path d="M51.5 55.5 69 72.5"/></g></mask>
+  </defs>
+  <symbol id="wa" viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4c-1-1.6-1.5-3.4-1.5-5.2 0-5.4 4.4-9.8 9.8-9.8 2.6 0 5.1 1 6.9 2.9 1.8 1.8 2.9 4.3 2.9 6.9 0 5.4-4.4 9.8-9.8 9.8zm8.4-18.2C18.1 1.3 15.2.1 12 .1 5.5.1.1 5.4.1 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.2-3.5-8.3z"/></symbol>
+  <symbol id="logo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" fill="none" stroke="url(#kl)" stroke-width="3"/><g fill="url(#kl)" mask="url(#km)"><rect x="26" y="31" width="12.6" height="46"/><path d="M26 69.5 60.5 35 68.5 43 38.6 72.9Z"/><path d="M46.5 24.6 75.5 22 73 51Z"/><path d="M42.5 60 50.6 51.8 76.5 77H60.5Z"/></g></symbol>
+</svg>
+
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="floor"></div><div class="beam"></div><div class="vig"></div><div class="grain"></div></div>
+<div class="bug"><svg><use href="#logo"/></svg>KOVA</div>
+<div class="stage" id="stage"></div>
+<div class="caps" id="caps"></div>
+<div class="flash" id="flash"></div>
+
+<script>
+/* ======================= Piezas ======================= */
+var WA = '<svg><use href="#wa"/></svg>';
+function phone(inner, cls, wrap) {
+  var ph = '<div class="ph ' + (cls || "tilt") + '">' + inner + '</div>';
+  return wrap ? '<div ' + wrap + '>' + ph + '</div>' : ph;
+}
+function wa(name, sub, msgs) {
+  return '<div class="wa-h"><div class="av">' + name.slice(0, 1) + '</div><div><b>' + name + '</b><small>' + sub + '</small></div></div><div class="wa-b">' + msgs + '</div>';
+}
+function row(ic, title, sub, attrs, tag) {
+  return '<div class="glass row" ' + (attrs || "") + '><div class="ic">' + ic + '</div><div><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : "") + '</div>' + (tag ? '<span class="tag">' + tag + '</span>' : "") + '</div>';
+}
+function price(from, amount, sub, attrs) {
+  return '<div class="price" ' + attrs + '><small>' + from + '</small><b class="gt">' + amount + '</b>' + (sub ? '<span>' + sub + '</span>' : "") + '</div>';
+}
+function browser(url, view, h) { return '<div class="br"><div class="bar"><i></i><i></i><i></i><div class="url">🔒 ' + url + '</div></div><div class="view" style="height:' + (h || 560) + 'px">' + view + '</div></div>'; }
+var SITE = '<div class="site"><nav><b>✦ Clínica Sonrisa</b><span>Servicios</span><span>Precios</span><span class="cta">WhatsApp</span></nav><div class="orb"></div><h4>Tu mejor sonrisa empieza hoy</h4><p>Agenda tu cita en línea en menos de un minuto.</p><div class="btn">💬 Agendar por WhatsApp</div><div class="cards"><div>🦷 Limpieza</div><div>✨ Blanqueamiento</div><div>📅 Citas 24/7</div></div></div>';
+var OLD = '<div class="old"><div class="ban">Bienvenidos a nuestra Pagina Web!!!</div><div class="mq">*** ULTIMA ACTUALIZACION 2014 *** LLAMENOS ***</div><div class="cols"><div>imagen.jpg</div><div>[foto]</div><div>cargando...</div></div><p>Somos una empresa lider con muchos años de experiencia en el mercado brindando servicios de calidad a todos nuestros clientes. Para mas informacion visite nuestras oficinas en horario de atencion...</p><div class="hit">Visitas: 000127</div></div>';
+function flow(nodes, links) {
+  // nodes: [x, y, icon, title, sub, attrs]; links: [[from, to, attrs]]
+  var svg = '<svg class="links" viewBox="0 0 870 900">', html = "";
+  links.forEach(function (l) {
+    var a = nodes[l[0]], b = nodes[l[1]];
+    // de borde a borde: sale por el lado de a que mira hacia b y entra por el lado opuesto de b
+    var right = b[0] > a[0], x1 = a[0] + (right ? 360 : 0), y1 = a[1] + 64, x2 = b[0] + (right ? 0 : 360), y2 = b[1] + 64;
+    var dx = (x2 - x1) * .55;
+    var d = "M" + x1 + " " + y1 + " C" + (x1 + dx) + " " + y1 + " " + (x2 - dx) + " " + y2 + " " + x2 + " " + y2;
+    svg += '<path d="' + d + '" ' + l[2] + '/>';
+    var pk = '<i class="pkt" style="offset-path:path(\'' + d + '\')"></i>';
+    html += l[3] ? '<div ' + l[3] + '>' + pk + '</div>' : pk;
+  });
+  nodes.forEach(function (n) { html += '<div class="glass node" style="left:' + n[0] + 'px;top:' + n[1] + 'px" ' + n[5] + '><div class="ic">' + n[2] + '</div><div><b>' + n[3] + '</b><small>' + n[4] + '</small></div></div>'; });
+  return '<div class="flow">' + svg + '</svg>' + html + '</div>';
+}
+
+/* ======================= Guiones y escenas ======================= */
+// tr = transición de entrada: whip | zoom | rise | drop | flip   (flash:true añade un destello)
+var VIDEOS = {
+  empleado: { a: ["#7c5cff", "#00e0ff", "#ff4ecd"], cover: [0, .9], beats: [
+    { tr: "zoom", vo: "Contraté a un empleado que trabaja las *veinticuatro* *horas*… y nunca pide *vacaciones*.", html:
+      '<div class="kick an an-down" t="0">Nuevo empleado</div>' +
+      '<div class="an an-pop" t=".1"><div class="glass idc float"><div class="clip"></div><div class="who"><div class="pic">👤<b style="position:absolute;inset:0;display:grid;place-items:center;font-size:90px;background:rgba(10,8,20,.6)">?</b></div><div><b class="sg" style="font-size:50px">Empleado del mes</b><div class="mut" style="font-size:28px;margin-top:6px">Ventas y atención</div></div></div>' +
+      '<div class="f an an-left" w="veinticuatro" sfx="pop"><span>Horario</span><b class="g">24/7</b></div>' +
+      '<div class="f an an-left" w="vacaciones" sfx="pop"><span>Vacaciones</span><b class="g">0 días</b></div>' +
+      '<div class="f an an-left" w="vacaciones" t=".5"><span>Responde en</span><b class="g">segundos</b></div></div></div>' },
+    { tr: "flip", flash: true, vo: "No es una persona. Es un *bot* *con* *inteligencia* *artificial*, entrenado con la información de tu negocio.", html:
+      '<div class="glass idc an an-pop" t="0"><div class="who"><div class="pic" style="background:var(--grad)">🤖</div><div><b class="sg gt" style="font-size:56px">Asistente IA</b><div class="mut" style="font-size:28px;margin-top:6px">Tu Negocio · WhatsApp</div></div></div>' +
+      '<div class="f"><span>Conoce</span><b>tu negocio</b></div></div>' +
+      '<div class="badges">' +
+      '<span class="badge an an-pop" w="entrenado" sfx="pop">📄 catálogo.pdf</span>' +
+      '<span class="badge an an-pop" w="información" sfx="pop">💲 precios.xlsx</span>' +
+      '<span class="badge an an-pop" w="negocio" sfx="pop">🕒 horarios</span></div>' },
+    { tr: "whip", vo: "Responde en segundos, atiende muchos chats a la vez, y nunca deja a un cliente *en* *visto*.", html:
+      phone(wa("Tu Negocio", "● en línea · asistente IA",
+        '<div class="m in an m-coll" t=".05" sfx="pop">Hola, ¿tienen disponibilidad mañana? <small>21:14</small></div>' +
+        '<div class="m out an m-coll" w="segundos" sfx="pop">¡Hola! 👋 Sí: 10:00, 12:30 o 16:00. ¿Cuál prefieres? <small>21:14 ✓✓</small></div>' +
+        '<div class="m in an m-coll" w="chats">La de las 12:30 🙌 <small>21:15</small></div>' +
+        '<div class="m out an m-coll" w="visto" sfx="success">✅ Listo, te agendé mañana a las 12:30. <small>21:15 ✓✓</small></div>')) },
+    { tr: "rise", vo: "Agenda citas, toma pedidos y cobra con un *link* *de* *pago*.", html:
+      '<div class="stack">' +
+      row("📅", "Cita confirmada", "Mañana · 12:30", 'class="an an-right" w="citas" sfx="ding"', "Agendada") +
+      row("🛒", "Pedido #208", "2 productos · envío a domicilio", 'class="an an-right" w="pedidos" sfx="ding"', "Recibido") +
+      row("💳", "Pago recibido", "$25,00 · link de pago", 'class="an an-right" w="pago" sfx="cash"', "Pagado") + '</div>' },
+    { tr: "zoom", flash: true, vo: "Y lo mejor: lo puedes tener desde *setenta* *y* *cinco* *dólares*.", html:
+      '<div class="kick an an-down" t="0">Bot con IA</div>' + price("desde", "$75", "listo en 2–3 días", 'class="an an-zoom" w="setenta" sfx="cash"') }
+  ]},
+
+  errores: { a: ["#ff4d6d", "#ffb020", "#7c5cff"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "*Cinco* *errores* que hacen que tu página web no venda. El tercero es el más común.", html:
+      '<div class="big gt an an-zoom" t="0">5</div><h2 class="h an an-up" t=".15">errores que<br>no te dejan vender</h2>' +
+      '<div class="kick an an-pop" w="tercero" sfx="pop">⚠️ el #3 es el más común</div>' },
+    { tr: "whip", vo: "Uno: tarda más de *tres* *segundos* en cargar, y muchos visitantes se van antes de verla.", html:
+      '<div class="kick an an-down" t="0">Error #1 · lenta</div>' +
+      browser("tunegocio.com", '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px"><div class="spin" style="width:120px;height:120px;border-radius:50%;border:12px solid rgba(255,255,255,.12);border-top-color:var(--a1)"></div><div class="sg" style="font-size:90px"><span class="count an" t=".2" data-count="5" data-dur="2.6"></span> s</div><div class="mut" style="font-size:30px">cargando…</div></div>', 520) +
+      '<div class="badge an an-shake" w="visitantes" sfx="pop" style="background:rgba(255,77,109,.16);border-color:var(--r);color:#ffb3c0">👋 visitantes que se van</div>' },
+    { tr: "flip", vo: "Dos: no se ve bien en el *celular*.", html:
+      phone('<div class="old" style="padding:70px 10px 10px"><div class="ban" style="font-size:30px;white-space:nowrap">Bienvenidos a nuestra Pagina Web!!!</div><div class="cols"><div>img</div><div>img</div><div>img</div></div><p style="font-size:14px">Texto diminuto imposible de leer en el celular, botones pequeños y todo desordenado...</p></div>', "tilt-r", 'class="an an-shake" w="celular" sfx="pop"') },
+    { tr: "whip", vo: "Tres: no tiene un botón directo a *WhatsApp*. Tu cliente quiere escribirte… y no sabe cómo.", html:
+      '<div class="kick an an-down" t="0">Error #3 · el más común</div>' +
+      browser("tunegocio.com/contacto", '<div class="old" style="font-family:Inter"><div class="ban" style="font-family:Inter;font-size:32px">Contáctenos</div><p>Llene el formulario y le responderemos en 3 a 5 días hábiles.</p><div style="margin-top:16px;display:grid;gap:10px"><div style="height:44px;background:#fff;border:2px solid #aaa"></div><div style="height:44px;background:#fff;border:2px solid #aaa"></div><div style="height:90px;background:#fff;border:2px solid #aaa"></div></div></div>', 520) +
+      '<div class="badge an an-shake" w="cómo" sfx="pop" style="background:rgba(255,77,109,.16);border-color:var(--r);color:#ffb3c0">❌ sin botón de WhatsApp</div>' },
+    { tr: "rise", vo: "Cuatro: no aparece en *Google*.", html:
+      '<div class="kick an an-down" t="0">Error #4 · invisible</div>' +
+      '<div class="search an an-up" t=".05"><div class="mag"></div><span>tu servicio en tu ciudad</span></div>' +
+      '<div class="res an an-up" t=".25"><small>competencia.com</small><b>Tu competencia</b><span>Precios · WhatsApp · Reseñas</span></div>' +
+      '<div class="badge an an-shake" w="Google" sfx="pop" style="background:rgba(255,77,109,.16);border-color:var(--r);color:#ffb3c0">❌ tu negocio no aparece</div>' },
+    { tr: "drop", vo: "Y cinco: no muestra precios ni un *llamado* *claro* a la acción.", html:
+      '<div class="kick an an-down" t="0">Error #5 · confusa</div>' +
+      browser("tunegocio.com", '<div class="old" style="font-family:Inter;text-align:center;padding-top:60px"><div style="font-size:46px;font-weight:700">Bienvenidos</div><p>Somos una empresa con experiencia. Contamos con diversos servicios para usted.</p><p style="margin-top:30px;color:#999">¿Precios? ¿Qué hago ahora? 🤷</p></div>', 460) +
+      '<div class="badge an an-shake" w="llamado" sfx="pop" style="background:rgba(255,77,109,.16);border-color:var(--r);color:#ffb3c0">❌ sin precios ni botón</div>' },
+    { tr: "zoom", flash: true, vo: "En Kova hacemos webs que evitan los cinco errores: *rápidas*, perfectas en el *celular*, y listas para *vender*.", html:
+      '<div class="glass stack" style="padding:24px 20px;gap:6px">' +
+      '<div class="chk an an-left" w="rápidas" sfx="success"><i>✓</i>Carga en menos de 2 s</div>' +
+      '<div class="chk an an-left" w="celular" sfx="success"><i>✓</i>Perfecta en el celular</div>' +
+      '<div class="chk an an-left" w="celular" t="0" sfx="success"><i>✓</i>Botón directo a WhatsApp</div>' +
+      '<div class="chk an an-left" w="vender" sfx="success"><i>✓</i>Lista para Google</div>' +
+      '<div class="chk an an-left" w="vender" sfx="success"><i>✓</i>Precios y botón claros</div></div>' +
+      '<div class="badge ok an an-pop" w="vender">Landing desde $89 · 2–3 días</div>' }
+  ]},
+
+  flujo: { a: ["#00c2a8", "#00e0ff", "#7c5cff"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "Así se ve un negocio que vende por WhatsApp en *piloto* *automático*.", html:
+      '<div class="kick an an-down" t="0">Automatización real</div><h1 class="h an an-up" t=".1">Tu negocio en<br><span class="gt">piloto automático</span></h1>' +
+      '<div class="badges"><span class="badge an an-pop" w="WhatsApp">📣 Anuncio</span><span class="badge an an-pop" w="piloto">🤖 Bot</span><span class="badge an an-pop" w="automático" sfx="pop">💳 Venta</span></div>' },
+    { tr: "rise", vo: "Un cliente ve tu *anuncio* y te *escribe*.", html: "@F1" },
+    { tr: "none", vo: "El *bot* le responde al instante, le muestra el *catálogo* y resuelve sus dudas.", html: "@F2" },
+    { tr: "none", vo: "Cuando decide comprar, le envía un *link* *de* *pago*.", html: "@F3" },
+    { tr: "none", vo: "El pedido se guarda solo en tu *hoja* *de* *cálculo*, y a ti te llega la *notificación*.", html: "@F4" },
+    { tr: "zoom", flash: true, vo: "Todo conectado, sin que muevas un dedo. Bot con IA y automatizaciones, desde *ciento* *setenta* *y* *nueve* *dólares*.", html:
+      '<div class="kick an an-down" t="0">Bot IA + 5 automatizaciones</div>' + price("desde", "$179", "conectado a WhatsApp, pagos y Google Sheets", 'class="an an-zoom" w="ciento" sfx="cash"') }
+  ]},
+
+  demo: { a: ["#7c5cff", "#25d366", "#00e0ff"], cover: [0, 1.2], beats: [
+    { tr: "zoom", vo: "¿Y si *primero* ves cómo quedaría tu proyecto… y *después* decides si pagas?", html:
+      '<div class="glass stack an an-pop" t="0" style="padding:40px;gap:24px">' +
+      '<div class="chk an an-left" w="primero" sfx="pop"><i>1</i>Primero ves tu demo</div>' +
+      '<div class="chk an an-left" w="después" sfx="pop"><i>2</i>Después decides</div></div>' +
+      '<h2 class="h2 an an-up" w="pagas">Sin pagar <span class="gt">por adelantado</span></h2>' },
+    { tr: "whip", vo: "Así trabajamos en Kova. Nos escribes por *WhatsApp* y nos cuentas qué necesita tu negocio.", html:
+      phone(wa("KOVA", "● en línea", '<div class="m in an m-coll" w="WhatsApp" sfx="pop">Hola 👋 tengo una pastelería y quiero que un bot tome los pedidos.<small>10:02</small></div><div class="m out an m-coll" w="necesita" sfx="pop">¡Hola! Claro que sí 🙌 Cuéntame cómo recibes los pedidos hoy y te preparo una demo.<small>10:03 ✓✓</small></div>')) },
+    { tr: "flip", vo: "Te preparamos una *demo* con tu información, *sin* *costo*.", html:
+      '<div style="position:relative">' + phone(wa("Pastelería · Demo", "● bot de prueba", '<div class="m in">Quiero una torta de chocolate para el sábado 🎂<small>15:20</small></div><div class="m out an m-coll" w="demo">¡Perfecto! Tenemos de 8, 12 y 20 porciones. ¿Cuál te separo? 🍫<small>15:20 ✓✓</small></div>'), "tilt-r") +
+      '<div class="badge ok an an-stamp" w="costo" sfx="cash" style="position:absolute;right:-70px;top:120px;font-size:44px;padding:20px 36px;z-index:30">DEMO GRATIS</div></div>' },
+    { tr: "rise", vo: "Si te gusta, empezamos con el *cincuenta* *por* *ciento*… y el resto lo pagas cuando lo *recibes*.", html:
+      '<div class="kick an an-down" t="0">Pagos en 2 partes</div>' +
+      '<div class="glass" style="width:100%;padding:40px">' +
+      '<div style="display:flex;height:120px;border-radius:30px;overflow:hidden;font:800 44px Inter">' +
+      '<div class="an an-grow" w="cincuenta" sfx="pop" style="flex:1;background:var(--grad);display:grid;place-items:center;color:#07060d">50%</div>' +
+      '<div class="an an-grow" w="recibes" sfx="success" style="flex:1;background:var(--g);display:grid;place-items:center;color:#06140b;transform-origin:left">50%</div></div>' +
+      '<div style="display:flex;justify-content:space-between;margin-top:20px;font:600 32px Inter;color:#d9d6f5"><span>al empezar</span><span>al recibir ✓</span></div></div>' },
+    { tr: "zoom", flash: true, vo: "*Precio* *fijo*, *contrato*, y el *código* es tuyo.", html:
+      '<div class="stack">' + row("🔒", "Precio fijo", "sin costos ocultos", 'class="an an-right" w="Precio" sfx="pop"') +
+      row("📝", "Contrato", "todo por escrito", 'class="an an-right" w="contrato" sfx="pop"') +
+      row("🔑", "El código es tuyo", "accesos y documentación", 'class="an an-right" w="código" sfx="success"') + '</div>' }
+  ]},
+
+  costo: { a: ["#ffb020", "#ff4d6d", "#7c5cff"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "¿Cuánto te cuesta *no* *automatizar* tu negocio? Hagamos la *cuenta*.", html:
+      '<div style="font-size:200px;line-height:1" class="an an-pop" t="0">🧮</div><h1 class="h an an-up" t=".1">¿Cuánto te cuesta<br><span class="gt">NO automatizar?</span></h1>' },
+    { tr: "rise", vo: "Si pasas *tres* *horas* al día respondiendo mensajes y pasando datos a mano…", html:
+      '<div class="glass calc">' +
+      '<div class="cl an an-left" w="tres" sfx="pop"><span>⏱️ Horas al día</span><b class="r">3 h</b></div>' +
+      '<div class="cl an an-left" w="mensajes" sfx="pop"><span>💬 Mensajes</span><b>a mano</b></div>' +
+      '<div class="cl an an-left" w="datos" sfx="pop"><span>📊 Datos y Excel</span><b>a mano</b></div>' +
+      '<div class="cl an an-left" w="mano" style="border:0"><span>📅 Días al mes</span><b>26</b></div></div>' },
+    { tr: "whip", vo: "…son más de *setenta* *horas* al mes.", html:
+      '<div class="kick an an-down" t="0">3 h × 26 días</div><div class="big r an an-zoom" t=".05" sfx="whoosh"><span class="count" data-count="78" data-dur="1.2"></span>h</div><h2 class="h2 an an-up" w="mes">al mes</h2>' },
+    { tr: "flip", vo: "Si tu hora vale *cinco* *dólares*, estás perdiendo casi *cuatrocientos* *dólares* cada mes.", html:
+      '<div class="kick an an-down" t="0">78 h × $5 la hora</div><div class="big r an an-zoom" w="cuatrocientos" sfx="cash" style="font-size:280px">$<span class="count" data-count="390" data-dur="1"></span></div><h2 class="h2 an an-up" w="mes">perdidos al mes</h2><div class="mut an an-fi" t=".2" style="font-size:26px">Ejemplo ilustrativo</div>' },
+    { tr: "zoom", flash: true, vo: "Un bot con inteligencia artificial cuesta desde *setenta* *y* *cinco* *dólares*, y trabaja por ti todos los días.", html:
+      '<div class="bars">' +
+      '<div class="barc"><div class="v r an an-fi" t=".3">$390</div><div class="b an an-growy" t=".1" style="height:420px;background:linear-gradient(#ff4d6d,#7a1730)"></div><small>tiempo perdido<br>cada mes</small></div>' +
+      '<div class="barc"><div class="v g an an-fi" w="setenta">$75</div><div class="b an an-growy" w="setenta" sfx="cash" style="height:90px;background:linear-gradient(#25d366,#0c5c30)"></div><small>bot con IA<br>desde</small></div></div>' }
+  ]},
+
+  instagram: { a: ["#e1306c", "#833ab4", "#f9a825"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "Tu Instagram *no* *es* tu página web. Y depender solo de él es un *riesgo*.", html:
+      '<div class="glass ig an an-pop" t="0"><div class="top"><div class="av"><div>🛍️</div></div><div class="st"><div><b>1.240</b>posts</div><div><b>8,5 mil</b>seguidores</div></div></div><div class="grid"><div></div><div></div><div></div><div></div><div></div><div></div></div></div>' +
+      '<div class="badge an an-stamp" w="riesgo" sfx="pop" style="background:rgba(255,77,109,.18);border-color:var(--r);color:#ffb3c0;font-size:44px">⚠️ RIESGO</div>' },
+    { tr: "whip", vo: "Uno: el *algoritmo* decide quién te ve.", html:
+      '<div class="kick an an-down" t="0">#1 · alcance</div><h2 class="h2 an an-up" t=".05">Personas que ven tu post</h2>' +
+      '<div class="stack" style="gap:14px;text-align:left"><div style="font:600 32px Inter">Antes</div><div class="meter"><i class="an an-grow" t=".1" style="background:linear-gradient(90deg,#e1306c,#f9a825)"></i></div>' +
+      '<div style="font:600 32px Inter;margin-top:16px">Ahora</div><div class="meter"><i class="an an-grow" w="algoritmo" style="background:linear-gradient(90deg,#e1306c,#f9a825);transform:scaleX(.22)"></i></div></div>' +
+      '<div class="big r an an-zoom" w="ve" sfx="pop" style="font-size:200px">-78%</div><div class="mut an an-fi" w="ve" style="font-size:24px">Ejemplo ilustrativo</div>' },
+    { tr: "flip", flash: true, vo: "Dos: si te *hackean* o te *bloquean* la cuenta, pierdes *todo*.", html:
+      '<div class="glass lockc an an-pop" t="0"><div class="ico an an-shake" w="hackean" sfx="pop">🔒</div><h2 class="h2">Cuenta suspendida</h2><div class="mut" style="font-size:32px">No puedes acceder a tus mensajes ni a tus clientes</div></div>' +
+      '<div class="badge an an-pop" w="todo" sfx="pop" style="background:rgba(255,77,109,.16);border-color:var(--r);color:#ffb3c0">❌ pierdes clientes, fotos y mensajes</div>' },
+    { tr: "rise", vo: "Tres: en *Google*, los clientes buscan *páginas* *web*, no perfiles.", html:
+      '<div class="kick an an-down" t="0">#3 · Google</div><div class="search an an-up" t=".05"><div class="mag"></div><span>tienda de ropa en quito</span></div>' +
+      '<div class="res an an-up" w="páginas" sfx="pop"><small>tutienda.com</small><b>Tienda online · Envíos a todo el país</b><span>Catálogo, precios y pago en línea</span></div>' +
+      '<div class="res an an-up" w="web"><small>otratienda.ec</small><b>Ropa y accesorios · Compra online</b><span>Nueva colección</span></div>' },
+    { tr: "zoom", flash: true, vo: "Tu web es *tuya*: aparece en Google, recibe pedidos y te escriben al WhatsApp. Desde *ochenta* *y* *nueve* *dólares*.", html:
+      '<div class="glass stack" style="padding:20px">' +
+      '<div class="chk an an-left" w="tuya" sfx="success"><i>✓</i>Es tuya, nadie te la quita</div>' +
+      '<div class="chk an an-left" w="aparece" sfx="success"><i>✓</i>Aparece en Google</div>' +
+      '<div class="chk an an-left" w="pedidos" sfx="success"><i>✓</i>Recibe pedidos 24/7</div>' +
+      '<div class="chk an an-left" w="WhatsApp" sfx="success"><i>✓</i>Botón directo a WhatsApp</div></div>' +
+      price("desde", "$89", "", 'class="an an-zoom" w="ochenta" sfx="cash" style="transform:scale(.6);margin:-60px 0"') }
+  ]},
+
+  rediseno: { a: ["#00e0ff", "#7c5cff", "#25d366"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "Así se ve una página web *antes* y *después* de pasar por Kova.", html:
+      '<div class="kick an an-down" t="0">Rediseño</div><h1 class="h an an-up" t=".05"><span class="r">Antes</span> vs <span class="gt">después</span></h1>' +
+      '<div class="ba an an-pop" t=".15" style="height:520px"><div class="layer">' + OLD + '</div><div class="layer an an-wipe" w="después" style="clip-path:inset(0 0 0 50%)">' + SITE + '</div><div class="handle an an-handle" w="después" style="left:50%"></div></div>' },
+    { tr: "whip", vo: "Antes: lenta, desordenada, y *sin* *forma* *de* *contactar*.", html:
+      '<div style="position:relative;width:100%">' + browser("clinicasonrisa.com", OLD, 600) +
+      '<div class="badge an an-pop" w="lenta" sfx="pop" style="position:absolute;left:-10px;top:110px;background:#3a0f1a;border-color:var(--r);color:#ffb3c0">🐢 lenta</div>' +
+      '<div class="badge an an-pop" w="desordenada" sfx="pop" style="position:absolute;right:-10px;top:300px;background:#3a0f1a;border-color:var(--r);color:#ffb3c0">😵 desordenada</div>' +
+      '<div class="badge an an-pop" w="contactar" sfx="pop" style="position:absolute;left:30px;bottom:40px;background:#3a0f1a;border-color:var(--r);color:#ffb3c0">❌ sin contacto</div></div>' },
+    { tr: "none", vo: "Después: diseño *premium*, *rápida*, y con un botón directo a *WhatsApp*.", html:
+      '<div style="position:relative;width:100%"><div class="ba" style="height:680px"><div class="layer">' + OLD + '</div><div class="layer an an-wipe" t=".05" sfx="whoosh">' + SITE + '</div><div class="handle an an-handle" t=".05" style="left:0"></div></div>' +
+      '<div class="badge ok an an-pop" w="premium" sfx="pop" style="position:absolute;left:-10px;top:120px;background:#0b2a1a">✨ premium</div>' +
+      '<div class="badge ok an an-pop" w="rápida" sfx="pop" style="position:absolute;right:-10px;top:330px;background:#0b2a1a">⚡ rápida</div>' +
+      '<div class="badge ok an an-pop" w="WhatsApp" sfx="pop" style="position:absolute;left:30px;bottom:30px;background:#0b2a1a">💬 botón a WhatsApp</div></div>' },
+    { tr: "flip", vo: "Y perfecta en el *celular*, que es donde están tus clientes.", html:
+      phone('<div class="site" style="padding:70px 22px 22px"><nav style="font-size:18px"><b style="font-size:24px">✦ Clínica Sonrisa</b><span>☰</span></nav><div class="orb" style="position:static;margin:30px auto 0;width:180px;height:180px"></div><h4 style="width:auto;font-size:46px;margin-top:30px;text-align:center">Tu mejor sonrisa empieza hoy</h4><p style="width:auto;text-align:center;font-size:22px">Agenda tu cita en línea en menos de un minuto.</p><div class="btn" style="display:block;text-align:center;font-size:24px">💬 Agendar por WhatsApp</div></div>', "tilt", 'class="an an-zoom" w="celular" sfx="whoosh"') },
+    { tr: "zoom", flash: true, vo: "Tu nueva web, lista en *dos* *o* *tres* *días*, desde *ochenta* *y* *nueve* *dólares*.", html:
+      '<div class="kick an an-down" t="0">Landing Pro</div>' + price("desde", "$89", "lista en 2–3 días", 'class="an an-zoom" w="ochenta" sfx="cash"') + '<div class="mut an an-fi" t=".3" style="font-size:24px">Diseño de ejemplo</div>' }
+  ]},
+
+  agente: { a: ["#6366f1", "#22d3ee", "#a855f7"], cover: [0, 1.2], beats: [
+    { tr: "zoom", vo: "Imagina que tu empresa tuviera su propio *asistente* *de* *inteligencia* *artificial*… que conoce todos tus documentos.", html:
+      '<div class="core an an-zoom" t="0"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="nucleus">IA</div></div>' +
+      '<h2 class="h2 an an-up" w="asistente">Tu propia <span class="gt">IA</span></h2><div class="kick an an-pop" w="documentos" sfx="pop">entrenada con tu empresa</div>' },
+    { tr: "rise", z: 1, vo: "Le das tus *manuales*, *precios* y *políticas*…", html:
+      '<div style="position:relative;width:870px;height:880px;display:grid;place-items:center"><div class="core"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="nucleus">IA</div></div>' +
+      '<div class="glass doc an an-suck" w="manuales" sfx="whoosh" style="left:20px;top:40px;--dx:300px;--dy:360px"><em>📘</em>Manual.pdf</div>' +
+      '<div class="glass doc an an-suck" w="precios" sfx="whoosh" style="right:10px;top:120px;--dx:-280px;--dy:290px"><em>💲</em>Precios.xlsx</div>' +
+      '<div class="glass doc an an-suck" w="políticas" sfx="whoosh" style="left:60px;bottom:60px;--dx:270px;--dy:-300px"><em>📄</em>Políticas.docx</div>' +
+      '<div class="glass doc an an-suck" w="políticas" t="0" style="right:30px;bottom:110px;--dx:-260px;--dy:-260px"><em>❓</em>FAQ.txt</div></div>' },
+    { tr: "whip", vo: "…y responde cualquier *pregunta* al instante, a tus *clientes* o a tu *equipo*.", html:
+      '<div class="q an an-left" w="pregunta" sfx="pop">¿Cuál es la política de devoluciones?</div>' +
+      '<div class="ans an an-right" w="clientes" sfx="success">Tienes 30 días para devolver tu compra con la factura. Te explico los pasos 👇</div>' +
+      '<div class="badges"><span class="badge an an-pop" w="clientes">👥 Clientes</span><span class="badge an an-pop" w="equipo" sfx="pop">🧑‍💼 Equipo</span></div>' },
+    { tr: "flip", vo: "Funciona en *WhatsApp*, en tu *web* o en *Slack*, con control de acceso y *privacidad*.", html:
+      '<div class="stack">' + row("💬", "WhatsApp", "clientes 24/7", 'class="an an-right" w="WhatsApp" sfx="pop"') +
+      row("🌐", "Chat en tu web", "responde mientras navegan", 'class="an an-right" w="web" sfx="pop"') +
+      row("🧑‍💻", "Slack", "tu equipo pregunta y aprende", 'class="an an-right" w="Slack" sfx="pop"') +
+      row("🛡️", "Privacidad", "control de acceso por usuario", 'class="an an-right" w="privacidad" sfx="success"') + '</div>' },
+    { tr: "zoom", flash: true, vo: "Agentes de inteligencia artificial a la medida de tu empresa. *Cotiza* *gratis*.", html:
+      '<div class="core an an-zoom" t="0" style="transform:scale(.8)"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="nucleus">IA</div></div>' +
+      '<h2 class="h2 an an-up" t=".2">Agente IA <span class="gt">empresarial</span></h2><div class="badge ok an an-stamp" w="Cotiza" sfx="cash" style="font-size:46px">COTIZA GRATIS</div>' }
+  ]},
+
+  detras: { a: ["#25d366", "#00e0ff", "#7c5cff"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "Así *programamos* la automatización de un negocio, de *principio* *a* *fin*.", html:
+      '<div class="kick an an-down" t="0">Detrás de cámaras</div><h1 class="h an an-up" t=".05">De la idea a<br><span class="gt">funcionando solo</span></h1>' +
+      '<div class="badges"><span class="badge an an-pop" w="principio" sfx="pop">🧠 Entender</span><span class="badge an an-pop" w="a" sfx="pop">💻 Programar</span><span class="badge an an-pop" w="fin" sfx="pop">🚀 Lanzar</span></div>' },
+    { tr: "whip", vo: "Primero entendemos el *proceso*: qué se *repite* y cuánto *tiempo* te quita.", html:
+      '<div class="kick an an-down" t="0">1 · entender</div><div class="glass" style="position:relative;width:100%;height:700px;background:#f4f2ea;border-radius:30px">' +
+      '<div class="sticky an an-pop" w="proceso" sfx="pop" style="left:40px;top:50px;background:#ffe36e;transform:rotate(-3deg)">📩 Llegan pedidos por WhatsApp</div>' +
+      '<div class="sticky an an-pop" w="repite" sfx="pop" style="right:40px;top:120px;background:#9ff0c0;transform:rotate(2deg)">✍️ Se copian a mano al Excel</div>' +
+      '<div class="sticky an an-pop" w="tiempo" sfx="pop" style="left:90px;top:330px;background:#ffb3c7;transform:rotate(2deg)">🧾 Se hace la factura</div>' +
+      '<div class="sticky an an-pop" w="quita" sfx="pop" style="right:60px;top:430px;background:#b9d4ff;transform:rotate(-2deg)">⏳ 3 horas al día</div></div>' },
+    { tr: "rise", vo: "Después lo *programamos* y lo *conectamos* con tus herramientas.", html:
+      '<div class="kick an an-down" t="0">2 · programar</div><div class="br"><div class="bar"><i></i><i></i><i></i>automatizacion.py</div><div class="code">' +
+      '<div class="an an-left" t=".1" sfx="type"><span class="k">def</span> <span class="f">nuevo_pedido</span>(msg):</div>' +
+      '<div class="an an-left" t=".4">    pedido = ia.<span class="f">leer</span>(msg)</div>' +
+      '<div class="an an-left" w="conectamos">    sheets.<span class="f">agregar</span>(pedido)</div>' +
+      '<div class="an an-left" w="herramientas">    factura.<span class="f">emitir</span>(pedido)</div>' +
+      '<div class="an an-left" w="herramientas" t="0">    whatsapp.<span class="f">avisar</span>(<span class="s">"✅"</span>)</div></div></div>' +
+      '<div class="badges"><span class="badge an an-pop" w="conectamos" sfx="pop">💬 WhatsApp</span><span class="badge an an-pop" w="herramientas" sfx="pop">📊 Google Sheets</span><span class="badge an an-pop" w="herramientas">🧾 Facturación</span></div>' },
+    { tr: "flip", vo: "Lo *probamos* a fondo, para que *nada* *falle*.", html:
+      '<div class="kick an an-down" t="0">3 · probar</div><div class="br"><div class="bar"><i></i><i></i><i></i>pruebas</div><div class="term">' +
+      '<div class="an an-left" t=".1">$ kova test</div>' +
+      '<div class="an an-left" w="probamos" sfx="success"><span class="ok">✓</span> lee pedidos de WhatsApp</div>' +
+      '<div class="an an-left" w="fondo" sfx="success"><span class="ok">✓</span> guarda en Google Sheets</div>' +
+      '<div class="an an-left" w="nada" sfx="success"><span class="ok">✓</span> emite la factura</div>' +
+      '<div class="an an-left" w="falle" sfx="success"><span class="ok">✓</span> avisa al cliente</div>' +
+      '<div class="an an-pop" w="falle" t="0"><span class="ok">4 de 4 pruebas OK</span></div></div></div>' },
+    { tr: "zoom", flash: true, vo: "Y lo dejamos funcionando, con un *panel* para que veas todo lo que hace por ti.", html:
+      '<div class="kick an an-down" t="0">4 · funcionando</div><div class="kpis">' +
+      '<div class="glass kpi an an-pop" w="panel" sfx="pop"><small>Pedidos procesados</small><b class="gt">126</b></div>' +
+      '<div class="glass kpi an an-pop" w="panel"><small>Horas ahorradas</small><b class="g">38 h</b></div></div>' +
+      '<div class="glass chart an an-up" w="veas"><i class="an an-growy" w="veas" style="height:40%"></i><i class="an an-growy" w="veas" style="height:55%"></i><i class="an an-growy" w="todo" style="height:50%"></i><i class="an an-growy" w="todo" style="height:70%"></i><i class="an an-growy" w="hace" style="height:85%"></i><i class="an an-growy" w="hace" style="height:100%"></i></div>' +
+      '<div class="mut an an-fi" t=".3" style="font-size:24px">Panel de ejemplo</div>' }
+  ]},
+
+  dudas: { a: ["#7c5cff", "#ff4ecd", "#00e0ff"], cover: [0, 1.0], beats: [
+    { tr: "zoom", vo: "Las *cuatro* *preguntas* que todos nos hacen antes de automatizar su negocio.", html:
+      '<div class="big gt an an-zoom" t="0">4</div><h2 class="h an an-up" t=".1">preguntas antes<br>de automatizar</h2>' },
+    { tr: "whip", vo: "¿Es *caro*? No. Hay bots desde *setenta* *y* *cinco* *dólares* y webs desde *ochenta* *y* *nueve*.", html:
+      '<div class="qn an an-fi" t="0">PREGUNTA 1</div><div class="stack" style="gap:30px"><div class="q an an-left" t=".05" sfx="pop">¿Es caro? 💸</div>' +
+      '<div class="ans an an-right" w="No" sfx="success">No. Bots desde <span class="g">$75</span> y webs desde <span class="g">$89</span>.</div></div>' },
+    { tr: "whip", vo: "¿Necesito saber de *tecnología*? Para *nada*. Nosotros hacemos todo, y te *enseñamos* a usarlo.", html:
+      '<div class="qn an an-fi" t="0">PREGUNTA 2</div><div class="stack" style="gap:30px"><div class="q an an-left" t=".05" sfx="pop">¿Necesito saber de tecnología? 🤓</div>' +
+      '<div class="ans an an-right" w="nada" sfx="success">Para nada. Lo hacemos todo y te enseñamos a usarlo.</div></div>' },
+    { tr: "whip", vo: "¿Cuánto *tarda*? Muchos proyectos están listos en *dos* *o* *tres* *días*.", html:
+      '<div class="qn an an-fi" t="0">PREGUNTA 3</div><div class="stack" style="gap:30px"><div class="q an an-left" t=".05" sfx="pop">¿Cuánto tarda? ⏳</div>' +
+      '<div class="ans an an-right" w="Muchos" sfx="success">Webs y bots sencillos: listos en <span class="g">2–3 días</span>.</div></div>' },
+    { tr: "whip", vo: "¿Y si no me gusta? Primero ves una *demo*, y tienes *garantía* *por* *escrito*.", html:
+      '<div class="qn an an-fi" t="0">PREGUNTA 4</div><div class="stack" style="gap:30px"><div class="q an an-left" t=".05" sfx="pop">¿Y si no me gusta? 😬</div>' +
+      '<div class="ans an an-right" w="Primero" sfx="success">Primero ves una demo. Y tienes garantía por escrito 🛡️</div></div>' }
+  ]}
+};
+
+// Escenas del flujo (video "flujo"): el mismo gráfico va creciendo nodo a nodo
+(function () {
+  var N = [
+    [40, 20, "📣", "Anuncio", "TikTok · Instagram"],
+    [500, 150, "💬", "WhatsApp", "el cliente escribe"],
+    [40, 320, "🤖", "Bot con IA", "catálogo y dudas"],
+    [500, 470, "💳", "Pago", "link de pago"],
+    [40, 620, "📊", "Google Sheets", "pedido guardado"],
+    [500, 770, "🔔", "Notificación", "nueva venta 🎉"]
+  ];
+  var L = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]];
+  var plan = { "@F1": [["anuncio", "escribe"], 1], "@F2": [["bot", "catálogo"], 2], "@F3": [["link"], 3], "@F4": [["hoja", "notificación"], 5] };
+  Object.keys(plan).forEach(function (key) {
+    var words = plan[key][0], upto = plan[key][1], shown = { "@F1": -1, "@F2": 1, "@F3": 2, "@F4": 3 }[key];
+    var nodes = N.slice(0, upto + 1).map(function (n, i) {
+      var attrs = i <= shown ? "" : 'class="an an-pop" w="' + words[Math.min(i - shown - 1, words.length - 1)] + '" sfx="pop"';
+      if (i > shown && words.length === 1) attrs = 'class="an an-pop" w="' + words[0] + '"' + (i === upto ? ' sfx="pop"' : "");
+      if (key === "@F4" && i === 5) attrs = 'class="an an-pop" w="notificación" sfx="ding"';
+      if (key === "@F4" && i === 4) attrs = 'class="an an-pop" w="hoja" sfx="pop"';
+      return n.concat([attrs]);
+    });
+    var links = L.filter(function (l) { return l[1] <= upto; }).map(function (l) {
+      var isNew = l[1] > shown;
+      var target = nodes[l[1]][5].match(/w="([^"]+)"/);
+      return [l[0], l[1], isNew && target ? 'class="an an-draw" w="' + target[1] + '"' : "", isNew && target ? 'class="an an-fi" w="' + target[1] + '"' : ""];
+    });
+    var html = flow(nodes, links);
+    if (key === "@F4") html += '<div class="glass row an an-down" w="notificación" style="position:absolute;left:30px;right:30px;top:-10px;z-index:9"><div class="ic">🔔</div><div><b>Nueva venta · $25,00</b><small>Pedido #209 guardado en tu hoja</small></div></div>';
+    VIDEOS.flujo.beats.forEach(function (b) { if (b.html === key) b.html = html; });
+  });
+})();
+
+var END = { tr: "zoom", flash: true, vo: "Escríbenos por *WhatsApp*. La asesoría es *gratis*, y el link está en el perfil.", html:
+  '<svg class="logo an an-zoom" t="0"><use href="#logo"/></svg><div class="brand an an-up" t=".15">KOVA</div>' +
+  '<div class="mut an an-up" t=".3" style="font-size:38px;margin-top:-16px">Webs · Bots con IA · Automatizaciones</div>' +
+  '<div class="an an-pop" w="WhatsApp" sfx="pop"><div class="wa pulse">' + WA + '<span><small>Escríbenos por WhatsApp</small><b>+593 96 905 3512</b></span></div></div>' +
+  '<div class="badge an an-up" w="gratis">🌐 kovaautomatiza.com</div>' };
+
+/* ======================= Construcción de la línea de tiempo ======================= */
+var q = new URLSearchParams(location.search);
+var vid = q.get("v") || "empleado";
+var V = VIDEOS[vid];
+V.beats = V.beats.concat([END]);
+document.documentElement.style.setProperty("--a1", V.a[0]);
+document.documentElement.style.setProperty("--a2", V.a[1]);
+document.documentElement.style.setProperty("--a3", V.a[2]);
+
+function clean(t) { return t.replace(/\*/g, ""); }
+window.SCRIPT = V.beats.map(function (b) { return clean(b.vo); });
+
+function norm(w) { return w.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ]/g, ""); }
+var styleTag = document.createElement("style"); document.head.appendChild(styleTag);
+var kf = 0;
+
+// info: [{dur, words:[{w,s,e}]}] por frase (de voz.py). Sin info (vista previa) se estima.
+window.build = function (info) {
+  var LEAD = .12, GAP = .16, TAIL = 1.8;
+  var stage = document.getElementById("stage"), caps = document.getElementById("caps");
+  stage.innerHTML = ""; caps.innerHTML = "";
+  document.querySelectorAll(".flash.dyn").forEach(function (f) { f.remove(); });
+  var T = 0, timeline = { beats: [], cues: [], voice: [] };
+  V.beats.forEach(function (b, k) {
+    var inf = info && info[k] ? info[k] : estimate(clean(b.vo));
+    var last = k === V.beats.length - 1;
+    var start = T, vs = start + (k === 0 ? .05 : LEAD);
+    var len = (vs - start) + inf.dur + (last ? TAIL : GAP);
+    timeline.beats.push({ start: start, len: len, voice: vs });
+    timeline.voice.push(vs);
+    T += len;
+    b._t = { start: start, len: len, vs: vs, words: inf.words, emph: emphasis(b.vo) };
+  });
+  timeline.dur = T;
+
+  V.beats.forEach(function (b, k) {
+    var tm = b._t, next = V.beats[k + 1];
+    var sc = document.createElement("div"); sc.className = "scene";
+    var cam = document.createElement("div"); cam.className = "cam";
+    cam.innerHTML = b.html; sc.appendChild(cam); stage.appendChild(sc);
+    var end = next ? next._t.start : timeline.dur + 1;
+    var tr = b.tr || "zoom", ntr = next ? (next.tr || "zoom") : null;
+    var anims = ["vis " + (end - tm.start + (ntr && ntr !== "none" ? .35 : 0)).toFixed(3) + "s linear " + tm.start.toFixed(3) + "s 1 none"];
+    if (tr !== "none" && k > 0) anims.push("in-" + tr + " .45s cubic-bezier(.2,.8,.2,1) " + tm.start.toFixed(3) + "s 1 backwards");
+    if (ntr && ntr !== "none") anims.push("out-" + ntr + " .35s cubic-bezier(.6,0,.8,.4) " + (end - .02).toFixed(3) + "s 1 forwards");
+    sc.style.animation = anims.join(", ");
+    cam.style.zoom = b.z || (/class="flow"/.test(b.html) ? 1 : 1.18);  // todo un poco más grande, salvo el flujo
+    if (tr !== "none" && ntr !== "none") cam.style.animation = "ken " + (end - tm.start + .4).toFixed(3) + "s linear " + tm.start.toFixed(3) + "s 1 both";
+    if (k > 0 && tr !== "none") timeline.cues.push({ t: tm.start - .12, type: "whoosh" });
+    if (b.flash && k > 0) { var fl = document.createElement("div"); fl.className = "flash dyn"; fl.style.animation = "flash .35s ease-out " + tm.start.toFixed(3) + "s 1 none"; document.body.appendChild(fl); }
+
+    // Elementos: a la palabra (w) o a los segundos (t) desde el inicio de la escena
+    var seen = {};
+    cam.querySelectorAll(".an").forEach(function (el) {
+      var t = null;
+      if (el.hasAttribute("w")) t = wordTime(tm, el.getAttribute("w"));
+      if (el.hasAttribute("t")) t = (t === null ? tm.start : t) + parseFloat(el.getAttribute("t"));
+      if (t === null) t = tm.start + .15;
+      el.style.setProperty("--d", t.toFixed(3));
+      if (el.hasAttribute("sfx")) timeline.cues.push({ t: t, type: el.getAttribute("sfx") });
+    });
+    // Contadores
+    cam.querySelectorAll("[data-count]").forEach(function (el) {
+      var host = el.closest(".an"), d = host ? parseFloat(host.style.getPropertyValue("--d")) : tm.start;
+      if (el.classList.contains("an")) d = parseFloat(el.style.getPropertyValue("--d"));
+      var name = "cnt" + (kf++);
+      styleTag.sheet.insertRule("@keyframes " + name + "{from{--n:0}to{--n:" + el.dataset.count + "}}", 0);
+      el.classList.add("count");
+      el.style.animation = name + " " + (el.dataset.dur || 1.2) + "s cubic-bezier(.2,.7,.25,1) " + d.toFixed(3) + "s 1 both";
+    });
+    // Trazos SVG: largo real para la animación de dibujo
+    cam.querySelectorAll("path").forEach(function (p) { p.style.setProperty("--len", Math.ceil(p.getTotalLength())); });
+
+    buildCaptions(caps, tm, end);
+  });
+  window.TIMELINE = timeline;
+  return { dur: timeline.dur, cues: timeline.cues, voice: timeline.voice, end: V.beats[V.beats.length - 1]._t.start,
+    cover: V.beats[1]._t.start - .35 };  // final del gancho
+};
+
+function estimate(text) {
+  var words = text.split(/\s+/), t = 0, out = [];
+  words.forEach(function (w) { var d = .07 * w.length + .1; out.push({ w: w, s: t, e: t + d }); t += d + .04; });
+  return { dur: t, words: out };
+}
+function emphasis(vo) {
+  var set = {};
+  vo.split(/\s+/).forEach(function (w, i) { if (/\*/.test(w)) set[i] = true; });
+  return set;
+}
+function wordTime(tm, key) {
+  var parts = key.split("#"), target = norm(parts[0]), nth = parseInt(parts[1] || "1"), c = 0;
+  for (var i = 0; i < tm.words.length; i++) {
+    if (norm(tm.words[i].w) === target && ++c === nth) return tm.vs + tm.words[i].s - .06;
+  }
+  return null;
+}
+// Subtítulos: grupos de hasta 3-4 palabras (cortan en la puntuación); la palabra que suena se resalta
+function buildCaptions(caps, tm, end) {
+  var ws = tm.words, chunks = [], cur = [];
+  ws.forEach(function (w, i) {
+    cur.push(i);
+    var chars = cur.reduce(function (n, j) { return n + ws[j].w.length + 1; }, 0);
+    if (/[.,;:?!…]$/.test(w.w) || cur.length >= 4 || chars > 20) { chunks.push(cur); cur = []; }
+  });
+  if (cur.length) chunks.push(cur);
+  chunks.forEach(function (ch, ci) {
+    var s = tm.vs + ws[ch[0]].s - .04;
+    var e = ci + 1 < chunks.length ? tm.vs + ws[chunks[ci + 1][0]].s - .04 : Math.min(end, tm.vs + ws[ws.length - 1].e + .5);
+    var div = document.createElement("div"); div.className = "chunk";
+    div.style.animation = "vis " + Math.max(.05, e - s).toFixed(3) + "s linear " + s.toFixed(3) + "s 1 none, cin .25s cubic-bezier(.3,1.5,.5,1) " + s.toFixed(3) + "s 1 backwards";
+    ch.forEach(function (j, n) {
+      var w = ws[j], sp = document.createElement("span");
+      sp.className = "wd" + (tm.emph[j] ? " em" : "");
+      sp.textContent = w.w.replace(/\*/g, "");
+      var ws0 = tm.vs + w.s - .03, we = n + 1 < ch.length ? tm.vs + ws[ch[n + 1]].s - .03 : Math.min(e, tm.vs + w.e + .25);
+      sp.style.animation = "win .18s cubic-bezier(.2,.8,.2,1) " + ws0.toFixed(3) + "s 1 backwards, hl " + Math.max(.05, we - ws0).toFixed(3) + "s linear " + ws0.toFixed(3) + "s 1 none";
+      div.appendChild(sp);
+    });
+    caps.appendChild(div);
+  });
+}
+
+// Congela todas las animaciones y las coloca en el segundo t (lo usa render-tiktok2.js)
+window.seek = function (t) {
+  document.getAnimations().forEach(function (a) { a.pause(); a.currentTime = t * 1000; });
+};
+window.ready = document.fonts.ready.then(function () {
+  if (!q.has("noauto")) window.PREVIEW = build(null);
+  if (q.has("t")) seek(parseFloat(q.get("t")));
+});
+</script>
+</body>
+</html>

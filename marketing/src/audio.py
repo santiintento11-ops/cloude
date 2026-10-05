@@ -170,7 +170,9 @@ def sfx_impact():
 
 
 # ---------------------------------------------------------------- música
-def music(dur, end):
+def music(dur, end, bpm=BPM, semis=0):
+    """Base musical. bpm y semis (semitonos) cambian el tempo y el tono, para que cada video suene distinto."""
+    BEAT = 60 / bpm
     n = int(dur * SR)
     buf = np.zeros((2, n))
     beats = int(dur / BEAT) + 1
@@ -182,6 +184,7 @@ def music(dur, end):
     bar_n = int(4 * BEAT * SR)
     for b in range(int(dur / (4 * BEAT)) + 1):
         notes, root = CHORDS[b % 4]
+        notes, root = [m + semis for m in notes], root + semis
         t0 = b * 4 * BEAT
         # Pad: sierras desafinadas en estéreo
         for m in notes:
@@ -264,7 +267,7 @@ def voice_track(items, n):
 def main(src, dst):
     meta = json.load(open(src))
     dur, end = meta["dur"], meta["end"]
-    out = music(dur, end) * .9
+    out = music(dur, end, meta.get("bpm", BPM), meta.get("shift", 0)) * .9
     for cue in meta["cues"]:
         typ, t = cue["type"], cue["t"]
         if typ == "type":
