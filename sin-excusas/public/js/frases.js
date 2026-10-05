@@ -192,3 +192,121 @@ window.RACHA_ROTA = [
   'Racha rota. No es el final: es un dato. Los que llegan no son los que nunca fallan, son los que vuelven al día siguiente. Hoy vuelves.',
   'Perdiste la racha, no la capacidad. Ya demostraste que puedes cumplir varios días seguidos. Hazlo otra vez, empezando hoy.'
 ];
+
+/* Frases de dinero, riqueza y éxito (se mezclan con las de disciplina). */
+window.FRASES_RIQUEZA = [
+  'La riqueza no se hace en un día. Se hace en días como hoy.',
+  'Primero págate a ti. Después a todo lo demás.',
+  'Gastar menos de lo que ganas no es opcional. Es la base de todo.',
+  'Cada dólar que guardas trabaja para ti. Cada dólar que gastas sin pensar trabaja para otro.',
+  'Los ingresos se ganan. La riqueza se guarda.',
+  'Si no sabes en qué se te va el dinero, el dinero te maneja a ti.',
+  'Tu primer objetivo no es ser rico. Es dejar de ser desordenado.',
+  'Cien dólares a la semana son más de cinco mil al año. Empieza por esta semana.',
+  'La gente que construye riqueza hace aburrido lo importante: lo repite.',
+  'No compres para impresionar a gente que no te importa.',
+  'Tu habilidad más rentable es la que todavía no has aprendido.',
+  'Si quieres ganar más, vuélvete más valioso.',
+  'Una hora diaria en tu proyecto vale más que un año de "algún día".',
+  'El interés compuesto premia al que empieza temprano y no se detiene.',
+  'Lo que hoy es un capricho mañana es una deuda.',
+  'Antes de comprar algo, pregúntate: ¿esto me acerca o me aleja de mi meta?',
+  'El dinero ama la claridad. Anota cada ingreso.',
+  'Nadie se hizo rico gastando todo lo que ganaba.',
+  'Las oportunidades le llegan al que está preparado y trabajando.',
+  'Construye primero el hábito de ahorrar poco. Después ahorrar mucho es fácil.',
+  'No esperes a ganar más para ordenarte. Ordénate para ganar más.',
+  'El éxito es una suma de días que nadie vio.',
+  'La comodidad es cara. La disciplina sale barata.',
+  'Tus finanzas reflejan tus hábitos, no tu suerte.',
+  'Invierte en ti: es la única inversión que nadie te puede quitar.',
+  'Los ricos compran tiempo. Tú empieza por no regalar el tuyo.',
+  'Ofrece algo que resuelva un problema y el dinero llega.',
+  'Cobrar lo que vales empieza por creer que vales.',
+  'Más fuentes de ingreso, menos miedo.',
+  'Si hoy no generaste nada, pregúntate qué puedes ofrecer mañana.',
+  'El que mide su dinero cada semana nunca se lleva sorpresas a fin de mes.',
+  'Un fondo de emergencia es tranquilidad que se compra de a poco.',
+  'Cada "no lo necesito" es un pequeño depósito en tu futuro.',
+  'Sé paciente con los resultados e impaciente con las acciones.',
+  'Los grandes ingresos empiezan como pequeños ingresos bien cuidados.',
+  'Tu red vale: conoce gente que juegue el juego en el que quieres ganar.',
+  'Primero ganas la batalla contra ti. Después contra el mercado.',
+  'Rico no es el que más gana. Es el que más conserva y multiplica.',
+  'El dinero que no tiene un plan desaparece.',
+  'Vende, aprende, mejora, repite.',
+  'Hoy siembras horas. Mañana cosechas libertad.',
+  'Lo que haces con tus primeros cien dólares dice lo que harás con tu primer millón.',
+  'No te compares con el éxito de otros. Compite con tus números de la semana pasada.',
+  'Ser constante con poco te prepara para manejar mucho.',
+  'La meta no es tener más cosas. Es tener más opciones.',
+  'El éxito llega antes a quien no se distrae.',
+  'Tu tiempo es tu capital inicial. Inviértelo bien.',
+  'Cada mañana tienes una nueva oportunidad de hacer dinero de forma honesta. Úsala.'
+];
+
+/* Frases con tu persona importante: {pareja} se reemplaza por el nombre (Ajustes). */
+window.FRASES_PAREJA = [
+  '{pareja} merece a alguien que cumple lo que promete. Empieza contigo.',
+  'Construye hoy el futuro que quieres compartir con {pareja}.',
+  'La mejor versión de ti también es un regalo para {pareja}.',
+  'Que {pareja} vea en ti a alguien que no se rinde.',
+  'Cada meta que cumples es estabilidad para ti y para {pareja}.',
+  'Haz que {pareja} esté orgullosa de tu constancia, no de tus promesas.',
+  'Disciplina hoy, tranquilidad mañana para ti y para {pareja}.',
+  'Ahorrar también es cuidar a {pareja}: es construir algo para los dos.',
+  'Piensa en los planes con {pareja}. Cada dólar guardado los acerca.',
+  'Quien cumple consigo mismo cumple con los que ama. Hazlo por ti y por {pareja}.'
+];
+
+/* Principios de dinero que repiten las personas que construyen riqueza. Información general, no asesoría financiera. */
+window.REGLAS_RIQUEZA = [
+  { t: 'Págate primero', d: 'Apenas recibes dinero, separa tu ahorro. Gasta solo lo que queda, no al revés.' },
+  { t: 'Gasta menos de lo que ganas', d: 'Suena obvio, pero es la regla que más gente rompe. La diferencia es tu futuro.' },
+  { t: 'Fondo de emergencia', d: 'Junta entre 3 y 6 meses de gastos. Te da calma y evita endeudarte por un imprevisto.' },
+  { t: 'Evita deudas de consumo', d: 'Pagar intereses por cosas que pierden valor es trabajar para el banco.' },
+  { t: 'Mide tu dinero cada semana', d: 'Anota ingresos y ahorro. Lo que se mide se puede mejorar.' },
+  { t: 'Aumenta tus ingresos', d: 'Ahorrar tiene un límite; ganar más no. Aprende habilidades por las que la gente paga.' },
+  { t: 'Más de una fuente de ingresos', d: 'Un trabajo, un servicio extra, un negocio pequeño. Cada fuente te da más seguridad.' },
+  { t: 'Interés compuesto', d: 'Lo que inviertes genera ganancias que también generan ganancias. Necesita tiempo: empieza pronto.' },
+  { t: 'Compra activos, no caprichos', d: 'Un activo te pone dinero en el bolsillo. Un capricho te lo saca.' },
+  { t: 'Regla de las 24 horas', d: 'Antes de una compra no planeada, espera un día. La mayoría de las ganas se pasan.' },
+  { t: 'Invierte en ti', d: 'Libros, cursos, salud y habilidades. Es la inversión con mejor retorno a largo plazo.' },
+  { t: 'Rodéate de gente que suma', d: 'Tus hábitos se parecen a los de las personas con las que pasas más tiempo.' },
+  { t: 'Protege tu tiempo', d: 'El tiempo no se recupera. Dile que no a lo que no te acerca a tus metas.' },
+  { t: 'Presupuesto simple', d: 'No necesitas una hoja perfecta: necesitas saber cuánto entra, cuánto sale y cuánto guardas.' },
+  { t: 'Retrasa la gratificación', d: 'Elegir algo mejor más adelante en lugar de algo bueno ahora es la base de la riqueza.' },
+  { t: 'Constancia sobre perfección', d: 'Ahorrar poco cada semana le gana a ahorrar mucho una sola vez.' }
+];
+
+/* Ideas prácticas para generar ingresos extra. */
+window.IDEAS_INGRESO = [
+  'Ofrece un servicio que ya sabes hacer (diseño, clases, reparaciones, redes sociales).',
+  'Vende cosas que ya no usas.',
+  'Haz un trabajo extra por encargo este fin de semana.',
+  'Escribe a 5 clientes posibles hoy. Vender es pedir.',
+  'Cobra lo que te deben.',
+  'Pide más trabajo a un cliente que ya está contento contigo.',
+  'Convierte un pasatiempo en un producto pequeño.',
+  'Aprende una habilidad que paga y ofrécela barata al principio para ganar experiencia.'
+];
+
+/* Coach de dinero: {hecho}, {meta}, {falta}, {porDia}, {dias}, {dia} se reemplazan solos. */
+window.COACH_DINERO = {
+  sinRegistro: [
+    'Todavía no registras ingresos esta semana. Lo que no anotas no existe: si ganaste algo, regístralo.',
+    'Semana en cero por ahora. Tu meta son {meta}. Piensa hoy en una forma concreta de generar los primeros.'
+  ],
+  cumplida: [
+    'Meta cumplida: {hecho} esta semana. Ahora separa tu ahorro antes de gastar.',
+    'Lo lograste: {hecho} de {meta}. Cuando esto te resulte fácil, sube la meta.'
+  ],
+  aTiempo: [
+    'Vas {hecho} de {meta}. Te faltan {falta}: unos {porDia} por día en los {dias} días que quedan. Se puede.',
+    'Buen ritmo. Faltan {falta} y quedan {dias} días. No aflojes.'
+  ],
+  atrasado: [
+    'Es {dia} y vas {hecho} de {meta}. Te faltan {falta}. ¿Qué vas a vender, ofrecer o cobrar hoy?',
+    'Faltan {falta} para tu meta y queda poca semana. Hoy toca moverse: una oferta, una venta, un trabajo extra.'
+  ]
+};

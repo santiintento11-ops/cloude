@@ -21,6 +21,7 @@ export function skipItem(it, status, date) {
   if (it.kind === 'nudge') return st.done > 0 || !st.total;
   if (it.kind === 'risk') return st.won || !st.total;
   if (it.kind === 'night') return st.journal;
+  if (it.kind === 'money') return !!st.moneyMet;
   return false;
 }
 

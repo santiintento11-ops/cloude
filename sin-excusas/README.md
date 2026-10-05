@@ -6,21 +6,26 @@ App web instalable (PWA) en HTML, CSS y JavaScript puro. Funciona sin internet y
 
 | Función | Dónde |
 |---|---|
-| Tareas del día con casillas grandes, barra de progreso y celebración al completar todo | **Hoy** |
-| Hábitos diarios (eliges días) y tareas de un solo día, con hora, categoría y prioridad. Se agregan en 3 toques: **+**, escribir, **Agregar** | Botón **+** |
-| Rachas con récord personal. Si se rompe, una pantalla que te empuja a volver, no a rendirte | **Hoy** |
+| Tareas del día separadas en **Mañana, Tarde y Noche** (y "Cuando sea"), con el bloque actual marcado como **Ahora**, casillas grandes, anillo de progreso y celebración al completar todo | **Hoy** |
+| Hábitos diarios (eliges días) y tareas de un solo día, con momento del día, hora, categoría y prioridad. Se agregan en 3 toques: **+**, escribir, **Agregar** | Botón **+** |
+| **Hábitos de gente exitosa**: levantarte a las 6, ahorrar antes de gastar, trabajar 1 hora en tu negocio, aprender una habilidad que paga, leer de finanzas, planear el día siguiente… se agregan con un toque | **Dinero** o **Más → Mis tareas** |
+| **Dinero**: meta semanal (por defecto $100) con anillo de progreso, cuánto te falta por día, racha de semanas cumplidas, "págate primero" (% de lo que ganas para ahorrar), metas de ahorro con fecha estimada, gráfico de 8 semanas, proyección con interés compuesto, regla de riqueza del día e ideas para generar ingresos | **Dinero** |
+| Rachas con récord personal y la semana en curso de un vistazo. Si se rompe, una pantalla que te empuja a volver, no a rendirte | **Hoy** |
 | Regla de los 2 minutos: cada tarea puede tener versión mínima (botón **2 min**) | Cada tarea |
 | Regla "nunca dos días seguidos": alerta roja si ayer fallaste | **Hoy** |
 | Pomodoro 25 + 5 (largo de 15 cada 4), botón **Empezar ahora**, pantalla siempre encendida | **Enfoque** |
-| 133 frases propias (una distinta cada día, sin repetir), coach que felicita o confronta según cómo vas, mensaje de la mañana y de la noche | **Hoy** |
-| Puntos, 11 niveles (de Novato a Leyenda) y 24 insignias | **Más → Logros** |
-| Recordatorios: a la hora de cada tarea, mañana, "no has marcado nada", racha en peligro, revisión nocturna, cierre de semana | **Más → Recordatorios** |
-| Revisión nocturna (¿qué logré?, ¿qué me frenó?, ¿qué haré mañana?) guardada en un diario. Lo que escribiste para mañana aparece al día siguiente | **Diario** |
-| % semanal y mensual, mapa de calor tipo GitHub, mejores y peores días, tarea más fallada, % por categoría | **Progreso** |
+| 191 frases propias (disciplina, dinero y éxito, y algunas con Leslie), una distinta cada día; coach que felicita o confronta según cómo vas, también con tu dinero | **Hoy** y **Dinero** |
+| Puntos, 11 niveles (de Novato a Leyenda) y 30 insignias, incluidas las de dinero | **Más → Logros** |
+| Recordatorios: a la hora de cada tarea, mañana, "no has marcado nada", racha en peligro, meta de dinero (viernes a domingo), revisión nocturna, cierre de semana | **Más → Recordatorios** |
+| Revisión nocturna (¿qué logré?, ¿qué me frenó?, ¿qué haré mañana?) guardada en un diario | **Más → Diario** |
+| % semanal y mensual, mapa de calor, mejores y peores días, rendimiento por momento del día, tarea más fallada, % por categoría | **Progreso** |
 | Recompensa y castigo semanal. Se cierra el domingo por la noche y te muestra el resultado | **Más → Compromiso** |
 | Mi porqué (metas, razones y foto): sale cada mañana, cuando vas mal y en el modo emergencia | **Más → Mi porqué** |
-| Botón **No tengo ganas**: elige tu tarea más fácil, te muestra tu porqué, 2 minutos de cuenta atrás y después te deja marcarla o seguir con 25 min de enfoque | **Hoy** |
+| Botón **No tengo ganas**: tu tarea más fácil, tu porqué, 2 minutos de cuenta atrás y después la marcas o sigues con 25 min de enfoque | **Hoy** |
+| Persona importante (Leslie): aparece en algunas frases y en el modo emergencia. Se cambia o se quita en **Ajustes** | **Más → Ajustes** |
 | Copia de seguridad (exportar e importar) | **Más → Ajustes** |
+
+Diseño: iconos vectoriales profesionales ([Lucide](https://lucide.dev), licencia ISC) en lugar de emojis, animaciones al entrar a cada pantalla, números que cuentan, anillos y barras que se llenan.
 
 **Cómo se gana un día:** completas el % de tareas que elijas en Ajustes (Flexible 60%, **Firme 80%** por defecto, Total 100%). La versión mínima cuenta como hecha. Con 80%: 4 de 5, 3 de 4, 2 de 3.
 **Cómo se gana una semana:** ganas ese mismo % de días (con 80%: 6 de 7).
@@ -100,7 +105,8 @@ sin-excusas/
 │   ├── manifest.json
 │   ├── sw.js                ← service worker: offline + recibe push
 │   ├── css/styles.css
-│   ├── js/frases.js         ← frases y mensajes del coach (edítalas libremente)
+│   ├── js/frases.js         ← frases, reglas de dinero y mensajes del coach (edítalas libremente)
+│   ├── js/icons.js          ← iconos vectoriales (Lucide, ISC)
 │   ├── js/app.js            ← toda la lógica
 │   └── icons/
 ├── worker/                  ← servidor en Cloudflare Workers (plan gratis)

@@ -22,15 +22,24 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="gFire" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb02e"/><stop offset="1" stop-color="#ff4d3d"/></linearGradient>
+      <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7cf5b0"/><stop offset="1" stop-color="#16b866"/></linearGradient>
+      <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#f0a020"/></linearGradient>
+    </defs>
+  </svg>
+
   <div id="app">
     <main id="view" class="view" aria-live="polite"></main>
 
     <nav class="tabbar" aria-label="Secciones">
-      <a href="#hoy" data-tab="hoy"><span class="ti">✅</span><span>Hoy</span></a>
-      <a href="#enfoque" data-tab="enfoque"><span class="ti">⏱️</span><span>Enfoque</span></a>
-      <a href="#stats" data-tab="stats"><span class="ti">📊</span><span>Progreso</span></a>
-      <a href="#diario" data-tab="diario"><span class="ti">📓</span><span>Diario</span></a>
-      <a href="#mas" data-tab="mas"><span class="ti">☰</span><span>Más</span></a>
+      <a href="#hoy" data-tab="hoy" data-icon="list-checks"><span class="ti"></span><span>Hoy</span></a>
+      <a href="#dinero" data-tab="dinero" data-icon="wallet"><span class="ti"></span><span>Dinero</span></a>
+      <a href="#enfoque" data-tab="enfoque" data-icon="timer"><span class="ti"></span><span>Enfoque</span></a>
+      <a href="#stats" data-tab="stats" data-icon="chart-column"><span class="ti"></span><span>Progreso</span></a>
+      <a href="#mas" data-tab="mas" data-icon="layout-grid"><span class="ti"></span><span>Más</span></a>
     </nav>
   </div>
 
@@ -41,6 +50,7 @@
 
   <noscript><p style="padding:24px;color:#fff">Activa JavaScript para usar Sin Excusas.</p></noscript>
 
+  <script src="js/icons.js"></script>
   <script src="js/frases.js"></script>
   <script src="js/app.js"></script>
 </body>

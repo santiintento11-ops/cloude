@@ -56,6 +56,9 @@ test('solo avisa lo que toca y no está hecho', () => {
   assert.deepEqual(dueItems(rec, null, now).due.map((x) => x.k), ['t:a', 'morning', 'o']);
   assert.equal(dueItems(rec, null, now).due[1].body, 'frase');
   assert.deepEqual(dueItems(rec, { date: '2026-10-05', keys: ['t:a'] }, now).due.map((x) => x.k), ['morning', 'o']);
+  const money = { ...rec, items: [{ k: 'money', kind: 'money', hm: '07:00', days: [1], title: 'Meta', body: 'x' }] };
+  assert.deepEqual(dueItems(money, null, now).due.map((x) => x.k), ['money']);
+  assert.deepEqual(dueItems({ ...money, status: { ...rec.status, moneyMet: true } }, null, now).due, []);
   const stale = dueItems({ ...rec, status: { ...rec.status, date: '2026-10-04' } }, null, now).due.map((x) => x.k);
   assert.ok(stale.includes('nudge') && stale.includes('t:b'));
 });

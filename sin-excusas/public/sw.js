@@ -1,9 +1,10 @@
 /* Service worker de Sin Excusas: guarda la app en el teléfono para que funcione sin internet. */
-const CACHE = 'sin-excusas-v2';
+const CACHE = 'sin-excusas-v3';
 const FILES = [
   './',
   './index.html',
   './css/styles.css',
+  './js/icons.js',
   './js/frases.js',
   './js/app.js',
   './manifest.json',
