@@ -1,0 +1,10 @@
+{
+  "name": "sin-excusas",
+  "private": true,
+  "type": "module",
+  "description": "Sin Excusas: app de disciplina personal (PWA) + funciones de notificaciones push en Netlify.",
+  "dependencies": {
+    "@netlify/blobs": "^8.2.0",
+    "web-push": "^3.6.7"
+  }
+}

@@ -1,0 +1,20 @@
+# Configuración para publicar "Sin Excusas" gratis en Netlify (Add new site → Import from GitHub).
+# No hace falta tocar nada en Netlify: esto le dice dónde está la app.
+[build]
+  base = "sin-excusas"
+  publish = "public"
+  functions = "netlify/functions"
+  command = "echo 'Sin Excusas lista'"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"

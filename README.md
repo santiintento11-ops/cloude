@@ -52,3 +52,7 @@ También sirve tal cual en GitHub Pages, Netlify o Vercel.
 La campaña de Facebook/Instagram (estrategia, paso a paso y textos) está en [`marketing/CAMPANA-META.md`](marketing/CAMPANA-META.md). Los 3 videos están en `marketing/videos/` y las 3 imágenes en `marketing/imagenes/`.
 
 La web marca los chats que llegan desde un anuncio: si la URL trae `utm_content`, el mensaje de WhatsApp termina en `[ref: nombre-del-anuncio]`. Para activar el Pixel de Meta, pega su ID en `var META_PIXEL_ID = "";`.
+
+## App "Sin Excusas" (disciplina personal)
+
+En la carpeta [`sin-excusas/`](sin-excusas/README.md) hay una app web instalable para iPhone (hábitos, rachas, pomodoro, diario, estadísticas y recordatorios). Es independiente de esta web: se publica aparte en Netlify con el `netlify.toml` de la raíz. Instrucciones en [`sin-excusas/README.md`](sin-excusas/README.md).
