@@ -2,9 +2,14 @@
   "name": "sin-excusas",
   "private": true,
   "type": "module",
-  "description": "Sin Excusas: app de disciplina personal (PWA) + funciones de notificaciones push en Netlify.",
-  "dependencies": {
-    "@netlify/blobs": "^8.2.0",
-    "web-push": "^3.6.7"
+  "description": "Sin Excusas: app de disciplina personal (PWA) + servidor de notificaciones en Cloudflare Workers.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/push.test.mjs"
+  },
+  "devDependencies": {
+    "http_ece": "^1.2.0",
+    "wrangler": "^4.0.0"
   }
 }

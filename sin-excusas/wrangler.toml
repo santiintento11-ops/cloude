@@ -1,0 +1,22 @@
+# Configuración de Cloudflare Workers (plan gratis). Cloudflare la lee sola al desplegar.
+name = "sin-excusas"
+main = "worker/index.js"
+compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "PushStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PushStore"]
+
+[observability]
+enabled = true

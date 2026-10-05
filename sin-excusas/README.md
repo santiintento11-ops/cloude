@@ -27,24 +27,33 @@ App web instalable (PWA) en HTML, CSS y JavaScript puro. Funciona sin internet y
 
 ---
 
-## 1. Publicarla gratis (Netlify, recomendado)
+## 1. Publicarla gratis (Cloudflare, recomendado)
 
-Netlify es gratis y además hace funcionar las **notificaciones con la app cerrada** (en otros sitios solo llegan con la app abierta). No tienes que configurar claves ni nada técnico: el archivo `netlify.toml` del repo ya le dice todo.
+Cloudflare tiene un plan gratis **sin créditos**: el límite es de 100.000 visitas **por día** y se reinicia cada día. Si alguna vez lo pasaras, la app deja de responder hasta el día siguiente, pero no te cobra nada. Para una persona usándola, no te vas a acercar a ese límite.
 
-1. Entra en **https://app.netlify.com/signup** y crea tu cuenta con **"Sign up with GitHub"**.
-2. En el panel, toca **Add new project** (o **Add new site**) → **Import an existing project**.
-3. Elige **GitHub** y autoriza a Netlify. Si no ves tu repositorio, toca **Configure Netlify on GitHub** y dale acceso a `cloude`.
+Además, con Cloudflare las notificaciones **llegan con la app cerrada**. No hay que configurar claves ni nada técnico: el archivo `sin-excusas/wrangler.toml` ya le dice todo a Cloudflare.
+
+1. Entra en **https://dash.cloudflare.com** con la misma cuenta donde tienes `kovaautomatiza.com`.
+2. En el menú de la izquierda abre **Compute (Workers) → Workers & Pages** y toca **Create** (o **Create application**).
+3. Elige **Import a repository** y conecta tu cuenta de **GitHub**. Si no ves el repositorio, dale permiso a Cloudflare sobre `cloude`.
 4. Elige el repositorio **`santiintento11-ops/cloude`**.
-5. En **Branch to deploy** elige **`claude/zen-knuth-gpkvv5`** (la rama donde está la app).
-6. No cambies nada más (los campos se rellenan solos desde `netlify.toml`). Toca **Deploy**.
-7. Espera 1 o 2 minutos. Netlify te da una dirección como `https://nombre-raro-123.netlify.app`.
-8. (Opcional) En **Project configuration → Change project name** ponle un nombre fácil, por ejemplo `sinexcusas-santi`, y quedará `https://sinexcusas-santi.netlify.app`.
+5. Rellena así:
+   - **Project name:** `sin-excusas` (tiene que ser exactamente este nombre).
+   - **Build command:** déjalo vacío.
+   - **Deploy command:** `npx wrangler deploy` (suele venir puesto).
+   - En **Advanced settings → Path** (o *Root directory*) escribe: `sin-excusas`
+6. Toca **Create and deploy** / **Deploy**.
+7. **Elige la rama correcta.** La app está en la rama `claude/zen-knuth-gpkvv5`, pero la rama principal del repo es la de la web de KOVA. Si Cloudflare no te dejó elegir rama al crearla, el primer despliegue fallará (es normal):
+   - Entra en tu Worker **sin-excusas → Settings → Build → Branch control**.
+   - En **Production branch** escribe `claude/zen-knuth-gpkvv5` y guarda.
+   - Lanza un despliegue nuevo desde **Deployments** (o pídele a Claude que suba un cambio pequeño a esa rama para que se dispare solo).
+8. Cuando termine, tu app queda en una dirección como `https://sin-excusas.TU-USUARIO.workers.dev` (aparece en **Deployments** o arriba en **Visit**).
+9. (Opcional) Dirección bonita con tu dominio: **Settings → Domains & Routes → Add → Custom domain** → por ejemplo `app.kovaautomatiza.com`. Tu web de KOVA no se toca.
 
-> Cada vez que se suba un cambio a esa rama, Netlify actualiza la app sola.
+> Cada vez que se suba un cambio a esa rama, Cloudflare actualiza la app sola.
 
-### Alternativas (sin push con la app cerrada)
+### Alternativas gratis (sin avisos con la app cerrada)
 - **Vercel:** *Add New → Project* → importa el repo → en **Root Directory** escribe `sin-excusas/public` → **Deploy**.
-- **Netlify Drop:** descarga la carpeta `sin-excusas/public` y arrástrala en https://app.netlify.com/drop.
 - **GitHub Pages:** este repo ya lo usa para la web de KOVA, así que no se recomienda aquí.
 
 En estas opciones los recordatorios solo salen con la app abierta; usa también el **Calendario** (ver abajo).
@@ -64,7 +73,7 @@ Necesitas **iOS 16.4 o superior** (Ajustes → General → Información → Vers
 1. Abre la app **desde el icono** de la pantalla de inicio.
 2. Ve a **Más → Recordatorios** y activa **Notificaciones**.
 3. Cuando el iPhone pregunte, toca **Permitir**.
-4. Toca **Enviar notificación de prueba**. Si publicaste en Netlify verás "Push activado" y te llegará aunque cierres la app.
+4. Toca **Enviar notificación de prueba**. Si publicaste en Cloudflare verás "Push activado" y te llegará aunque cierres la app.
 5. Ajusta tus horarios: mañana, aviso si no marcaste nada, racha en peligro y revisión nocturna. Cada tarea con hora te avisa a esa hora si no la has hecho.
 
 Si dijiste "No permitir" por error: **Ajustes del iPhone → Notificaciones → Sin Excusas → Permitir notificaciones**.
@@ -78,7 +87,7 @@ Revisa también que el **modo Concentración / No molestar** no las esté silenc
 
 - Todo vive en tu iPhone, nadie más lo ve. Si borras la app de la pantalla de inicio, se borran tus datos.
 - Haz una copia de vez en cuando: **Más → Ajustes → Exportar copia** y guárdala en Archivos o iCloud Drive. Para recuperarla: **Importar copia**.
-- Con Netlify, el servidor solo guarda lo necesario para avisarte: tus horarios, los títulos de las tareas con hora y si ya las marcaste.
+- Con Cloudflare, el servidor solo guarda lo necesario para avisarte: tus horarios, los títulos de las tareas con hora y si ya las marcaste.
 
 ---
 
@@ -94,13 +103,15 @@ sin-excusas/
 │   ├── js/frases.js         ← frases y mensajes del coach (edítalas libremente)
 │   ├── js/app.js            ← toda la lógica
 │   └── icons/
-├── netlify/
-│   ├── functions/push.mjs       ← /api/push/key | sync | test | unsubscribe
-│   ├── functions/push-tick.mjs  ← programada cada 5 min: envía los avisos que tocan
-│   └── lib/push-common.mjs
-└── package.json             ← web-push + @netlify/blobs (solo para las funciones)
+├── worker/                  ← servidor en Cloudflare Workers (plan gratis)
+│   ├── index.js             ← sirve public/, /api/push/key|sync|test|unsubscribe y el cron cada 5 min
+│   ├── webpush.js           ← cifrado Web Push (RFC 8291) y firma VAPID con WebCrypto, sin librerías
+│   └── schedule.js          ← qué recordatorio toca a qué hora (zona horaria del usuario)
+├── test/push.test.mjs       ← pruebas: el cifrado se valida contra la librería de referencia http_ece
+├── wrangler.toml            ← configuración de Cloudflare (Durable Object SQLite + cron)
+└── package.json
 ```
 
-- Probar en local: `npx http-server sin-excusas/public` y abrir `http://localhost:8080`.
-- Las claves VAPID se generan solas la primera vez y se guardan en Netlify Blobs.
+- `npm install` y luego `npm test` (pruebas), `npm run dev` (app + servidor en `http://localhost:8787`), `npm run deploy` (publicar desde la terminal).
+- Las claves VAPID se generan solas la primera vez y se guardan en el Durable Object `PushStore`.
 - Al cambiar archivos de `public/`, sube el número de `CACHE` en `sw.js` para que los iPhone descarguen la versión nueva.

@@ -55,4 +55,4 @@ La web marca los chats que llegan desde un anuncio: si la URL trae `utm_content`
 
 ## App "Sin Excusas" (disciplina personal)
 
-En la carpeta [`sin-excusas/`](sin-excusas/README.md) hay una app web instalable para iPhone (hábitos, rachas, pomodoro, diario, estadísticas y recordatorios). Es independiente de esta web: se publica aparte en Netlify con el `netlify.toml` de la raíz. Instrucciones en [`sin-excusas/README.md`](sin-excusas/README.md).
+En la carpeta [`sin-excusas/`](sin-excusas/README.md) hay una app web instalable para iPhone (hábitos, rachas, pomodoro, diario, estadísticas y recordatorios). Es independiente de esta web: se publica aparte en Cloudflare Workers (plan gratis). Instrucciones en [`sin-excusas/README.md`](sin-excusas/README.md).
