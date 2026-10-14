@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Huellitas Creativas · escena</title>
+<style>
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<script type="module">
+// Escena de 8 s para "Huellitas Creativas". Todo es determinista: window.seek(t) coloca
+// cámara y personajes en el instante t y renderiza un fotograma (lo usa render.js).
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const W = 1920, H = 1080;
+const q = new URLSearchParams(location.search);
+const SCALE = +(q.get("s") || 1);
+const boca = await (await fetch("build/boca.json")).json();
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true, powerPreference: "high-performance" });
+renderer.setPixelRatio(1);
+renderer.setSize(W * SCALE, H * SCALE);
+renderer.domElement.style.width = W + "px";
+renderer.domElement.style.height = H + "px";
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a1c14);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.32;
+
+const camera = new THREE.PerspectiveCamera(30, W / H, 0.05, 60);
+
+// ---------------------------------------------------------------- utilidades
+const rand = (() => { let s = 1234567; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const easeInOut = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const lerp = (a, b, t) => a + (b - a) * t;
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+function canvas(n) { const c = document.createElement("canvas"); c.width = c.height = n; return c; }
+
+// Convierte un mapa de alturas (canvas en grises) en albedo + normal map.
+function texFromHeight(hc, { strength = 2.2, ao = 0.5, colorCanvas = null, rep = [1, 1] } = {}) {
+  const n = hc.width, hd = hc.getContext("2d").getImageData(0, 0, n, n).data;
+  const h = new Float32Array(n * n);
+  for (let i = 0; i < n * n; i++) h[i] = hd[i * 4] / 255;
+  const nc = canvas(n), nctx = nc.getContext("2d"), nd = nctx.createImageData(n, n);
+  const ac = colorCanvas || canvas(n), actx = ac.getContext("2d");
+  const ad = colorCanvas ? actx.getImageData(0, 0, n, n) : actx.createImageData(n, n);
+  const at = (x, y) => h[((y + n) % n) * n + ((x + n) % n)];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = (at(x + 1, y) - at(x - 1, y)) * strength, dy = (at(x, y + 1) - at(x, y - 1)) * strength;
+    const l = Math.hypot(dx, dy, 1), i = (y * n + x) * 4;
+    nd.data[i] = (-dx / l * 0.5 + 0.5) * 255; nd.data[i + 1] = (dy / l * 0.5 + 0.5) * 255;
+    nd.data[i + 2] = (1 / l * 0.5 + 0.5) * 255; nd.data[i + 3] = 255;
+    const shade = (1 - ao) + ao * Math.pow(h[y * n + x], 0.8);
+    if (colorCanvas) { for (let k = 0; k < 3; k++) ad.data[i + k] *= shade; }
+    else { const g = shade * 255; ad.data[i] = ad.data[i + 1] = ad.data[i + 2] = g; ad.data[i + 3] = 255; }
+  }
+  nctx.putImageData(nd, 0, 0); actx.putImageData(ad, 0, 0);
+  const map = new THREE.CanvasTexture(ac), normalMap = new THREE.CanvasTexture(nc);
+  map.colorSpace = THREE.SRGBColorSpace;
+  for (const t of [map, normalMap]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.repeat.set(...rep); }
+  return { map, normalMap };
+}
+
+// Puntos bajos de crochet: filas de "V" con la torsión de la lana visible.
+function crochetHeight(cols = 16, rows = 16, n = 512) {
+  const c = canvas(n), x = c.getContext("2d");
+  x.fillStyle = "#000"; x.fillRect(0, 0, n, n);
+  const cw = n / cols, ch = n / rows;
+  x.filter = "blur(0.7px)";
+  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) {
+    const cx = k * cw + cw / 2 + (rand() - 0.5) * 2, cy = r * ch + ch / 2 + (rand() - 0.5) * 1.5;
+    const b = 0.85 + rand() * 0.15;
+    for (const s of [-1, 1]) {
+      x.save();
+      x.globalCompositeOperation = "lighten";
+      x.translate(cx + s * cw * 0.2, cy);
+      x.rotate(s * 0.4);
+      x.scale(1, 2.1);
+      const g = x.createRadialGradient(0, 0, 0, 0, 0, cw * 0.24);
+      g.addColorStop(0, `rgb(${255 * b},${255 * b},${255 * b})`);
+      g.addColorStop(0.6, `rgb(${200 * b},${200 * b},${200 * b})`);
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      x.fillStyle = g;
+      x.beginPath(); x.arc(0, 0, cw * 0.24, 0, Math.PI * 2); x.fill();
+      // torsión de las hebras
+      x.globalCompositeOperation = "source-over";
+      x.strokeStyle = "rgba(0,0,0,0.22)"; x.lineWidth = 1.1;
+      for (let j = -2; j <= 2; j++) { x.beginPath(); x.moveTo(-cw * 0.2, j * 3 - 3); x.lineTo(cw * 0.2, j * 3 + 2); x.stroke(); }
+      x.restore();
+    }
+  }
+  x.filter = "none";
+  // pelusa
+  const d = x.getImageData(0, 0, n, n);
+  for (let i = 0; i < d.data.length; i += 4) { const v = d.data[i] + (rand() - 0.5) * 22; d.data[i] = d.data[i + 1] = d.data[i + 2] = clamp(v, 0, 255); }
+  x.putImageData(d, 0, 0);
+  return c;
+}
+
+// Hebras de lana paralelas (pelo, madejas, hilo).
+function yarnHeight(strands = 20, n = 512) {
+  const c = canvas(n), x = c.getContext("2d"), d = x.createImageData(n, n);
+  const w = n / strands;
+  for (let y = 0; y < n; y++) for (let px = 0; px < n; px++) {
+    const s = Math.floor(px / w), u = (px % w) / w;
+    const tw = 0.7 + 0.3 * Math.sin(2 * Math.PI * (y / (w * 1.4) + u * 0.9 + s * 0.37));
+    const v = Math.pow(Math.sin(Math.PI * u), 0.6) * tw * 255 + (rand() - 0.5) * 18;
+    const i = (y * n + px) * 4; d.data[i] = d.data[i + 1] = d.data[i + 2] = clamp(v, 0, 255); d.data[i + 3] = 255;
+  }
+  x.putImageData(d, 0, 0);
+  return c;
+}
+
+const CROCHET = texFromHeight(crochetHeight(), { strength: 2.0, ao: 0.42 });
+const YARN = texFromHeight(yarnHeight(), { strength: 2.0, ao: 0.5 });
+
+function tejido(color, ru = 4, rv = 2, { yarn = false, sheen = 0.9, rough = 0.95, normal = 1.1 } = {}) {
+  const base = yarn ? YARN : CROCHET;
+  const map = base.map.clone(), nm = base.normalMap.clone();
+  map.repeat.set(ru, rv); nm.repeat.set(ru, rv);
+  const c = new THREE.Color(color);
+  return new THREE.MeshPhysicalMaterial({
+    color: c, map, normalMap: nm, normalScale: new THREE.Vector2(normal, normal), roughness: rough,
+    sheen, sheenRoughness: 0.55, sheenColor: c.clone().lerp(new THREE.Color(0xffffff), 0.45),
+  });
+}
+// repeticiones enteras alrededor (evita costuras) para una puntada de ~tamaño s
+const repU = (circ, s = 0.0175) => Math.max(1, Math.round(circ / s / 16));
+const repV = (len, s = 0.0175) => Math.max(0.5, len / s / 16);
+
+function mesh(geo, mat, { cast = true, recv = true } = {}) {
+  const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = recv; return m;
+}
+function bola(r, mat, seg = 40) { return mesh(new THREE.SphereGeometry(r, seg, Math.round(seg * 0.75)), mat); }
+function capsula(r, len, mat) { return mesh(new THREE.CapsuleGeometry(r, len, 10, 28), mat); }
+function bolaTejida(r, color, sx = 1, sy = 1, sz = 1, opts) {
+  const m = bola(r, tejido(color, repU(2 * Math.PI * r * Math.max(sx, sz)), repV(Math.PI * r * sy), opts));
+  m.scale.set(sx, sy, sz); return m;
+}
+function capsulaTejida(r, len, color, opts) {
+  return capsula(r, len, tejido(color, repU(2 * Math.PI * r), repV(len + Math.PI * r), opts));
+}
+
+// Casquete semiesférico mirando a +z con UV plana (ojos, parches, huella).
+function casquete(r, tex, { depth = 0.5, rough = 0.2, clearcoat = 1, seg = 32, mat = null } = {}) {
+  const g = new THREE.SphereGeometry(r, seg, seg / 2, 0, Math.PI * 2, 0, Math.PI / 2);
+  g.rotateX(Math.PI / 2);
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / r * 0.5 + 0.5, p.getY(i) / r * 0.5 + 0.5);
+  g.scale(1, 1, depth);
+  const m = mesh(g, mat || new THREE.MeshPhysicalMaterial({ map: tex, roughness: rough, clearcoat, clearcoatRoughness: 0.05 }), { cast: false });
+  return m;
+}
+
+function ojoTex(iris, oscuro) {
+  const n = 256, c = canvas(n), x = c.getContext("2d"), m = n / 2;
+  x.fillStyle = oscuro; x.fillRect(0, 0, n, n);
+  const g = x.createRadialGradient(m, m * 1.08, 4, m, m, m * 0.96);
+  g.addColorStop(0, iris[0]); g.addColorStop(0.55, iris[1]); g.addColorStop(0.9, iris[2]); g.addColorStop(1, oscuro);
+  x.fillStyle = g; x.beginPath(); x.arc(m, m, m * 0.96, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = "rgba(0,0,0,0.25)"; x.lineWidth = 2;
+  for (let a = 0; a < Math.PI * 2; a += 0.12) { x.beginPath(); x.moveTo(m + Math.cos(a) * m * 0.42, m + Math.sin(a) * m * 0.42); x.lineTo(m + Math.cos(a) * m * 0.85, m + Math.sin(a) * m * 0.85); x.stroke(); }
+  x.fillStyle = "#0b0605"; x.beginPath(); x.arc(m, m, m * 0.4, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "rgba(255,255,255,0.95)"; x.beginPath(); x.ellipse(m * 0.68, m * 0.62, m * 0.2, m * 0.17, -0.5, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "rgba(255,255,255,0.8)"; x.beginPath(); x.arc(m * 1.3, m * 1.32, m * 0.08, 0, Math.PI * 2); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const OJO_MARRON = ojoTex(["#c8823e", "#7a4520", "#4a2812"], "#1a0e08");
+const OJO_PERRO = ojoTex(["#8a5a32", "#4a2c16", "#2a170b"], "#120a05");
+const OJO_GATA = ojoTex(["#d8f07a", "#5fae43", "#2e6b28"], "#10200c");
+const OJO_NEGRO = ojoTex(["#2a2a2a", "#151515", "#0a0a0a"], "#050505");
+
+function huellaTex() {
+  const n = 256, c = canvas(n), x = c.getContext("2d");
+  x.fillStyle = "#f6ead7"; x.fillRect(0, 0, n, n);
+  x.fillStyle = "#8a4b2c";
+  x.beginPath(); x.ellipse(128, 158, 46, 38, 0, 0, Math.PI * 2); x.fill();
+  for (const [px, py, r] of [[70, 104, 20], [104, 72, 21], [152, 72, 21], [186, 104, 20]]) { x.beginPath(); x.ellipse(px, py, r * 0.85, r, 0, 0, Math.PI * 2); x.fill(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+// Bordado: línea de hilo sobre una curva
+function bordado(points, r, color) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  return mesh(new THREE.TubeGeometry(curve, 24, r, 8, false), tejido(color, 1, 4, { yarn: true }), { cast: false });
+}
+
+// Coloca un objeto sobre la superficie de una esfera (radio R) en la dirección (az, el).
+function enEsfera(obj, R, az, el, lift = 0) {
+  const d = V(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+  obj.position.copy(d.clone().multiplyScalar(R + lift));
+  obj.quaternion.setFromUnitVectors(V(0, 0, 1), d);
+  return obj;
+}
+
+// ---------------------------------------------------------------- el taller
+const taller = new THREE.Group(); scene.add(taller);
+
+function maderaTex() {
+  const n = 1024, c = canvas(n), x = c.getContext("2d"), tablas = 6, w = n / tablas;
+  for (let i = 0; i < tablas; i++) {
+    const tono = 0.85 + rand() * 0.25;
+    x.fillStyle = `rgb(${176 * tono},${118 * tono},${70 * tono})`; x.fillRect(i * w, 0, w, n);
+    for (let k = 0; k < 70; k++) {
+      x.strokeStyle = `rgba(${rand() < 0.5 ? "70,38,18" : "230,180,120"},${0.06 + rand() * 0.1})`;
+      x.lineWidth = 1 + rand() * 2; x.beginPath();
+      const px = i * w + rand() * w; x.moveTo(px, 0);
+      for (let y = 0; y <= n; y += 32) x.lineTo(px + Math.sin(y * 0.01 + k) * 4, y);
+      x.stroke();
+    }
+    x.fillStyle = "rgba(40,20,8,0.7)"; x.fillRect(i * w, 0, 2, n);
+    const corte = rand() * n; x.fillRect(i * w, corte, w, 2);
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+}
+const madera = maderaTex();
+
+function paredTex() {
+  const n = 512, c = canvas(n), x = c.getContext("2d"), d = x.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) { const v = 238 + (rand() - 0.5) * 10; d.data[i * 4] = v; d.data[i * 4 + 1] = v * 0.93; d.data[i * 4 + 2] = v * 0.84; d.data[i * 4 + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 2); return t;
+}
+const pared = new THREE.MeshStandardMaterial({ map: paredTex(), color: 0xf6dcc0, roughness: 0.95 });
+const paredBaja = new THREE.MeshStandardMaterial({ map: madera.clone(), color: 0xd9b48a, roughness: 0.7 });
+paredBaja.map.repeat.set(3, 0.4);
+
+// suelo
+{
+  const m = madera.clone(); m.repeat.set(3, 3);
+  const suelo = mesh(new THREE.PlaneGeometry(9, 11), new THREE.MeshStandardMaterial({ map: m, roughness: 0.55, metalness: 0 }), { cast: false });
+  suelo.rotation.x = -Math.PI / 2; suelo.position.set(0, 0, 1); taller.add(suelo);
+  const techo = mesh(new THREE.PlaneGeometry(9, 11), new THREE.MeshStandardMaterial({ color: 0xf2e2cc, roughness: 1 }), { cast: true, recv: true });
+  techo.rotation.x = Math.PI / 2; techo.position.set(0, 3.2, 1); taller.add(techo);
+}
+
+// pared del fondo con hueco de ventana (las cajas proyectan la sombra de la ventana)
+const VEN = { x0: -2.0, x1: 0.4, y0: 1.0, y1: 2.55, z: -3 };
+function caja(w, h, d, mat, pos, opts) { const m = mesh(new THREE.BoxGeometry(w, h, d), mat, opts); m.position.copy(pos); taller.add(m); return m; }
+caja(4.5 + VEN.x0, 3.2, 0.2, pared, V((-4.5 + VEN.x0) / 2, 1.6, VEN.z - 0.1));
+caja(4.5 - VEN.x1, 3.2, 0.2, pared, V((4.5 + VEN.x1) / 2, 1.6, VEN.z - 0.1));
+caja(VEN.x1 - VEN.x0, VEN.y0, 0.2, pared, V((VEN.x0 + VEN.x1) / 2, VEN.y0 / 2, VEN.z - 0.1));
+caja(VEN.x1 - VEN.x0, 3.2 - VEN.y1, 0.2, pared, V((VEN.x0 + VEN.x1) / 2, (3.2 + VEN.y1) / 2, VEN.z - 0.1));
+// zócalo de madera
+caja(9, 0.9, 0.04, paredBaja, V(0, 0.45, VEN.z + 0.02), { cast: false });
+// paredes laterales
+for (const s of [-1, 1]) { const p = caja(0.2, 3.2, 11, pared, V(s * 4.5, 1.6, 1)); p.castShadow = false; }
+// pared delantera con puerta por la que entra la cámara
+const PUERTA = { x0: -0.65, x1: 1.05, y1: 2.45, z: 6.2 };
+for (const [a, b] of [[-4.5, PUERTA.x0], [PUERTA.x1, 4.5]]) { const p = caja(b - a, 3.2, 0.2, pared, V((a + b) / 2, 1.6, PUERTA.z), { cast: false }); }
+caja(PUERTA.x1 - PUERTA.x0, 3.2 - PUERTA.y1, 0.2, pared, V((PUERTA.x0 + PUERTA.x1) / 2, (3.2 + PUERTA.y1) / 2, PUERTA.z), { cast: false });
+const marco = new THREE.MeshStandardMaterial({ map: madera, color: 0xc49a6c, roughness: 0.6 });
+for (const px of [PUERTA.x0 - 0.05, PUERTA.x1 + 0.05]) caja(0.1, PUERTA.y1 + 0.05, 0.3, marco, V(px, PUERTA.y1 / 2, PUERTA.z), { cast: false });
+caja(PUERTA.x1 - PUERTA.x0 + 0.2, 0.1, 0.3, marco, V((PUERTA.x0 + PUERTA.x1) / 2, PUERTA.y1 + 0.05, PUERTA.z), { cast: false });
+// pasillo exterior en penumbra
+{
+  const s = mesh(new THREE.PlaneGeometry(4, 4), new THREE.MeshStandardMaterial({ color: 0x5a3d2a, map: madera, roughness: 0.7 }), { cast: false });
+  s.rotation.x = -Math.PI / 2; s.position.set(0.2, 0.001, 8); taller.add(s);
+}
+
+// ventana: marco blanco, parteluces y un jardín luminoso desenfocado detrás
+const blanco = new THREE.MeshStandardMaterial({ color: 0xfbf4ea, roughness: 0.5 });
+{
+  const cx = (VEN.x0 + VEN.x1) / 2, cy = (VEN.y0 + VEN.y1) / 2, w = VEN.x1 - VEN.x0, h = VEN.y1 - VEN.y0;
+  for (const px of [VEN.x0, cx, VEN.x1]) caja(0.07, h, 0.1, blanco, V(px, cy, VEN.z + 0.02));
+  for (const py of [VEN.y0, cy, VEN.y1]) caja(w + 0.07, 0.07, 0.1, blanco, V(cx, py, VEN.z + 0.02));
+  caja(w + 0.3, 0.06, 0.3, blanco, V(cx, VEN.y0 - 0.02, VEN.z + 0.12)); // alféizar
+  const n = 512, c = canvas(n), x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, n); g.addColorStop(0, "#fff6dc"); g.addColorStop(0.5, "#ffe7b0"); g.addColorStop(1, "#b8d48a");
+  x.fillStyle = g; x.fillRect(0, 0, n, n);
+  for (let i = 0; i < 60; i++) {
+    x.fillStyle = `rgba(${90 + rand() * 80},${150 + rand() * 60},${60 + rand() * 40},${0.25 + rand() * 0.3})`;
+    x.beginPath(); x.arc(rand() * n, n * 0.55 + rand() * n * 0.5, 20 + rand() * 60, 0, Math.PI * 2); x.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const jardin = mesh(new THREE.PlaneGeometry(w * 2.2, h * 2.2), new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(1.9, 1.75, 1.5) }), { cast: false, recv: false });
+  jardin.position.set(cx, cy, VEN.z - 1.2); taller.add(jardin);
+}
+
+// rayos de sol (volumen falso) y motas de polvo
+const rayos = new THREE.Group(); taller.add(rayos);
+{
+  const n = 256, c = canvas(n), x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, n); g.addColorStop(0, "rgba(255,220,160,0.55)"); g.addColorStop(1, "rgba(255,220,160,0)");
+  x.fillStyle = g; x.fillRect(0, 0, n, n);
+  const t = new THREE.CanvasTexture(c);
+  const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  for (let i = 0; i < 5; i++) {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(0.35 + rand() * 0.4, 5.2), mat);
+    p.position.set(lerp(VEN.x0, VEN.x1, (i + 0.5) / 5) + 0.6, 1.0, -1.1);
+    p.rotation.set(-1.0, 0, 0.12);
+    rayos.add(p);
+  }
+}
+const motas = (() => {
+  const n = 220, pos = new Float32Array(n * 3), base = [];
+  for (let i = 0; i < n; i++) base.push([lerp(-1.8, 1.2, rand()), lerp(0.4, 2.6, rand()), lerp(-2.6, 1.2, rand()), rand() * 10]);
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const c = canvas(64), x = c.getContext("2d"), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255,240,210,1)"); gr.addColorStop(1, "rgba(255,240,210,0)"); x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.012, map: new THREE.CanvasTexture(c), transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending }));
+  taller.add(pts);
+  return { update(t) { base.forEach((b, i) => { pos[i * 3] = b[0] + Math.sin(t * 0.3 + b[3]) * 0.08; pos[i * 3 + 1] = b[1] + Math.sin(t * 0.21 + b[3] * 2) * 0.06 + t * 0.01; pos[i * 3 + 2] = b[2] + Math.cos(t * 0.25 + b[3]) * 0.08; }); g.attributes.position.needsUpdate = true; } };
+})();
+
+// madeja / ovillo de lana con vueltas de hilo por encima
+function ovillo(r, color) {
+  const g = new THREE.Group();
+  g.add(bola(r, tejido(color, repU(2 * Math.PI * r, 0.012) , repV(Math.PI * r, 0.012), { yarn: true })));
+  for (let i = 0; i < 7; i++) {
+    const t = mesh(new THREE.TorusGeometry(r * 0.99, r * 0.06, 6, 48), tejido(color, 30, 1, { yarn: true }), { cast: false });
+    t.rotation.set(rand() * Math.PI, rand() * Math.PI, rand() * Math.PI); g.add(t);
+  }
+  return g;
+}
+const PASTEL = [0xf4a6b8, 0x9fd3e6, 0xf7d37a, 0xb7dfa5, 0xc9b2e8, 0xf2a37a, 0xffffff, 0xe85d75, 0x6fb3d9];
+
+// maceta de crochet con planta
+function hoja(len, ancho, color) {
+  const s = new THREE.Shape(); s.moveTo(0, 0); s.quadraticCurveTo(ancho, len * 0.45, 0, len); s.quadraticCurveTo(-ancho, len * 0.45, 0, 0);
+  const g = new THREE.ShapeGeometry(s, 12);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i) / len, x = p.getX(i); p.setZ(i, -y * y * len * 0.35 - Math.abs(x) * 0.6); }
+  g.computeVertexNormals();
+  return mesh(g, new THREE.MeshStandardMaterial({ color, roughness: 0.55, side: THREE.DoubleSide }));
+}
+function maceta(r, h, color, tipo, hojas = 9) {
+  const g = new THREE.Group();
+  const perfil = [V(0, 0, 0), V(r * 0.78, 0, 0), V(r, h * 0.85, 0), V(r * 1.08, h, 0), V(r * 0.95, h * 1.02, 0)].map((p) => new THREE.Vector2(p.x, p.y));
+  const pot = mesh(new THREE.LatheGeometry(perfil, 40), tejido(color, repU(2 * Math.PI * r), repV(h * 1.2)));
+  g.add(pot);
+  const tierra = mesh(new THREE.CircleGeometry(r * 0.95, 24), new THREE.MeshStandardMaterial({ color: 0x3a2618, roughness: 1 }), { cast: false });
+  tierra.rotation.x = -Math.PI / 2; tierra.position.y = h * 0.95; g.add(tierra);
+  const verdes = [0x4f8f3a, 0x5fa548, 0x3f7a30, 0x6fb556];
+  for (let i = 0; i < hojas; i++) {
+    const len = tipo === "alta" ? h * (1.6 + rand() * 1.2) : h * (0.7 + rand() * 0.5);
+    const l = hoja(len, tipo === "alta" ? len * 0.12 : len * 0.35, verdes[i % 4]);
+    const a = (i / hojas) * Math.PI * 2 + rand() * 0.4;
+    l.position.set(Math.cos(a) * r * 0.25, h * 0.95, Math.sin(a) * r * 0.25);
+    l.rotation.set(0, -a + Math.PI / 2, 0);
+    l.rotateX(tipo === "alta" ? -0.15 - rand() * 0.25 : -0.5 - rand() * 0.6);
+    g.add(l);
+  }
+  return g;
+}
+
+// macetas en el alféizar y en el suelo
+[[-1.75, 0x9fd3e6, "baja"], [-1.1, 0xf4a6b8, "alta"], [-0.35, 0xf7d37a, "baja"], [0.15, 0xb7dfa5, "alta"]].forEach(([x, c, t], i) => {
+  const m = maceta(0.11, 0.16, c, t, t === "alta" ? 7 : 11); m.position.set(x, VEN.y0 + 0.01, VEN.z + 0.13); m.rotation.y = i; taller.add(m);
+});
+{ const m = maceta(0.32, 0.5, 0xe9d8c0, "alta", 14); m.position.set(3.1, 0, -2.2); taller.add(m); }
+{ const m = maceta(0.24, 0.36, 0xc9b2e8, "baja", 16); m.position.set(-3.4, 0, 0.9); taller.add(m); }
+
+// estantería con madejas a la derecha
+{
+  const est = new THREE.Group(); est.position.set(2.2, 0, VEN.z + 0.22); taller.add(est);
+  for (let k = 0; k < 4; k++) {
+    const y = 0.55 + k * 0.62;
+    const tabla = mesh(new THREE.BoxGeometry(2.0, 0.05, 0.42), marco); tabla.position.set(0, y, 0); est.add(tabla);
+    for (let i = 0; i < 7; i++) {
+      const o = ovillo(0.1 + rand() * 0.03, PASTEL[(i + k * 3) % PASTEL.length]);
+      o.position.set(-0.85 + i * 0.28 + (rand() - 0.5) * 0.05, y + 0.13, (rand() - 0.5) * 0.12); est.add(o);
+    }
+  }
+  for (const s of [-1, 1]) { const lado = mesh(new THREE.BoxGeometry(0.05, 2.5, 0.42), marco); lado.position.set(s * 1.0, 1.25 + 0.3, 0); est.add(lado); }
+}
+
+// mesa de trabajo con cesta de ovillos a la izquierda
+{
+  const mesa = new THREE.Group(); mesa.position.set(-2.55, 0, -0.9); mesa.rotation.y = 0.35; taller.add(mesa);
+  const tablero = mesh(new THREE.BoxGeometry(1.5, 0.06, 0.8), marco); tablero.position.y = 0.78; mesa.add(tablero);
+  for (const [x, z] of [[-0.68, -0.33], [0.68, -0.33], [-0.68, 0.33], [0.68, 0.33]]) { const p = mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.78, 12), marco); p.position.set(x, 0.39, z); mesa.add(p); }
+  const cesta = mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.22, 40, 1, true), tejido(0xc79a62, 12, 0.8, { yarn: true }));
+  cesta.position.set(0.2, 0.92, 0); mesa.add(cesta);
+  const fondo = mesh(new THREE.CircleGeometry(0.22, 30), tejido(0xc79a62, 4, 4, { yarn: true })); fondo.rotation.x = -Math.PI / 2; fondo.position.set(0.2, 0.82, 0); mesa.add(fondo);
+  for (let i = 0; i < 6; i++) { const o = ovillo(0.09, PASTEL[(i * 2) % PASTEL.length]); o.position.set(0.2 + Math.cos(i) * 0.13, 0.98 + (i % 2) * 0.06, Math.sin(i) * 0.12); mesa.add(o); }
+  const o2 = ovillo(0.08, 0xe85d75); o2.position.set(-0.45, 0.89, 0.1); mesa.add(o2);
+  const ganchillo = mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.32, 8), new THREE.MeshStandardMaterial({ color: 0xc0c4cc, metalness: 0.9, roughness: 0.25 }));
+  ganchillo.rotation.z = Math.PI / 2; ganchillo.rotation.y = 0.4; ganchillo.position.set(-0.2, 0.82, 0.2); mesa.add(ganchillo);
+}
+
+// alfombra redonda de crochet bajo los personajes
+{
+  const n = 1024, hc = canvas(n), hx = hc.getContext("2d"), cc = canvas(n), cx = cc.getContext("2d");
+  hx.fillStyle = "#000"; hx.fillRect(0, 0, n, n); cx.fillStyle = "#d9c09a"; cx.fillRect(0, 0, n, n);
+  const anillos = [0xe0c9a6, 0xe8849c, 0xe0c9a6, 0x6fb3d9, 0xe0c9a6, 0xf0c050, 0xe0c9a6, 0x8cc97a, 0xe0c9a6, 0xa98bd6, 0xe0c9a6];
+  const paso = (n / 2 - 8) / 26;
+  for (let r = 1; r < 26; r++) {
+    const rad = r * paso, cnt = Math.max(6, Math.round((2 * Math.PI * rad) / 13));
+    const col = "#" + anillos[Math.floor(r / 2.4) % anillos.length].toString(16).padStart(6, "0");
+    for (let k = 0; k < cnt; k++) {
+      const a = (k / cnt) * Math.PI * 2;
+      for (const [x, fill] of [[hx, null], [cx, col]]) {
+        x.save(); x.translate(n / 2 + Math.cos(a) * rad, n / 2 + Math.sin(a) * rad); x.rotate(a);
+        if (fill) { x.fillStyle = fill; x.beginPath(); x.ellipse(0, 0, paso * 0.55, 7, 0, 0, Math.PI * 2); x.fill(); }
+        else {
+          const g = x.createRadialGradient(0, 0, 0, 0, 0, 7); g.addColorStop(0, "#fff"); g.addColorStop(1, "rgba(0,0,0,0)");
+          x.globalCompositeOperation = "lighten"; x.scale(paso * 0.55 / 7, 1); x.fillStyle = g; x.beginPath(); x.arc(0, 0, 7, 0, Math.PI * 2); x.fill();
+        }
+        x.restore();
+      }
+    }
+  }
+  const tx = texFromHeight(hc, { strength: 2.0, ao: 0.45, colorCanvas: cc });
+  const alfombra = mesh(new THREE.CircleGeometry(1.7, 96), new THREE.MeshPhysicalMaterial({ map: tx.map, normalMap: tx.normalMap, roughness: 1, sheen: 1, sheenRoughness: 0.5, sheenColor: new THREE.Color(0xfff2e0) }), { cast: false });
+  alfombra.rotation.x = -Math.PI / 2; alfombra.position.set(0, 0.006, 0.2); taller.add(alfombra);
+}
+
+// guirnalda de banderines de crochet sobre la ventana
+{
+  const a = V(-2.6, 2.95, VEN.z + 0.08), b = V(1.0, 2.95, VEN.z + 0.08);
+  const pts = []; for (let i = 0; i <= 20; i++) { const t = i / 20; pts.push(V(lerp(a.x, b.x, t), a.y - Math.sin(Math.PI * t) * 0.28, a.z)); }
+  const curva = new THREE.CatmullRomCurve3(pts);
+  taller.add(mesh(new THREE.TubeGeometry(curva, 60, 0.006, 6), new THREE.MeshStandardMaterial({ color: 0xf3e7d3 }), { cast: false }));
+  for (let i = 0; i < 11; i++) {
+    const t = (i + 0.5) / 11, p = curva.getPoint(t);
+    const s = new THREE.Shape(); s.moveTo(-0.11, 0); s.lineTo(0.11, 0); s.lineTo(0, -0.24); s.closePath();
+    const g = new THREE.ShapeGeometry(s); const uv = g.attributes.uv, pp = g.attributes.position;
+    for (let k = 0; k < pp.count; k++) uv.setXY(k, pp.getX(k) * 4, pp.getY(k) * 4);
+    const f = mesh(g, tejido(PASTEL[i % 6], 1, 1), { cast: false }); f.position.copy(p); f.rotation.z = (rand() - 0.5) * 0.15; taller.add(f);
+  }
+}
+
+// lámpara colgante con pantalla de crochet
+{
+  const lamp = new THREE.Group(); lamp.position.set(0.3, 2.55, -0.6); taller.add(lamp);
+  lamp.add(mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.65, 6), new THREE.MeshStandardMaterial({ color: 0x333333 })).translateY(0.33));
+  const pantalla = mesh(new THREE.ConeGeometry(0.3, 0.26, 40, 1, true), tejido(0xf3e7d3, 6, 1.4));
+  pantalla.material.side = THREE.DoubleSide; lamp.add(pantalla);
+  const bombilla = mesh(new THREE.SphereGeometry(0.06, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.3, 1.4) }), { cast: false });
+  bombilla.position.y = -0.1; lamp.add(bombilla);
+  const luz = new THREE.PointLight(0xffb36b, 1.6, 6, 1.4); luz.position.y = -0.15; lamp.add(luz);
+}
+
+// ---------------------------------------------------------------- personajes
+function ojo(r, tex) {
+  const g = new THREE.Group();
+  const e = casquete(r, tex, { depth: 0.55 }); g.add(e);
+  // párpado: casquete de piel que baja al parpadear
+  return { g, eye: e };
+}
+function parpado(r, mat) {
+  const m = mesh(new THREE.BufferGeometry(), mat, { cast: false });
+  m.userData.set = (cierre) => {
+    const th = lerp(0.55, Math.PI / 2 + 0.25, cierre);
+    m.geometry.dispose();
+    const g = new THREE.SphereGeometry(r * 1.06, 24, 10, 0, Math.PI, 0, th);
+    g.scale(1, 1, 0.62); m.geometry = g;
+  };
+  m.userData.set(0);
+  return m;
+}
+
+// --- la niña
+const PIEL = 0xfcc9a4, PELO = 0x3d2418, SUETER = 0xf3e6cc;
+const nina = new THREE.Group(); scene.add(nina);
+const N = {};
+{
+  const RH = 0.36;
+  // piernas y zapatos
+  for (const s of [-1, 1]) {
+    const pierna = capsulaTejida(0.065, 0.26, 0xb98c74); pierna.position.set(s * 0.09, 0.2, 0); nina.add(pierna);
+    const zap = bolaTejida(0.075, 0x9c3b3b, 1, 0.6, 1.35); zap.position.set(s * 0.09, 0.05, 0.03); nina.add(zap);
+  }
+  // suéter acampanado
+  const perfil = [[0, 0.33], [0.24, 0.33], [0.255, 0.36], [0.235, 0.55], [0.205, 0.72], [0.185, 0.8], [0.13, 0.85], [0.06, 0.87], [0, 0.875]].map(([x, y]) => new THREE.Vector2(x, y));
+  const torso = mesh(new THREE.LatheGeometry(perfil, 48), tejido(SUETER, repU(2 * Math.PI * 0.22), repV(0.6)));
+  nina.add(torso);
+  const bajo = mesh(new THREE.TorusGeometry(0.247, 0.022, 10, 56), tejido(SUETER, 40, 1)); bajo.rotation.x = Math.PI / 2; bajo.position.y = 0.345; nina.add(bajo);
+  const cuello = mesh(new THREE.TorusGeometry(0.075, 0.03, 10, 32), tejido(SUETER, 12, 1)); cuello.rotation.x = Math.PI / 2; cuello.position.y = 0.86; nina.add(cuello);
+  // cabeza
+  const cab = new THREE.Group(); cab.position.set(0, 1.16, 0); nina.add(cab); N.cab = cab;
+  cab.add(bolaTejida(RH, PIEL, 1, 0.96, 0.98, { sheen: 0.35, normal: 0.8 }));
+  // pelo: casco con flequillo festoneado + mechones largos de lana
+  {
+    const casco = mesh(new THREE.SphereGeometry(RH * 1.045, 72, 36, 0, Math.PI * 2, 0, Math.PI * 0.62), tejido(PELO, 16, 3, { yarn: true, sheen: 0.6, rough: 0.8 }));
+    casco.rotation.x = -0.9; cab.add(casco);
+    // flequillo de hebras de lana que caen sobre la frente
+    const flq = tejido(PELO, 1, 3, { yarn: true, sheen: 0.6, rough: 0.8 });
+    for (let i = 0; i < 26; i++) {
+      const az = lerp(-1.05, 1.05, i / 25), largo = 0.42 - 0.07 * Math.cos(az * 11) * 0.5 - 0.12 * Math.abs(az);
+      const pts = [];
+      for (let k = 0; k <= 6; k++) {
+        const el = lerp(1.15, largo, k / 6), rr = RH * (1.04 + 0.025 * Math.sin(Math.PI * k / 6));
+        pts.push(V(Math.sin(az) * Math.cos(el) * rr, Math.sin(el) * rr, Math.cos(az) * Math.cos(el) * rr));
+      }
+      cab.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.03, 8), flq));
+    }
+    const mech = tejido(PELO, 1, 6, { yarn: true, sheen: 0.6, rough: 0.8 });
+    const pelo = new THREE.Group(); cab.add(pelo); N.pelo = pelo;
+    for (let i = 0; i < 46; i++) {
+      const a = lerp(-2.0, 2.0, i / 45) + Math.PI;  // por detrás y los lados
+      const sa = Math.sin(a), ca = Math.cos(a);
+      const r0 = RH * 1.0, largo = 0.62 + rand() * 0.08 - Math.abs(Math.sin(a)) * 0.08;
+      const pts = [
+        V(sa * r0 * 0.55, RH * 0.85, ca * r0 * 0.55),
+        V(sa * r0 * 1.06, RH * 0.2, ca * r0 * 1.06),
+        V(sa * r0 * 1.12, -RH * 0.6, ca * r0 * 1.0 - 0.02),
+        V(sa * (r0 * 1.0 + 0.04), -largo, ca * r0 * 0.75 - 0.08),
+        V(sa * (r0 * 0.85 + 0.05) + (rand() - 0.5) * 0.04, -largo - 0.12, ca * r0 * 0.6 - 0.1),
+      ];
+      // los mechones de los lados caen por delante de los hombros
+      if (Math.abs(sa) > 0.85) for (const q of pts.slice(2)) q.z += 0.12;
+      const t = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 28, 0.024 + rand() * 0.008, 8), mech);
+      pelo.add(t);
+    }
+    // flor de crochet en el pelo
+    const flor = new THREE.Group();
+    for (let k = 0; k < 5; k++) { const pe = bolaTejida(0.035, 0xf4a6b8, 1, 1, 0.45); pe.position.set(Math.cos(k * 1.2566) * 0.04, Math.sin(k * 1.2566) * 0.04, 0); flor.add(pe); }
+    const cen = bolaTejida(0.024, 0xf7d37a, 1, 1, 0.6); flor.add(cen);
+    enEsfera(flor, RH * 1.03, 0.75, 0.5); cab.add(flor);
+  }
+  // cara
+  const ojos = [];
+  for (const s of [-1, 1]) {
+    const o = ojo(0.072, OJO_MARRON); enEsfera(o.g, RH * 0.955, s * 0.33, 0.02); cab.add(o.g);
+    const lid = parpado(0.072, tejido(PIEL, 2, 1)); o.g.add(lid); ojos.push(lid);
+    // pestañas y cejas bordadas
+    const ceja = bordado([V(-0.05, 0, 0), V(0, 0.016, 0.004), V(0.05, 0.004, 0)], 0.007, 0x3d2418);
+    enEsfera(ceja, RH * 0.99, s * 0.33, 0.29); cab.add(ceja); ceja.userData.base = ceja.position.clone();
+    (N.cejas ||= []).push(ceja);
+    const mej = bolaTejida(0.06, 0xf49a9a, 1, 0.75, 0.3); enEsfera(mej, RH * 0.96, s * 0.55, -0.2); cab.add(mej);
+  }
+  N.parpados = ojos;
+  const nariz = bolaTejida(0.022, 0xf0bfa0, 1, 0.8, 0.8); enEsfera(nariz, RH * 0.97, 0, -0.1); cab.add(nariz);
+  // boca: sonrisa bordada + boca abierta en "D" para cantar
+  const boca = new THREE.Group(); enEsfera(boca, RH * 0.955, 0, -0.33); cab.add(boca); N.boca = boca;
+  N.sonrisa = bordado([V(-0.055, 0.01, 0), V(-0.025, -0.012, 0.004), V(0.025, -0.012, 0.004), V(0.055, 0.01, 0)], 0.0075, 0x8e3b3b);
+  boca.add(N.sonrisa);
+  const gD = new THREE.SphereGeometry(0.05, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+  N.abierta = mesh(gD, new THREE.MeshStandardMaterial({ color: 0x5c1d24, roughness: 0.6 }), { cast: false });
+  const lengua = mesh(new THREE.SphereGeometry(0.03, 20, 12), new THREE.MeshStandardMaterial({ color: 0xe0707a, roughness: 0.5 }), { cast: false });
+  lengua.position.set(0, -0.032, 0.006); lengua.scale.set(1, 0.45, 0.6); N.abierta.add(lengua);
+  const dientes = mesh(new THREE.BoxGeometry(0.07, 0.012, 0.01), new THREE.MeshStandardMaterial({ color: 0xfaf6f0, roughness: 0.4 }), { cast: false });
+  dientes.position.set(0, -0.004, 0.012); N.abierta.add(dientes);
+  boca.add(N.abierta);
+
+  // brazos: hombro -> codo -> mano
+  function brazo(s) {
+    const hombro = new THREE.Group(); hombro.position.set(s * 0.17, 0.8, 0); nina.add(hombro);
+    const sup = capsulaTejida(0.058, 0.17, SUETER); sup.position.y = -0.11; hombro.add(sup);
+    const codo = new THREE.Group(); codo.position.y = -0.22; hombro.add(codo);
+    const ant = capsulaTejida(0.054, 0.13, SUETER); ant.position.y = -0.08; codo.add(ant);
+    const puno = mesh(new THREE.TorusGeometry(0.052, 0.016, 8, 24), tejido(SUETER, 6, 1)); puno.rotation.x = Math.PI / 2; puno.position.y = -0.17; codo.add(puno);
+    const mano = bolaTejida(0.055, PIEL, 1, 1.05, 0.85); mano.position.y = -0.21; codo.add(mano);
+    const pulgar = bolaTejida(0.022, PIEL, 1, 1.3, 1); pulgar.position.set(-s * 0.04, -0.2, 0.025); codo.add(pulgar);
+    return { hombro, codo, mano };
+  }
+  N.der = brazo(-1); // su derecha queda a la izquierda de cámara: saluda
+  N.izq = brazo(1);  // abraza al perrito
+
+  // perrito de crochet con huella en el pecho
+  const pp = new THREE.Group(); nina.add(pp); N.peluche = pp;
+  const BEIGE = 0xe6cfa6, MARRON = 0x9a6a46;
+  const cuerpo = bolaTejida(0.095, BEIGE, 1, 1.15, 0.9); pp.add(cuerpo);
+  const huella = casquete(0.05, huellaTex(), { depth: 0.25, rough: 0.9, clearcoat: 0 }); huella.position.set(0, 0.0, 0.08); pp.add(huella);
+  const cabp = new THREE.Group(); cabp.position.set(0, 0.15, 0.01); pp.add(cabp);
+  cabp.add(bolaTejida(0.085, BEIGE));
+  const hoc = bolaTejida(0.04, 0xf6ead7, 1.2, 0.85, 1); hoc.position.set(0, -0.02, 0.07); cabp.add(hoc);
+  const nz = bola(0.014, new THREE.MeshPhysicalMaterial({ color: 0x1a1210, roughness: 0.3, clearcoat: 1 })); nz.position.set(0, -0.005, 0.11); cabp.add(nz);
+  for (const s of [-1, 1]) {
+    const oj = casquete(0.013, OJO_NEGRO, { depth: 0.6 }); enEsfera(oj, 0.085, s * 0.38, 0.12); cabp.add(oj);
+    const or = bolaTejida(0.03, MARRON, 0.6, 1.6, 0.35); or.position.set(s * 0.08, 0.0, 0); or.rotation.z = s * 0.25; cabp.add(or);
+    const pata = capsulaTejida(0.024, 0.04, BEIGE); pata.position.set(s * 0.06, -0.1, 0.03); pp.add(pata);
+  }
+}
+
+// --- Coco: perrito dorado con orejas largas y pañuelo azul
+function crearPerro() {
+  const raiz = new THREE.Group(), C = { raiz };
+  const DORADO = 0xdba552, CREMA = 0xf3dfb4;
+  const cuerpo = new THREE.Group(); cuerpo.position.y = 0.27; raiz.add(cuerpo); C.cuerpo = cuerpo;
+  const tronco = capsulaTejida(0.15, 0.22, DORADO); tronco.rotation.x = Math.PI / 2; cuerpo.add(tronco);
+  const pecho = bolaTejida(0.12, CREMA, 1, 1, 0.7); pecho.position.set(0, -0.02, 0.17); cuerpo.add(pecho);
+  // patas
+  C.patas = [];
+  for (const [x, z] of [[-0.08, 0.13], [0.08, 0.13], [-0.08, -0.13], [0.08, -0.13]]) {
+    const piv = new THREE.Group(); piv.position.set(x, -0.04, z); cuerpo.add(piv);
+    const p = capsulaTejida(0.05, 0.1, DORADO); p.position.y = -0.11; piv.add(p);
+    const pie = bolaTejida(0.055, CREMA, 1, 0.7, 1.2); pie.position.set(0, -0.2, 0.015); piv.add(pie);
+    C.patas.push(piv);
+  }
+  // cola
+  const cola = new THREE.Group(); cola.position.set(0, 0.06, -0.24); cuerpo.add(cola); C.cola = cola;
+  const cc = capsulaTejida(0.035, 0.12, DORADO); cc.position.y = 0.08; cola.add(cc); cola.rotation.x = -0.6;
+  // cabeza
+  const cab = new THREE.Group(); cab.position.set(0, 0.19, 0.2); cuerpo.add(cab); C.cab = cab;
+  cab.add(bolaTejida(0.17, DORADO));
+  const hocico = bolaTejida(0.08, CREMA, 1.15, 0.85, 1); hocico.position.set(0, -0.055, 0.135); cab.add(hocico);
+  const nariz = bola(0.028, new THREE.MeshPhysicalMaterial({ color: 0x1b1210, roughness: 0.25, clearcoat: 1 })); nariz.position.set(0, -0.025, 0.215); nariz.scale.set(1.3, 0.9, 0.9); cab.add(nariz);
+  const lengua = bolaTejida(0.03, 0xe87f88, 1, 0.5, 1); lengua.position.set(0, -0.11, 0.17); cab.add(lengua);
+  C.orejas = [];
+  for (const s of [-1, 1]) {
+    const o = ojo(0.042, OJO_PERRO); enEsfera(o.g, 0.163, s * 0.38, 0.12); cab.add(o.g);
+    const piv = new THREE.Group(); piv.position.set(s * 0.14, 0.08, -0.01); cab.add(piv);
+    const or = bolaTejida(0.06, 0xb87a35, 0.55, 1.9, 0.35); or.position.set(s * 0.02, -0.11, 0); piv.add(or);
+    piv.rotation.z = s * 0.15; C.orejas.push(piv);
+  }
+  // pañuelo azul tejido
+  const pa = mesh(new THREE.ConeGeometry(0.13, 0.17, 3, 1), tejido(0x3d7fd0, 4, 1.5));
+  pa.rotation.set(Math.PI + 0.35, 0, 0); pa.scale.set(1, 1, 0.35); pa.position.set(0, 0.07, 0.24); cuerpo.add(pa);
+  const nudo = mesh(new THREE.TorusGeometry(0.11, 0.022, 8, 32), tejido(0x3d7fd0, 10, 1)); nudo.position.set(0, 0.12, 0.2); nudo.rotation.x = Math.PI / 2 + 0.6; cuerpo.add(nudo);
+  return C;
+}
+
+// --- Luna: gatita gris y blanca, ojos verdes, collar rosa con corazón
+function crearGata() {
+  const raiz = new THREE.Group(), C = { raiz };
+  const GRIS = 0x9b9ea6, BLANCO = 0xf7f4ee;
+  const cuerpo = new THREE.Group(); cuerpo.position.y = 0.23; raiz.add(cuerpo); C.cuerpo = cuerpo;
+  const tronco = capsulaTejida(0.12, 0.2, GRIS); tronco.rotation.x = Math.PI / 2; cuerpo.add(tronco);
+  const pecho = bolaTejida(0.1, BLANCO, 1, 1.05, 0.7); pecho.position.set(0, -0.02, 0.14); cuerpo.add(pecho);
+  C.patas = [];
+  for (const [x, z] of [[-0.065, 0.11], [0.065, 0.11], [-0.065, -0.11], [0.065, -0.11]]) {
+    const piv = new THREE.Group(); piv.position.set(x, -0.03, z); cuerpo.add(piv);
+    const p = capsulaTejida(0.04, 0.09, GRIS); p.position.y = -0.1; piv.add(p);
+    const pie = bolaTejida(0.045, BLANCO, 1, 0.7, 1.15); pie.position.set(0, -0.18, 0.01); piv.add(pie);
+    C.patas.push(piv);
+  }
+  // cola larga en segmentos (se curva y se mueve)
+  C.cola = [];
+  let padre = new THREE.Group(); padre.position.set(0, 0.04, -0.2); cuerpo.add(padre);
+  for (let i = 0; i < 6; i++) {
+    const seg = capsulaTejida(0.03 - i * 0.002, 0.05, i === 5 ? BLANCO : GRIS); seg.position.y = 0.045; padre.add(seg);
+    const sig = new THREE.Group(); sig.position.y = 0.075; padre.add(sig);
+    C.cola.push(padre); padre = sig;
+  }
+  const cab = new THREE.Group(); cab.position.set(0, 0.17, 0.17); cuerpo.add(cab); C.cab = cab;
+  cab.add(bolaTejida(0.15, GRIS, 1.08, 0.95, 1));
+  for (const s of [-1, 1]) {
+    const mof = bolaTejida(0.05, BLANCO, 1, 0.85, 0.8); mof.position.set(s * 0.035, -0.06, 0.115); cab.add(mof);
+    const o = ojo(0.04, OJO_GATA); enEsfera(o.g, 0.145, s * 0.4, 0.1); cab.add(o.g);
+    const oreja = mesh(new THREE.ConeGeometry(0.06, 0.12, 24), tejido(GRIS, 3, 1)); oreja.position.set(s * 0.085, 0.125, 0); oreja.rotation.z = -s * 0.35; cab.add(oreja);
+    const interior = mesh(new THREE.ConeGeometry(0.035, 0.08, 16), tejido(0xf3a7b5, 2, 1)); interior.position.set(s * 0.082, 0.118, 0.025); interior.rotation.z = -s * 0.35; cab.add(interior);
+    for (const k of [-1, 1]) {
+      const bigote = bordado([V(s * 0.06, -0.05 + k * 0.012, 0.14), V(s * 0.13, -0.045 + k * 0.022, 0.135), V(s * 0.19, -0.05 + k * 0.035, 0.11)], 0.0025, 0xffffff);
+      cab.add(bigote);
+    }
+  }
+  const frente = bolaTejida(0.06, BLANCO, 1, 1.2, 0.5); frente.position.set(0, 0.0, 0.13); frente.visible = false; cab.add(frente);
+  const nariz = bolaTejida(0.017, 0xf08aa0, 1.2, 0.8, 0.8); nariz.position.set(0, -0.035, 0.155); cab.add(nariz);
+  // collar rosa con corazón
+  const collar = mesh(new THREE.TorusGeometry(0.095, 0.017, 8, 32), tejido(0xf58fb0, 10, 1)); collar.position.set(0, 0.09, 0.15); collar.rotation.x = Math.PI / 2 + 0.55; cuerpo.add(collar);
+  const s = new THREE.Shape(); s.moveTo(0, -0.03); s.bezierCurveTo(-0.04, 0, -0.03, 0.03, 0, 0.015); s.bezierCurveTo(0.03, 0.03, 0.04, 0, 0, -0.03);
+  const cor = mesh(new THREE.ExtrudeGeometry(s, { depth: 0.01, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 3 }),
+    new THREE.MeshPhysicalMaterial({ color: 0xff5f8f, roughness: 0.25, clearcoat: 1, metalness: 0.1 }));
+  cor.position.set(0, 0.03, 0.235); cor.rotation.x = -0.3; cuerpo.add(cor); C.corazon = cor;
+  return C;
+}
+
+const coco = crearPerro(); scene.add(coco.raiz);
+const luna = crearGata(); scene.add(luna.raiz);
+
+// sombras de contacto suaves bajo los pies
+function sombraContacto(r) {
+  const c = canvas(128), x = c.getContext("2d"), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, "rgba(40,20,10,0.55)"); g.addColorStop(1, "rgba(40,20,10,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.012; scene.add(m); return m;
+}
+const sNina = sombraContacto(0.42), sCoco = sombraContacto(0.36), sLuna = sombraContacto(0.3);
+
+// ---------------------------------------------------------------- luces
+scene.add(new THREE.HemisphereLight(0xffe9cf, 0x7a4a2c, 0.55));
+const sol = new THREE.DirectionalLight(0xffcf8f, 3.2);
+sol.position.set(-2.4, 4.8, -7.5); sol.target.position.set(0.2, 0, 0.6); scene.add(sol, sol.target);
+sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.02;
+Object.assign(sol.shadow.camera, { left: -4.5, right: 4.5, top: 4.5, bottom: -4.5, near: 1, far: 20 });
+const llave = new THREE.DirectionalLight(0xffe2bf, 1.45); llave.position.set(-2.5, 3.2, 5); llave.target.position.set(0, 0.8, 0);
+llave.castShadow = true; llave.shadow.mapSize.set(1024, 1024); llave.shadow.radius = 6;
+Object.assign(llave.shadow.camera, { left: -2.5, right: 2.5, top: 2.5, bottom: -2.5, near: 1, far: 14 });
+scene.add(llave, llave.target);
+const relleno = new THREE.DirectionalLight(0xffd6b0, 0.5); relleno.position.set(3, 1.5, 4); scene.add(relleno);
+const contra = new THREE.DirectionalLight(0xfff0d0, 1.4); contra.position.set(1.5, 2.5, -4); contra.target.position.set(0, 1, 0); scene.add(contra, contra.target);
+
+// ---------------------------------------------------------------- posprocesado
+const rt = new THREE.WebGLRenderTarget(W * SCALE, H * SCALE, { type: THREE.HalfFloatType, samples: 4 });
+const composer = new EffectComposer(renderer, rt);
+composer.addPass(new RenderPass(scene, camera));
+const bokeh = new BokehPass(scene, camera, { focus: 3.4, aperture: 0.0016, maxblur: 0.0065 });
+composer.addPass(bokeh);
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W * SCALE / 2, H * SCALE / 2), 0.32, 0.6, 0.9));
+composer.addPass(new OutputPass());
+composer.addPass(new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, uT: { value: 0 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uT; varying vec2 vUv;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)) + uT*7.13) * 43758.5453); }
+    void main(){ vec4 c = texture2D(tDiffuse, vUv); vec2 d = vUv-0.5; d.x *= 1.3;
+      float vig = smoothstep(0.85, 0.25, length(d)); c.rgb *= mix(0.72, 1.0, vig);
+      c.rgb = mix(c.rgb, c.rgb*vec3(1.04,1.0,0.94), 0.6); c.rgb += (h(vUv*1000.)-0.5)*0.018;
+      gl_FragColor = c; }`,
+}));
+
+// ---------------------------------------------------------------- animación
+function bocaEn(t) {
+  const f = t * boca.fps, i = Math.floor(f), k = f - i;
+  const g = (a, j) => a[clamp(j, 0, a.length - 1)];
+  return { abre: lerp(g(boca.abre, i), g(boca.abre, i + 1), k), redondo: lerp(g(boca.redondo, i), g(boca.redondo, i + 1), k) };
+}
+function parpadeo(t) {
+  let v = 0;
+  for (const c of [1.15, 3.55, 6.25]) v = Math.max(v, 1 - Math.abs(t - c) / 0.09);
+  return clamp(v * 1.3);
+}
+
+function camara(t) {
+  const ruta = new THREE.CatmullRomCurve3([V(0.75, 1.62, 9.0), V(0.35, 1.45, 6.6), V(0.08, 1.2, 5.3), V(0.0, 1.02, 4.25)]);
+  const u = easeInOut(clamp(t / 3.6));
+  const p = ruta.getPoint(u);
+  const extra = smooth(3.6, 8.0, t);
+  p.add(V(0.1 * extra, -0.02 * extra, -0.4 * extra));
+  camera.position.copy(p);
+  const mira = V(0, lerp(1.25, 0.8, easeInOut(clamp(t / 3.6))), lerp(-1.5, 0.1, easeInOut(clamp(t / 3.6))));
+  mira.y += 0.05 * extra;
+  camera.lookAt(mira);
+  camera.fov = lerp(34, 29, u); camera.updateProjectionMatrix();
+}
+
+function correr(C, t, desde, hasta, t0, t1, alto, gal = 7.5) {
+  const u = clamp((t - t0) / (t1 - t0));
+  const e = easeOut(u);
+  const p = desde.clone().lerp(hasta, e);
+  C.raiz.position.copy(p);
+  const vel = u < 1 && t >= t0 ? (1 - u) * (1 - u) * 3 : 0; // velocidad relativa del easeOut
+  const rumbo = Math.atan2(hasta.x - desde.x, hasta.z - desde.z);
+  // al llegar se gira hacia la cámara/la niña
+  const giro = smooth(t1 - 0.25, t1 + 0.35, t);
+  C.raiz.rotation.y = lerp(rumbo, Math.atan2(-p.x * 0.8, 3.5 - p.z) , giro);
+  const a = Math.min(1, vel * 1.2), fase = t * gal * Math.PI * 2;
+  C.patas.forEach((pt, i) => { pt.rotation.x = Math.sin(fase + (i < 2 ? 0 : Math.PI) + (i % 2) * 0.5) * 0.8 * a; });
+  C.cuerpo.position.y = alto + Math.abs(Math.sin(fase)) * 0.05 * a;
+  C.cuerpo.rotation.x = Math.sin(fase) * 0.08 * a;
+  return { llegado: u >= 1, a };
+}
+
+function seek(t) {
+  camara(t);
+  motas.update(t);
+
+  // niña: respira, sonríe, saluda y se balancea con la música mientras canta
+  const canta = smooth(1.35, 1.6, t) * (1 - smooth(7.75, 7.95, t));
+  nina.position.set(0, 0, 0);
+  nina.rotation.y = 0.04 * Math.sin(t * 0.7);
+  const beat = Math.sin(t * Math.PI * 2 * 1.0); // 120 bpm -> balanceo de 2 tiempos
+  nina.rotation.z = 0.035 * beat * canta;
+  N.cab.position.y = 1.16 + 0.006 * Math.sin(t * 2.2);
+  const mira = smooth(1.7, 2.4, t) * (1 - smooth(3.3, 4.0, t));
+  N.cab.rotation.set(-0.06 + 0.04 * Math.sin(t * Math.PI * 2) * canta, -0.35 * mira * Math.sin(Math.min(1, (t - 1.7) / 1.5) * Math.PI) + 0.06 * Math.sin(t * 1.3), 0.08 * beat * canta + 0.1 * smooth(0.5, 1.0, t) * (1 - smooth(1.4, 2, t)));
+  N.pelo.rotation.x = 0.03 * Math.sin(t * 2.0 + 0.6);
+  N.pelo.rotation.z = -0.04 * beat * canta;
+  // cejas suben al sonreír
+  const sonrisa = smooth(0.35, 0.9, t);
+  N.cejas.forEach((c) => { c.position.y = c.userData.base.y + 0.008 * sonrisa + 0.006 * canta * Math.abs(beat); });
+  // saludo con la mano derecha
+  const saluda = smooth(0.45, 0.85, t) * (1 - smooth(2.6, 3.2, t));
+  N.der.hombro.rotation.set(1.49 * saluda, 0, lerp(-0.25, -2.22, saluda));
+  N.der.codo.rotation.set(1.16 * saluda, 0, lerp(0.25, -0.34, saluda) + saluda * 0.45 * Math.sin(t * 9.0));
+  // brazo izquierdo abraza al perrito
+  N.izq.hombro.rotation.set(-0.4, 0, 0.22);
+  N.izq.codo.rotation.set(-0.55, 0, -1.45 + 0.04 * beat * canta);
+  // tras el saludo la mano derecha vuelve a sujetar al perrito
+  const sujeta = smooth(2.9, 3.5, t);
+  N.der.hombro.rotation.x = lerp(N.der.hombro.rotation.x, -0.4, sujeta);
+  N.der.hombro.rotation.z = lerp(N.der.hombro.rotation.z, -0.22, sujeta);
+  N.der.codo.rotation.x = lerp(N.der.codo.rotation.x, -0.75, sujeta);
+  N.der.codo.rotation.z = lerp(N.der.codo.rotation.z, 1.25 + 0.06 * Math.sin(t * Math.PI * 4) * canta, sujeta);
+  nina.updateMatrixWorld(true);
+  const mano = new THREE.Vector3(); N.izq.mano.getWorldPosition(mano); nina.worldToLocal(mano);
+  N.peluche.position.set(mano.x - 0.03, mano.y + 0.1, mano.z + 0.01);
+  N.peluche.rotation.set(0.05, -0.2, -0.1 + 0.03 * beat * canta);
+  // párpados y boca
+  const p = parpadeo(t);
+  N.parpados.forEach((l) => l.userData.set(p));
+  const b = bocaEn(t);
+  const abre = b.abre, red = b.redondo;
+  N.abierta.visible = abre > 0.04;
+  N.abierta.scale.set((1.05 - 0.35 * red) * (0.9 + 0.2 * sonrisa), 0.12 + 1.35 * abre, 0.5);
+  N.sonrisa.visible = abre <= 0.04;
+  N.sonrisa.scale.set(0.9 + 0.25 * sonrisa, 0.5 + 0.9 * sonrisa, 1);
+
+  // Coco entra corriendo desde la izquierda, Luna desde la derecha
+  const c = correr(coco, t, V(-3.6, 0, -1.4), V(-0.8, 0, 0.42), 1.25, 3.3, 0.27);
+  const l = correr(luna, t, V(3.4, 0, -1.8), V(0.78, 0, 0.5), 1.6, 3.6, 0.23, 8.5);
+  const colaC = c.llegado ? 11 : 7, colaL = 4.5;
+  coco.cola.rotation.set(-0.7, 0, Math.sin(t * colaC) * (c.llegado ? 0.7 : 0.4));
+  coco.orejas.forEach((o, i) => { o.rotation.z = (i ? 1 : -1) * (0.15 + 0.35 * c.a * Math.abs(Math.sin(t * 15))) ; o.rotation.x = -0.4 * c.a; });
+  coco.cab.rotation.set(-0.15 * (c.llegado ? 1 : 0) + 0.05 * Math.sin(t * 4), 0, 0.22 * smooth(3.4, 3.9, t) * Math.sin(t * 2));
+  if (c.llegado) coco.cuerpo.position.y = 0.27 + 0.02 * Math.max(0, Math.sin(t * Math.PI * 2));
+  luna.cola.forEach((s, i) => { s.rotation.set(i === 0 ? -0.35 : 0.22 + 0.04 * i, 0, Math.sin(t * colaL - i * 0.6) * (0.18 + 0.05 * i)); });
+  luna.cab.rotation.set(-0.12 * (l.llegado ? 1 : 0), 0, -0.18 * smooth(3.7, 4.2, t) * Math.sin(t * 1.7 + 1));
+  if (l.llegado) luna.cuerpo.position.y = 0.23 + 0.012 * Math.max(0, Math.sin(t * Math.PI * 2 + 1));
+  luna.corazon.rotation.z = 0.25 * Math.sin(t * 6) * (l.a + 0.3);
+
+  sNina.position.set(0, 0.012, 0.02);
+  sCoco.position.set(coco.raiz.position.x, 0.013, coco.raiz.position.z);
+  sLuna.position.set(luna.raiz.position.x, 0.014, luna.raiz.position.z);
+
+  // enfoque en la cara de la niña
+  const cara = new THREE.Vector3(); N.cab.getWorldPosition(cara);
+  bokeh.uniforms.focus.value = camera.position.distanceTo(cara) - 0.25;
+  bokeh.uniforms.aperture.value = lerp(0.0007, 0.0016, smooth(0, 3.2, t));
+  composer.passes[composer.passes.length - 1].uniforms.uT.value = t;
+  composer.render();
+  renderer.getContext().finish();
+}
+
+window.seek = seek;
+seek(+(q.get("t") || 0));
+window.ready = Promise.resolve(true);
+</script>
+</body>
+</html>

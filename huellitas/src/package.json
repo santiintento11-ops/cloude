@@ -1,0 +1,8 @@
+{
+  "name": "huellitas-video",
+  "private": true,
+  "description": "Video 3D de Huellitas Creativas renderizado con Three.js",
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}
